@@ -38,7 +38,7 @@ export class BundleService {
       this.currentBundle.set(analysis);
     } catch (err) {
       this.error.set(
-        err instanceof Error ? err.message : 'Failed to load bundle'
+        err instanceof Error ? err.message : 'Failed to load bundle',
       );
     } finally {
       this.isLoading.set(false);
@@ -47,7 +47,7 @@ export class BundleService {
 
   private async processChunk(
     chunkFile: File,
-    sourceMapFile?: File
+    sourceMapFile?: File,
   ): Promise<ChunkInfo> {
     const content = await this.readFileAsText(chunkFile);
     let sourceMap: SourceMapData | undefined;
@@ -81,7 +81,7 @@ export class BundleService {
 
   private extractInlineSourceMap(content: string): SourceMapData | undefined {
     const sourceMapMatch = content.match(
-      /\/\/# sourceMappingURL=data:application\/json;base64,(.+)$/m
+      /\/\/# sourceMappingURL=data:application\/json;base64,(.+)$/m,
     );
     if (sourceMapMatch) {
       try {
@@ -104,7 +104,7 @@ export class BundleService {
           const currentSize = sourceBreakdown.get(source) || 0;
           sourceBreakdown.set(
             source,
-            currentSize + chunk.size / chunk.sourceMap.sources.length
+            currentSize + chunk.size / chunk.sourceMap.sources.length,
           );
         }
       }

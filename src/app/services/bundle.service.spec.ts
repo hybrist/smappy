@@ -1,14 +1,18 @@
 import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { BundleService } from './bundle.service';
-import { BundleConfig, ChunkInfo, SourceMapData } from '../models/bundle.models';
+import {
+  BundleConfig,
+  ChunkInfo,
+  SourceMapData,
+} from '../models/bundle.models';
 
 describe('BundleService', () => {
   let service: BundleService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideZonelessChangeDetection()]
+      providers: [provideZonelessChangeDetection()],
     });
     service = TestBed.inject(BundleService);
   });
@@ -24,8 +28,10 @@ describe('BundleService', () => {
           console.log('test module');
         /***/ }),
       `;
-      
-      const mockChunk = new File([mockChunkContent], 'main.js', { type: 'application/javascript' });
+
+      const mockChunk = new File([mockChunkContent], 'main.js', {
+        type: 'application/javascript',
+      });
       const config: BundleConfig = { chunks: [mockChunk] };
 
       await service.loadBundle(config);
@@ -42,16 +48,22 @@ describe('BundleService', () => {
         sources: ['src/main.ts'],
         names: ['console', 'log'],
         mappings: 'AAAA,OAAO,CAAC,GAAG',
-        sourcesContent: ['console.log("Hello World");']
+        sourcesContent: ['console.log("Hello World");'],
       };
 
       const mockChunkContent = 'console.log("Hello World");';
-      const mockChunk = new File([mockChunkContent], 'main.js', { type: 'application/javascript' });
-      const mockSourceMapFile = new File([JSON.stringify(mockSourceMap)], 'main.js.map', { type: 'application/json' });
-      
-      const config: BundleConfig = { 
+      const mockChunk = new File([mockChunkContent], 'main.js', {
+        type: 'application/javascript',
+      });
+      const mockSourceMapFile = new File(
+        [JSON.stringify(mockSourceMap)],
+        'main.js.map',
+        { type: 'application/json' },
+      );
+
+      const config: BundleConfig = {
         chunks: [mockChunk],
-        sourceMaps: [mockSourceMapFile]
+        sourceMaps: [mockSourceMapFile],
       };
 
       await service.loadBundle(config);
@@ -66,14 +78,16 @@ describe('BundleService', () => {
         version: 3,
         sources: ['src/main.ts'],
         names: [],
-        mappings: 'AAAA'
+        mappings: 'AAAA',
       };
 
       const encodedSourceMap = btoa(JSON.stringify(mockSourceMap));
       const mockChunkContent = `console.log("test");
 //# sourceMappingURL=data:application/json;base64,${encodedSourceMap}`;
-      
-      const mockChunk = new File([mockChunkContent], 'main.js', { type: 'application/javascript' });
+
+      const mockChunk = new File([mockChunkContent], 'main.js', {
+        type: 'application/javascript',
+      });
       const config: BundleConfig = { chunks: [mockChunk] };
 
       await service.loadBundle(config);
@@ -88,10 +102,10 @@ describe('BundleService', () => {
       const config: BundleConfig = { chunks: [mockChunk] };
 
       expect(service.loading()).toBe(false);
-      
+
       const loadPromise = service.loadBundle(config);
       expect(service.loading()).toBe(true);
-      
+
       await loadPromise;
       expect(service.loading()).toBe(false);
     });
@@ -99,7 +113,9 @@ describe('BundleService', () => {
     it('should handle errors gracefully', async () => {
       const invalidChunk = new File([''], 'test.js');
       // Mock FileReader to throw error
-      spyOn(FileReader.prototype, 'readAsText').and.callFake(function(this: FileReader) {
+      spyOn(FileReader.prototype, 'readAsText').and.callFake(function (
+        this: FileReader,
+      ) {
         setTimeout(() => {
           if (this.onerror) {
             this.onerror.call(this, {} as ProgressEvent<FileReader>);
@@ -156,10 +172,10 @@ describe('BundleService', () => {
     it('should calculate total size correctly', async () => {
       const content1 = 'a'.repeat(100);
       const content2 = 'b'.repeat(200);
-      
+
       const chunk1 = new File([content1], 'chunk1.js');
       const chunk2 = new File([content2], 'chunk2.js');
-      
+
       const config: BundleConfig = { chunks: [chunk1, chunk2] };
       await service.loadBundle(config);
 
