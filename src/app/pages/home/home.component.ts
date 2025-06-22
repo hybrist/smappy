@@ -14,6 +14,47 @@ import { BundleConfig } from '../../models/bundle.models';
           Analyze your JavaScript bundles and source maps
         </p>
 
+        @if (bundle()) {
+          <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+            <div class="flex items-center">
+              <svg
+                class="w-5 h-5 text-green-600 mr-2"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+              <div>
+                <p class="text-sm font-medium text-green-800">
+                  Previous Analysis Available
+                </p>
+                <p class="text-sm text-green-700">
+                  {{ formatSize(bundle()!.totalSize) }} •
+                  {{ bundle()!.chunks.length }} chunks • {{ getBundleAge() }}
+                </p>
+              </div>
+            </div>
+            <div class="mt-3 flex space-x-3">
+              <button
+                (click)="viewExistingBundle()"
+                class="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+              >
+                View Analysis
+              </button>
+              <button
+                (click)="startNewAnalysis()"
+                class="text-sm bg-white text-green-700 border border-green-600 px-3 py-1 rounded hover:bg-green-50"
+              >
+                New Analysis
+              </button>
+            </div>
+          </div>
+        }
+
         <div class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -44,9 +85,7 @@ import { BundleConfig } from '../../models/bundle.models';
           @if (chunks.length > 0) {
             <div class="bg-blue-50 p-3 rounded">
               <p class="text-sm text-blue-800">
-                {{ chunks.length }} chunk{{
-                  chunks.length > 1 ? 's' : ''
-                }}
+                {{ chunks.length }} chunk{{ chunks.length > 1 ? 's' : '' }}
                 selected
                 @if (sourceMaps.length > 0) {
                   <br />{{ sourceMaps.length }} source map{{
@@ -89,6 +128,7 @@ export class HomeComponent {
 
   readonly loading = this.bundleService.loading;
   readonly errorMessage = this.bundleService.errorMessage;
+  readonly bundle = this.bundleService.bundle;
 
   chunks: File[] = [];
   sourceMaps: File[] = [];
@@ -120,5 +160,39 @@ export class HomeComponent {
     if (this.bundleService.bundle()) {
       this.router.navigate(['/bundle']);
     }
+  }
+
+  viewExistingBundle(): void {
+    this.router.navigate(['/bundle']);
+  }
+
+  startNewAnalysis(): void {
+    this.bundleService.reset();
+    this.chunks = [];
+    this.sourceMaps = [];
+  }
+
+  getBundleAge(): string {
+    const age = this.bundleService.getBundleAge();
+    if (!age) return '';
+
+    const hours = Math.floor(age / (1000 * 60 * 60));
+    const minutes = Math.floor((age % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (hours > 0) {
+      return `${hours}h ago`;
+    } else if (minutes > 0) {
+      return `${minutes}m ago`;
+    } else {
+      return 'just now';
+    }
+  }
+
+  formatSize(bytes: number): string {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   }
 }

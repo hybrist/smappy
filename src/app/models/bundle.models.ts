@@ -47,3 +47,18 @@ export interface BundleConfig {
   chunks: File[];
   sourceMaps?: File[];
 }
+
+// Serializable version for localStorage
+export interface SerializableBundleAnalysis {
+  totalSize: number;
+  chunks: ChunkInfo[];
+  sourceBreakdown: [string, number][];
+}
+
+export interface SerializableChunkInfo {
+  id: string;
+  fileName: string;
+  size: number;
+  content: string;
+  sourceMap?: SourceMapData;
+}

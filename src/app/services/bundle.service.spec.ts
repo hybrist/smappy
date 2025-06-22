@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { BundleService } from './bundle.service';
+import { StorageService } from './storage.service';
 import {
   BundleConfig,
   ChunkInfo,
@@ -9,12 +10,21 @@ import {
 
 describe('BundleService', () => {
   let service: BundleService;
+  let storageService: StorageService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [provideZonelessChangeDetection()],
     });
     service = TestBed.inject(BundleService);
+    storageService = TestBed.inject(StorageService);
+
+    // Clear localStorage before each test
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    localStorage.clear();
   });
 
   it('should be created', () => {
@@ -181,6 +191,91 @@ describe('BundleService', () => {
 
       const bundle = service.bundle();
       expect(bundle?.totalSize).toBe(300);
+    });
+  });
+
+  describe('localStorage persistence', () => {
+    it('should save bundle to localStorage after analysis', async () => {
+      const mockChunk = new File(['test content'], 'main.js');
+      const config: BundleConfig = { chunks: [mockChunk] };
+
+      await service.loadBundle(config);
+
+      expect(storageService.hasSavedBundleAnalysis()).toBe(true);
+      const savedBundle = storageService.loadBundleAnalysis();
+      expect(savedBundle?.totalSize).toBe(service.bundle()?.totalSize);
+    });
+
+    it('should restore bundle from localStorage on initialization', () => {
+      // Save a bundle to localStorage first
+      const mockBundle = {
+        totalSize: 1000,
+        chunks: [
+          {
+            id: 'main',
+            fileName: 'main.js',
+            size: 1000,
+            content: 'test content',
+          },
+        ],
+        sourceBreakdown: new Map([['src/main.ts', 500]]),
+      };
+
+      storageService.saveBundleAnalysis(mockBundle);
+
+      // Create a new TestBed to get a fresh service instance
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [provideZonelessChangeDetection()],
+      });
+
+      const newService = TestBed.inject(BundleService);
+
+      expect(newService.bundle()).toBeTruthy();
+      expect(newService.bundle()?.totalSize).toBe(1000);
+    });
+
+    it('should clear localStorage when reset is called', async () => {
+      const mockChunk = new File(['test content'], 'main.js');
+      const config: BundleConfig = { chunks: [mockChunk] };
+
+      await service.loadBundle(config);
+      expect(storageService.hasSavedBundleAnalysis()).toBe(true);
+
+      service.reset();
+
+      expect(storageService.hasSavedBundleAnalysis()).toBe(false);
+      expect(service.bundle()).toBeNull();
+    });
+
+    it('should provide bundle age information', async () => {
+      const mockChunk = new File(['test content'], 'main.js');
+      const config: BundleConfig = { chunks: [mockChunk] };
+
+      await service.loadBundle(config);
+
+      const age = service.getBundleAge();
+      expect(age).toBeDefined();
+      expect(age).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should handle corrupted localStorage data gracefully', () => {
+      // Put invalid data in localStorage
+      localStorage.setItem('smappy_bundle_analysis', 'invalid json');
+      localStorage.setItem('smappy_bundle_timestamp', Date.now().toString());
+
+      spyOn(console, 'warn');
+
+      // Create a new TestBed to get a fresh service instance
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [provideZonelessChangeDetection()],
+      });
+
+      const newService = TestBed.inject(BundleService);
+
+      expect(newService.bundle()).toBeNull();
+      expect(console.warn).toHaveBeenCalled();
     });
   });
 });

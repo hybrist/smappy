@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import {
   BundleAnalysis,
   BundleConfig,
@@ -6,11 +6,14 @@ import {
   SourceMapData,
   SourceMapMapping,
 } from '../models/bundle.models';
+import { StorageService } from './storage.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class BundleService {
+  private readonly storageService = inject(StorageService);
+
   private readonly currentBundle = signal<BundleAnalysis | null>(null);
   private readonly isLoading = signal<boolean>(false);
   private readonly error = signal<string | null>(null);
@@ -18,6 +21,11 @@ export class BundleService {
   readonly bundle = this.currentBundle.asReadonly();
   readonly loading = this.isLoading.asReadonly();
   readonly errorMessage = this.error.asReadonly();
+
+  constructor() {
+    // Try to restore bundle from localStorage on initialization
+    this.restoreBundleFromStorage();
+  }
 
   async loadBundle(config: BundleConfig): Promise<void> {
     this.isLoading.set(true);
@@ -36,6 +44,9 @@ export class BundleService {
 
       const analysis = this.analyzeBundle(chunks);
       this.currentBundle.set(analysis);
+
+      // Save to localStorage for persistence
+      this.storageService.saveBundleAnalysis(analysis);
     } catch (err) {
       this.error.set(
         err instanceof Error ? err.message : 'Failed to load bundle',
@@ -147,5 +158,28 @@ export class BundleService {
     this.currentBundle.set(null);
     this.error.set(null);
     this.isLoading.set(false);
+
+    // Clear from localStorage
+    this.storageService.clearBundleAnalysis();
+  }
+
+  private restoreBundleFromStorage(): void {
+    try {
+      const savedBundle = this.storageService.loadBundleAnalysis();
+      if (savedBundle) {
+        this.currentBundle.set(savedBundle);
+      }
+    } catch (error) {
+      console.warn('Failed to restore bundle from storage:', error);
+      this.storageService.clearBundleAnalysis();
+    }
+  }
+
+  hasSavedBundle(): boolean {
+    return this.storageService.hasSavedBundleAnalysis();
+  }
+
+  getBundleAge(): number | null {
+    return this.storageService.getBundleAnalysisAge();
   }
 }
