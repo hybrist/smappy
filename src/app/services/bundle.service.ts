@@ -8,6 +8,7 @@ import {
   SourceMapMapping,
 } from '../models/bundle.models';
 import { StorageService } from './storage.service';
+import { of } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -115,7 +116,6 @@ export class BundleService {
       sourceBreakdown.set(source, currentSize + size);
     }
 
-    console.log('Analyzing bundle with', chunks.length, 'chunks');
     for (const chunk of chunks) {
       if (chunk.sourceMap) {
         try {
@@ -302,6 +302,22 @@ export class BundleService {
     // This would need a full source map parsing library like 'source-map'
     // For now, return empty array - implementation would decode the mappings string
     return [];
+  }
+
+  getSourceContent(sourcePath: string): string | null {
+    const bundle = this.currentBundle();
+    if (!bundle) return null;
+
+    for (const chunk of bundle.chunks) {
+      if (!chunk.sourceMap || !chunk.sourceMap.sourcesContent) continue;
+
+      let sourceIndex = chunk.sourceMap.sources.indexOf(sourcePath);
+      if (sourceIndex !== undefined && chunk.sourceMap.sourcesContent[sourceIndex]) {
+        return chunk.sourceMap.sourcesContent[sourceIndex];
+      }
+    }
+
+    return null;
   }
 
   reset(): void {

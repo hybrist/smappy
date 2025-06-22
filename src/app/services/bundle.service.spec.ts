@@ -159,6 +159,31 @@ describe('BundleService', () => {
     });
   });
 
+  describe('getSourceContent', () => {
+    it('return contents from source map', async () => {
+      const mockSourceMap: SourceMapData = {
+        version: 3,
+        sources: ['src/main.ts'],
+        sourcesContent: ['console.log("Hello World");'],
+        names: [],
+        mappings: 'AAAA',
+      };
+
+      const encodedSourceMap = btoa(JSON.stringify(mockSourceMap));
+      const mockChunkContent = `console.log("test");
+//# sourceMappingURL=data:application/json;base64,${encodedSourceMap}`;
+
+      const mockChunk = new File([mockChunkContent], 'main.js', {
+        type: 'application/javascript',
+      });
+      const config: BundleConfig = { chunks: [mockChunk] };
+
+      await service.loadBundle(config);
+
+      expect(service.getSourceContent('src/main.ts')).toBe('console.log("Hello World");');
+    });
+  });
+
   describe('reset', () => {
     it('should reset all state', async () => {
       const mockChunk = new File(['test content'], 'main.js');
