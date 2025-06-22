@@ -3,6 +3,12 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { BundleService } from '../../services/bundle.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 
+interface SourceLine {
+  line: number;
+  content: string;
+  size: number;
+}
+
 @Component({
   selector: 'app-source-detail',
   imports: [RouterLink],
@@ -175,7 +181,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
         }
 
         <!-- Source Code -->
-        @if (sourceContent(); as content) {
+        @if (sourceLines(); as lines) {
           <div class="bg-white rounded-lg shadow">
             <div class="px-6 py-4 border-b border-gray-200">
               <h3 class="text-lg font-medium text-gray-900">Source Code</h3>
@@ -183,7 +189,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
             <div class="px-6 py-4">
               <pre
                 class="bg-gray-50 rounded-lg p-4 overflow-x-auto text-sm font-mono border max-h-lvh overflow-y-auto"
-              ><code>{{ content }}</code></pre>
+              ><code>@for (line of lines; track $index) {<div>{{ line.content }}</div>}</code></pre>
             </div>
           </div>
         } @else {
@@ -359,10 +365,16 @@ export class SourceDetailComponent {
       .slice(0, 8);
   });
 
-  readonly sourceContent = computed<string | null>(() => {
+  readonly sourceLines = computed<SourceLine[] | null>(() => {
     const info = this.sourceInfo();
     if (!info) return null;
-    return this.bundleService.getSourceContent(info.path);
+    const src = this.bundleService.getSourceContent(info.path);
+    if (!src) return null;
+    return src.split('\n').map((content, index) => ({
+      line: index + 1,
+      content,
+      size: 0,
+    }));
   });
 
   formatSize(bytes: number): string {
