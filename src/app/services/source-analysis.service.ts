@@ -1,4 +1,6 @@
 import { Injectable, inject } from '@angular/core';
+import { SourceMapConsumer } from '@jridgewell/source-map';
+import { EachMapping } from '@jridgewell/trace-mapping';
 import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
 import { BundleService } from './bundle.service';
@@ -32,7 +34,7 @@ export class SourceAnalysisService {
     const fragments = this.parseSourceFragments(sourceContent, filePath);
 
     // Determine which fragments are included in the bundle
-    this.markFragmentsInBundle(fragments, sourceContent, fileSize);
+    this.markFragmentsInBundle(fragments, filePath, sourceContent, fileSize);
 
     return this.buildAnalysisResult(
       filePath,
@@ -98,32 +100,43 @@ export class SourceAnalysisService {
 
     traverse(ast, {
       Class: (path) => {
-        this.finalizeFragment({
-          type: 'class',
-          name: path.node.id?.name || 'anonymous',
-          startLine: path.node.loc?.start.line || 0,
-          startColumn: path.node.loc?.start.column || 0,
-        }, path.node.loc?.end.line || 0, fragments);
+        this.finalizeFragment(
+          {
+            type: 'class',
+            name: path.node.id?.name || 'anonymous',
+            startLine: path.node.loc?.start.line || 0,
+            startColumn: path.node.loc?.start.column || 0,
+          },
+          path.node.loc?.end.line || 0,
+          fragments,
+        );
       },
       Function: (path) => {
-        console.error('Function node:', path.node);
-        let name: string|undefined;
+        let name: string | undefined;
         if ('key' in path.node && path.node.key.type === 'Identifier') {
           name = name || path.node.key?.name;
         }
         if ('id' in path.node) {
           name = name || path.node.id?.name;
         }
-        if (path.parentPath.isClassBody() && path.parentPath.parentPath.isClass()) {
-          const parentName = path.parentPath.parentPath.node.id?.name || 'anonymous';
+        if (
+          path.parentPath.isClassBody() &&
+          path.parentPath.parentPath.isClass()
+        ) {
+          const parentName =
+            path.parentPath.parentPath.node.id?.name || 'anonymous';
           name = `${parentName}.${name || 'anonymous'}`;
         }
-        this.finalizeFragment({
-          type: path.isMethod() ? 'method' : 'function',
-          name,
-          startLine: path.node.loc?.start.line || 0,
-          startColumn: path.node.loc?.start.column || 0,
-        }, path.node.loc?.end.line || 0, fragments);
+        this.finalizeFragment(
+          {
+            type: path.isMethod() ? 'method' : 'function',
+            name,
+            startLine: path.node.loc?.start.line || 0,
+            startColumn: path.node.loc?.start.column || 0,
+          },
+          path.node.loc?.end.line || 0,
+          fragments,
+        );
       },
       Statement: (path) => {
         if (!path.parentPath.isProgram()) {
@@ -149,12 +162,16 @@ export class SourceAnalysisService {
         ) {
           return;
         }
-        this.finalizeFragment({
-          type: 'unknown',
-          name: `[${path.node.type}]`,
-          startLine: path.node.loc?.start.line || 0,
-          startColumn: path.node.loc?.start.column || 0,
-        }, path.node.loc?.end.line || 0, fragments);
+        this.finalizeFragment(
+          {
+            type: 'unknown',
+            name: `[${path.node.type}]`,
+            startLine: path.node.loc?.start.line || 0,
+            startColumn: path.node.loc?.start.column || 0,
+          },
+          path.node.loc?.end.line || 0,
+          fragments,
+        );
       },
     });
   }
@@ -260,28 +277,27 @@ export class SourceAnalysisService {
    */
   private markFragmentsInBundle(
     fragments: SourceFragment[],
+    filePath: string,
     sourceContent: string,
     totalBundleSize: number,
   ): void {
-    // This is a simplified approach - in reality, we'd need to analyze
-    // the source map mappings to determine exact inclusion
-    const totalSourceSize = sourceContent.length;
-    const inclusionRatio = Math.min(totalBundleSize / totalSourceSize, 1);
+    const chunks = this.bundleService.getChunksBySource(filePath);
+    for (const chunk of chunks) {
+      if (!chunk.sourceMap) {
+        continue;
+      }
 
-    fragments.forEach((fragment) => {
-      // Heuristic: assume larger fragments are more likely to be included
-      // and imports/exports are almost always included
-      const baseInclusionProbability =
-        fragment.type === 'import' || fragment.type === 'export' ? 0.9 : 0.5;
-      const sizeBonus = Math.min(fragment.sourceSize / 100, 0.4); // Larger fragments more likely included
-      const inclusionProbability =
-        Math.min(baseInclusionProbability + sizeBonus, 1) * inclusionRatio;
+      const consumer = new SourceMapConsumer(chunk.sourceMap as any, chunk.fileName);
 
-      fragment.isIncludedInBundle = Math.random() < inclusionProbability; // Simplified
-      fragment.bundleSize = fragment.isIncludedInBundle
-        ? Math.floor(fragment.sourceSize * inclusionRatio)
-        : 0;
-    });
+      const mappings: EachMapping[] = [];
+      consumer.eachMapping((mapping) => {
+        mappings.push(mapping);
+      });
+
+      // TODO: Find the fragment that includes this mapping in its range.
+      // Update the fragment to account for the mappings "cost" (size in bytes).
+      console.log(mappings);
+    }
   }
 
   /**

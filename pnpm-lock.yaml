@@ -38,6 +38,9 @@ importers:
       '@jridgewell/source-map':
         specifier: ^0.3.6
         version: 0.3.6
+      '@jridgewell/trace-mapping':
+        specifier: ^0.3.25
+        version: 0.3.25
       '@oxc-parser/binding-wasm32-wasi':
         specifier: ^0.73.2
         version: 0.73.2

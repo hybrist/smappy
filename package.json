@@ -21,6 +21,7 @@
     "@babel/traverse": "^7.27.4",
     "@jridgewell/gen-mapping": "^0.3.8",
     "@jridgewell/source-map": "^0.3.6",
+    "@jridgewell/trace-mapping": "^0.3.25",
     "@oxc-parser/binding-wasm32-wasi": "^0.73.2",
     "@tailwindcss/postcss": "^4.1.10",
     "oxc-parser": "^0.73.2",

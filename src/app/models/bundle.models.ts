@@ -9,11 +9,11 @@ export interface SourceMapMapping {
 
 export interface SourceMapData {
   version: number;
-  sources: string[];
-  sourcesContent?: (string | null)[];
-  names: string[];
+  readonly sources: readonly (string | null)[];
+  readonly sourcesContent?: readonly (string | null)[];
+  readonly names: readonly string[];
   mappings: string;
-  file?: string;
+  file?: string | null;
   sourceRoot?: string;
 }
 

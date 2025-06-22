@@ -2,8 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { SourceAnalysisService } from './source-analysis.service';
 import { BundleService } from './bundle.service';
-import { StorageService } from './storage.service';
+import { GenMapping, addMapping, setSourceContent, toEncodedMap } from '@jridgewell/gen-mapping';
 import { BundleConfig, SourceMapData } from '../models/bundle.models';
+import { map } from 'rxjs';
 
 describe('SourceAnalysisService', () => {
   let service: SourceAnalysisService;
@@ -46,13 +47,20 @@ interface MyInterface {
   prop: string;
 }`;
 
-      const mockSourceMap: SourceMapData = {
-        version: 3,
-        sources: ['src/test.ts'],
-        sourcesContent: [sourceContent],
-        names: [],
-        mappings: 'AAAA',
-      };
+      const mapGen = new GenMapping();
+      addMapping(mapGen, {
+        source: 'src/test.ts',
+        original: { line: 5, column: 4 },
+        generated: { line: 1, column: 0 },
+      });
+      addMapping(mapGen, {
+        source: 'src/test.ts',
+        original: { line: 14, column: 9 },
+        generated: { line: 1, column: 20 },
+      });
+      setSourceContent(mapGen, 'src/test.ts', sourceContent);
+
+      const mockSourceMap: SourceMapData = toEncodedMap(mapGen);
 
       const encodedSourceMap = btoa(JSON.stringify(mockSourceMap));
       const mockChunkContent = `// Some bundled code
@@ -74,8 +82,6 @@ interface MyInterface {
       
       expect(result).toBeTruthy();
       expect(result!.filePath).toBe('src/test.ts');
-
-      console.error(result!.fragments);
 
       expect(result!.fragments.map(f => `${f.type}:${f.name}`)).toEqual([
         'class:MyClass',
