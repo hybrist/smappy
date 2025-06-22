@@ -1,5 +1,6 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { BundleService } from '../../services/bundle.service';
 
 interface TreeNode {
@@ -13,7 +14,7 @@ interface TreeNode {
 
 @Component({
   selector: 'app-sources-tree',
-  imports: [RouterLink],
+  imports: [RouterLink, FormsModule],
   template: `
     @if (bundle(); as bundleData) {
       <div class="space-y-6">
@@ -59,7 +60,35 @@ interface TreeNode {
         <!-- File Tree -->
         <div class="bg-white rounded-lg shadow">
           <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-medium text-gray-900">File Tree</h3>
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-medium text-gray-900">File Tree</h3>
+              <div class="relative">
+                <input
+                  type="text"
+                  placeholder="Filter by filename..."
+                  [(ngModel)]="filterText"
+                  class="w-64 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                @if (filterText()) {
+                  <button
+                    (click)="clearFilter()"
+                    class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <svg
+                      class="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                        clip-rule="evenodd"
+                      ></path>
+                    </svg>
+                  </button>
+                }
+              </div>
+            </div>
           </div>
           <div class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
             @for (node of sourceTree(); track node.path) {
@@ -96,7 +125,8 @@ interface TreeNode {
                   <div class="min-w-0 flex-1">
                     @if (node.isFile) {
                       <a
-                        [routerLink]="['/bundle/sources', node.path]"
+                        [routerLink]="['/bundle/sources/details']"
+                        [queryParams]="{ p: node.path }"
                         class="text-sm font-medium text-gray-900 hover:text-blue-600 truncate block"
                       >
                         {{ node.name }}
@@ -186,16 +216,25 @@ export class SourcesTreeComponent {
   private readonly bundleService = inject(BundleService);
 
   readonly bundle = this.bundleService.bundle;
+  readonly filterText = signal('');
 
   readonly sourceTree = computed(() => {
     const bundle = this.bundle();
     if (!bundle) return [];
 
+    const filter = this.filterText().toLowerCase();
     const tree: TreeNode[] = [];
     const pathMap = new Map<string, TreeNode>();
 
+    // Filter entries if filter text is provided
+    const filteredEntries = filter
+      ? Array.from(bundle.sourceBreakdown.entries()).filter(([path]) =>
+          path.toLowerCase().includes(filter),
+        )
+      : Array.from(bundle.sourceBreakdown.entries());
+
     // Create tree structure
-    for (const [path, size] of bundle.sourceBreakdown.entries()) {
+    for (const [path, size] of filteredEntries) {
       const parts = path.split('/');
       let currentPath = '';
 
@@ -297,5 +336,9 @@ export class SourcesTreeComponent {
     return Array.from(bundle.sourceBreakdown.keys()).filter((path) =>
       path.includes('node_modules'),
     ).length;
+  }
+
+  clearFilter(): void {
+    this.filterText.set('');
   }
 }

@@ -1,4 +1,5 @@
 import { Injectable, signal, inject } from '@angular/core';
+import { SourceMapConsumer } from '@jridgewell/source-map';
 import {
   BundleAnalysis,
   BundleConfig,
@@ -109,15 +110,86 @@ export class BundleService {
     const totalSize = chunks.reduce((sum, chunk) => sum + chunk.size, 0);
     const sourceBreakdown = new Map<string, number>();
 
+    function addSourceSize(source: string, size: number) {
+      const currentSize = sourceBreakdown.get(source) || 0;
+      sourceBreakdown.set(source, currentSize + size);
+    }
+
+    console.log('Analyzing bundle with', chunks.length, 'chunks');
     for (const chunk of chunks) {
       if (chunk.sourceMap) {
-        for (const source of chunk.sourceMap.sources) {
-          const currentSize = sourceBreakdown.get(source) || 0;
-          sourceBreakdown.set(
-            source,
-            currentSize + chunk.size / chunk.sourceMap.sources.length,
+        try {
+          const consumer = new SourceMapConsumer(
+            chunk.sourceMap as any,
+            chunk.fileName,
           );
+
+          // Calculate the actual content size (excluding source map comment)
+          const contentWithoutSourceMap = this.getContentWithoutSourceMap(
+            chunk.content,
+          );
+          const lines = contentWithoutSourceMap.split('\n');
+          const lineLengths = lines.map((line) => line.length);
+
+          // Collect all mappings and sort by generated position
+          const mappings: any[] = [];
+          consumer.eachMapping((mapping) => {
+            mappings.push(mapping);
+          });
+
+          // Sort mappings by generated line and column
+          mappings.sort((a, b) => {
+            if (a.generatedLine !== b.generatedLine) {
+              return a.generatedLine - b.generatedLine;
+            }
+            return a.generatedColumn - b.generatedColumn;
+          });
+
+          // Calculate bytes between mappings
+          for (let i = 0; i < mappings.length; i++) {
+            const currentMapping = mappings[i];
+            const nextMapping = mappings[i + 1];
+
+            if (!currentMapping.source) continue;
+
+            let bytesToAttribute = 0;
+
+            if (nextMapping) {
+              // Calculate bytes between current and next mapping
+              bytesToAttribute = this.calculateBytesBetweenMappings(
+                currentMapping,
+                nextMapping,
+                lineLengths,
+              );
+            } else {
+              // For the last mapping, calculate bytes to end of content
+              bytesToAttribute = this.calculateBytesToEnd(
+                currentMapping,
+                lineLengths,
+              );
+            }
+
+            if (bytesToAttribute > 0) {
+              addSourceSize(currentMapping.source, bytesToAttribute);
+            }
+          }
+
+          // If no mappings found, attribute entire content to unknown source
+          if (mappings.length === 0) {
+            addSourceSize('<unknown>', contentWithoutSourceMap.length);
+          }
+        } catch (error) {
+          console.warn(
+            'Error processing source map for chunk',
+            chunk.fileName,
+            error,
+          );
+          // If source map processing fails, attribute entire chunk to unknown source
+          addSourceSize('<unknown>', chunk.size);
         }
+      } else {
+        // No source map available, attribute entire chunk to unknown source
+        addSourceSize('<unknown>', chunk.size);
       }
     }
 
@@ -126,6 +198,84 @@ export class BundleService {
       chunks,
       sourceBreakdown,
     };
+  }
+
+  private getContentWithoutSourceMap(content: string): string {
+    // Find and remove the source map comment and everything after it
+    const sourceMapCommentIndex = content.lastIndexOf('//# sourceMappingURL=');
+    if (sourceMapCommentIndex !== -1) {
+      // Find the line before the source map comment
+      const beforeSourceMap = content.substring(0, sourceMapCommentIndex);
+      // Remove trailing whitespace/newlines
+      return beforeSourceMap.trimEnd();
+    }
+    return content;
+  }
+
+  private calculateBytesBetweenMappings(
+    current: any,
+    next: any,
+    lineLengths: number[],
+  ): number {
+    let bytes = 0;
+
+    const currentLine = current.generatedLine - 1; // Convert to 0-based
+    const currentColumn = current.generatedColumn;
+    const nextLine = next.generatedLine - 1; // Convert to 0-based
+    const nextColumn = next.generatedColumn;
+
+    if (currentLine === nextLine) {
+      // Same line - just count columns
+      bytes = Math.max(0, nextColumn - currentColumn);
+    } else {
+      // Different lines
+      // Add remaining characters on current line
+      if (currentLine < lineLengths.length) {
+        bytes += Math.max(0, lineLengths[currentLine] - currentColumn);
+        bytes += 1; // Add newline character
+      }
+
+      // Add complete lines in between
+      for (
+        let line = currentLine + 1;
+        line < nextLine && line < lineLengths.length;
+        line++
+      ) {
+        bytes += lineLengths[line] + 1; // +1 for newline
+      }
+
+      // Add characters on next line up to next column
+      if (nextLine < lineLengths.length) {
+        bytes += Math.max(0, nextColumn);
+      }
+    }
+
+    return bytes;
+  }
+
+  private calculateBytesToEnd(mapping: any, lineLengths: number[]): number {
+    let bytes = 0;
+
+    const line = mapping.generatedLine - 1; // Convert to 0-based
+    const column = mapping.generatedColumn;
+
+    // Add remaining characters on current line
+    if (line < lineLengths.length) {
+      bytes += Math.max(0, lineLengths[line] - column);
+      bytes += 1; // Add newline character
+    }
+
+    // Add all remaining complete lines
+    for (let i = line + 1; i < lineLengths.length; i++) {
+      bytes += lineLengths[i] + 1; // +1 for newline
+    }
+
+    // Remove the last newline if we added one
+    if (bytes > 0) {
+      bytes -= 1;
+    }
+
+    return Math.max(0, bytes);
   }
 
   getChunkById(id: string): ChunkInfo | undefined {

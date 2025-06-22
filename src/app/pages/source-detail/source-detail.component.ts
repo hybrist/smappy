@@ -1,6 +1,7 @@
 import { Component, inject, computed } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { BundleService } from '../../services/bundle.service';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-source-detail',
@@ -278,8 +279,13 @@ export class SourceDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly bundleService = inject(BundleService);
 
+  private readonly queryParams = toSignal(this.route.queryParams);
+  private readonly sourcePath = computed<string | undefined>(() => {
+    return this.queryParams()?.['p'];
+  });
+
   readonly sourceInfo = computed(() => {
-    const sourcePath = this.route.snapshot.url.slice(2).join('/'); // Remove 'bundle/sources'
+    const sourcePath = this.sourcePath();
     const bundle = this.bundleService.bundle();
 
     if (!bundle || !sourcePath) return null;

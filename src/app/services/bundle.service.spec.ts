@@ -1,12 +1,9 @@
 import { TestBed } from '@angular/core/testing';
+import { GenMapping, addMapping, toEncodedMap } from '@jridgewell/gen-mapping';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { BundleService } from './bundle.service';
 import { StorageService } from './storage.service';
-import {
-  BundleConfig,
-  ChunkInfo,
-  SourceMapData,
-} from '../models/bundle.models';
+import { BundleConfig, SourceMapData } from '../models/bundle.models';
 
 describe('BundleService', () => {
   let service: BundleService;
@@ -191,6 +188,32 @@ describe('BundleService', () => {
 
       const bundle = service.bundle();
       expect(bundle?.totalSize).toBe(300);
+    });
+
+    it('should attribute size to source files', async () => {
+      const mapGen = new GenMapping();
+      addMapping(mapGen, {
+        source: 'src/a.ts',
+        original: { line: 1, column: 0 },
+        generated: { line: 1, column: 0 },
+      });
+      addMapping(mapGen, {
+        source: 'src/b.ts',
+        original: { line: 1, column: 0 },
+        generated: { line: 1, column: 20 },
+      });
+      const content = `${'a'.repeat(100)}\n\n//# sourceMappingURL=data:application/json;base64,${btoa(JSON.stringify(toEncodedMap(mapGen)))}`;
+
+      const chunk = new File([content], 'chunk1.js');
+
+      const config: BundleConfig = { chunks: [chunk] };
+      await service.loadBundle(config);
+
+      const bundle = service.bundle();
+      expect(bundle?.totalSize).toBeGreaterThan(100);
+
+      expect(bundle?.sourceBreakdown.get('src/a.ts')).toBe(20);
+      expect(bundle?.sourceBreakdown.get('src/b.ts')).toBe(80);
     });
   });
 

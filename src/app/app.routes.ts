@@ -43,7 +43,7 @@ export const routes: Routes = [
           ),
       },
       {
-        path: 'sources/**',
+        path: 'sources/details',
         loadComponent: () =>
           import('./pages/source-detail/source-detail.component').then(
             (m) => m.SourceDetailComponent,
