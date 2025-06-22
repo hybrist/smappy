@@ -7,6 +7,7 @@ import { SourceInfoCardsComponent } from '../../components/source-info-cards/sou
 import { SourceCodeViewerComponent, SourceLine } from '../../components/source-code-viewer/source-code-viewer.component';
 import { SourceAnalysisComponent } from '../../components/source-analysis/source-analysis.component';
 import { SimilarFilesComponent } from '../../components/similar-files/similar-files.component';
+import { SourceSemanticAnalysisComponent } from '../../components/source-semantic-analysis/source-semantic-analysis.component';
 
 @Component({
   selector: 'app-source-detail',
@@ -17,6 +18,7 @@ import { SimilarFilesComponent } from '../../components/similar-files/similar-fi
     SourceCodeViewerComponent,
     SourceAnalysisComponent,
     SimilarFilesComponent,
+    SourceSemanticAnalysisComponent,
   ],
   template: `
     @if (sourceInfo(); as info) {
@@ -24,6 +26,7 @@ import { SimilarFilesComponent } from '../../components/similar-files/similar-fi
         <section appSourceDetailHeader [path]="info.path" [size]="info.size"></section>
         <section appSourceInfoCards [size]="info.size" [chunksCount]="info.chunks.length"></section>
         <section appSourceCodeViewer [sourceLines]="sourceLines()"></section>
+        <section appSourceSemanticAnalysis [path]="info.path"></section>
         <section appSourceAnalysis [path]="info.path" [size]="info.size"></section>
         <section appSimilarFiles [similarFiles]="similarFiles()" [path]="info.path"></section>
       </div>
