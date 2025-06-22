@@ -58,27 +58,14 @@ import { BundleConfig } from '../../models/bundle.models';
         <div class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">
-              Bundle Files (JS)
+              Files
             </label>
             <input
               type="file"
               multiple
-              accept=".js"
-              (change)="onChunksSelected($event)"
+              accept=".js,.css,.map,.sourcemap"
+              (change)="onFilesSelected($event)"
               class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-            />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              Source Maps (optional)
-            </label>
-            <input
-              type="file"
-              multiple
-              accept=".map"
-              (change)="onSourceMapsSelected($event)"
-              class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
             />
           </div>
 
@@ -133,17 +120,14 @@ export class HomeComponent {
   chunks: File[] = [];
   sourceMaps: File[] = [];
 
-  onChunksSelected(event: Event): void {
+  onFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (input.files) {
-      this.chunks = Array.from(input.files);
-    }
-  }
-
-  onSourceMapsSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files) {
-      this.sourceMaps = Array.from(input.files);
+    for (const file of input.files || []) {
+      if (file.name.endsWith('.map') || file.name.endsWith('.sourcemap')) {
+        this.sourceMaps.push(file);
+      } else {
+        this.chunks.push(file);
+      }
     }
   }
 
