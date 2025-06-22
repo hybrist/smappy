@@ -4,7 +4,6 @@ import { BundleService } from '../../services/bundle.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { SourceDetailHeaderComponent } from '../../components/source-detail-header/source-detail-header.component';
 import { SourceInfoCardsComponent } from '../../components/source-info-cards/source-info-cards.component';
-import { SourceChunksListComponent } from '../../components/source-chunks-list/source-chunks-list.component';
 import { SourceCodeViewerComponent, SourceLine } from '../../components/source-code-viewer/source-code-viewer.component';
 import { SourceAnalysisComponent } from '../../components/source-analysis/source-analysis.component';
 import { SimilarFilesComponent } from '../../components/similar-files/similar-files.component';
@@ -15,7 +14,6 @@ import { SimilarFilesComponent } from '../../components/similar-files/similar-fi
     RouterLink,
     SourceDetailHeaderComponent,
     SourceInfoCardsComponent,
-    SourceChunksListComponent,
     SourceCodeViewerComponent,
     SourceAnalysisComponent,
     SimilarFilesComponent,
@@ -25,7 +23,6 @@ import { SimilarFilesComponent } from '../../components/similar-files/similar-fi
       <div class="space-y-6">
         <section appSourceDetailHeader [path]="info.path" [size]="info.size"></section>
         <section appSourceInfoCards [size]="info.size" [chunksCount]="info.chunks.length"></section>
-        <section appSourceChunksList [chunks]="info.chunks"></section>
         <section appSourceCodeViewer [sourceLines]="sourceLines()"></section>
         <section appSourceAnalysis [path]="info.path" [size]="info.size"></section>
         <section appSimilarFiles [similarFiles]="similarFiles()" [path]="info.path"></section>
