@@ -37,10 +37,18 @@ export interface FunctionInfo {
   };
 }
 
+export interface MappingImpact {
+  chunkId: string;
+  originalLine: number;
+  originalColumn: number;
+  sizeImpact: number;
+}
+
 export interface BundleAnalysis {
   totalSize: number;
   chunks: ChunkInfo[];
   sourceBreakdown: Map<string, number>;
+  mappingImpacts: Map<string, MappingImpact[]>; // source path -> mapping impacts
 }
 
 export interface BundleConfig {
@@ -53,6 +61,7 @@ export interface SerializableBundleAnalysis {
   totalSize: number;
   chunks: ChunkInfo[];
   sourceBreakdown: [string, number][];
+  mappingImpacts: [string, MappingImpact[]][];
 }
 
 export interface SerializableChunkInfo {

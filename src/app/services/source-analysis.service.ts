@@ -1,6 +1,4 @@
 import { Injectable, inject } from '@angular/core';
-import { SourceMapConsumer } from '@jridgewell/source-map';
-import { EachMapping } from '@jridgewell/trace-mapping';
 import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
 import { BundleService } from './bundle.service';
@@ -288,7 +286,7 @@ export class SourceAnalysisService {
   }
 
   /**
-   * Mark which fragments are included in the bundle
+   * Mark which fragments are included in the bundle using precomputed mapping impacts
    */
   private markFragmentsInBundle(
     fragments: SourceFragment[],
@@ -296,115 +294,45 @@ export class SourceAnalysisService {
     sourceContent: string,
     totalBundleSize: number,
   ): void {
-    const chunks = this.bundleService.getChunksBySource(filePath);
-
     // Initialize all fragments as not included
     fragments.forEach((fragment) => {
       fragment.isIncludedInBundle = false;
       fragment.bundleSize = 0;
     });
 
-    for (const chunk of chunks) {
-      if (!chunk.sourceMap) {
-        continue;
-      }
+    // Get precomputed mapping impacts for this source file
+    const mappingImpacts = this.bundleService.getMappingImpacts(filePath);
 
-      try {
-        const consumer = new SourceMapConsumer(
-          chunk.sourceMap as any,
-          chunk.fileName,
-        );
-
-        // Calculate the actual content size (excluding source map comment)
-        const contentWithoutSourceMap = this.getContentWithoutSourceMap(
-          chunk.content,
-        );
-        const lines = contentWithoutSourceMap.split('\n');
-        const lineLengths = lines.map((line) => line.length);
-
-        // Collect all mappings for this source file and sort by generated position
-        const mappings: EachMapping[] = [];
-        consumer.eachMapping((mapping) => {
-          mappings.push(mapping);
-        });
-
-        // Sort mappings by generated line and column
-        mappings.sort((a, b) => {
-          if (a.generatedLine !== b.generatedLine) {
-            return a.generatedLine - b.generatedLine;
-          }
-          return a.generatedColumn - b.generatedColumn;
-        });
-
-        // Calculate bytes between mappings and attribute to fragments
-        for (let i = 0; i < mappings.length; i++) {
-          const currentMapping = mappings[i];
-          const nextMapping = mappings[i + 1];
-
-          if (
-            currentMapping.source !== filePath ||
-            !currentMapping.originalLine ||
-            !currentMapping.originalColumn
-          )
-            continue;
-
-          let bytesToAttribute = 0;
-
-          if (nextMapping) {
-            // Calculate bytes between current and next mapping
-            bytesToAttribute = this.calculateBytesBetweenMappings(
-              currentMapping,
-              nextMapping,
-              lineLengths,
-            );
-          } else {
-            // For the last mapping, calculate bytes to end of content
-            bytesToAttribute = this.calculateBytesToEnd(
-              currentMapping,
-              lineLengths,
-            );
-          }
-
-          if (bytesToAttribute > 0) {
-            // Find the fragments that contains this mapping
-            for (const fragment of fragments) {
-              if (
-                fragment.startLine > currentMapping.originalLine ||
-                fragment.endLine < currentMapping.originalLine
-              ) {
-                continue;
-              }
-              if (
-                fragment.startLine === currentMapping.originalLine &&
-                fragment.startColumn > currentMapping.originalColumn
-              ) {
-                continue;
-              }
-              if (
-                fragment.endLine === currentMapping.originalLine &&
-                fragment.endColumn < currentMapping.originalColumn
-              ) {
-                continue;
-              }
-              fragment.isIncludedInBundle = true;
-              fragment.bundleSize =
-                (fragment.bundleSize || 0) + bytesToAttribute;
-            }
-          }
-        }
-      } catch (error) {
-        console.warn(
-          'Error processing source map for chunk',
-          chunk.fileName,
-          error,
-        );
-        // If source map processing fails, mark all fragments as potentially included
-        // with a proportional size estimate
+    if (mappingImpacts.length === 0) {
+      // No mapping impacts found - either no chunks reference this file,
+      // or source map processing failed during bundle analysis
+      const chunks = this.bundleService.getChunksBySource(filePath);
+      if (chunks.length > 0) {
+        // File is referenced but no mappings - estimate proportional size
         const fragmentShare = totalBundleSize / fragments.length;
         fragments.forEach((fragment) => {
           fragment.isIncludedInBundle = true;
           fragment.bundleSize = Math.floor(fragmentShare);
         });
+      }
+      return;
+    }
+
+    // Use precomputed mapping impacts to attribute bytes to fragments
+    for (const impact of mappingImpacts) {
+      if (impact.sizeImpact <= 0) continue;
+
+      // Find ALL fragments that contain this mapping position
+      const containingFragments = this.findFragmentsContainingPosition(
+        fragments,
+        impact.originalLine,
+        impact.originalColumn,
+      );
+
+      // Attribute the bytes to all containing fragments
+      for (const fragment of containingFragments) {
+        fragment.isIncludedInBundle = true;
+        fragment.bundleSize = (fragment.bundleSize || 0) + impact.sizeImpact;
       }
     }
   }
@@ -501,126 +429,39 @@ export class SourceAnalysisService {
   }
 
   /**
-   * Find the fragment that contains a source map mapping
+   * Find all fragments that contain the given line/column position
    */
-  private findFragmentForMapping(
+  private findFragmentsContainingPosition(
     fragments: SourceFragment[],
-    mapping: EachMapping,
-  ): SourceFragment | null {
-    if (!mapping.originalLine || !mapping.originalColumn) {
-      return null;
-    }
-
-    // Find fragments that contain this line/column position
-    const candidateFragments = fragments.filter((fragment) => {
-      return (
-        mapping.originalLine! >= fragment.startLine &&
-        mapping.originalLine! <= fragment.endLine
-      );
-    });
-
-    if (candidateFragments.length === 0) {
-      return null;
-    }
-
-    // If we have multiple candidates, prefer the most specific one (smallest range)
-    candidateFragments.sort((a, b) => {
-      const aRange = a.endLine - a.startLine;
-      const bRange = b.endLine - b.startLine;
-      return aRange - bRange;
-    });
-
-    return candidateFragments[0];
-  }
-
-  /**
-   * Calculate bytes between two mappings (adapted from BundleService)
-   */
-  private calculateBytesBetweenMappings(
-    current: EachMapping,
-    next: EachMapping,
-    lineLengths: number[],
-  ): number {
-    let bytes = 0;
-
-    const currentLine = current.generatedLine - 1; // Convert to 0-based
-    const currentColumn = current.generatedColumn;
-    const nextLine = next.generatedLine - 1; // Convert to 0-based
-    const nextColumn = next.generatedColumn;
-
-    if (currentLine === nextLine) {
-      // Same line - just count columns
-      bytes = Math.max(0, nextColumn - currentColumn);
-    } else {
-      // Different lines
-      // Add remaining characters on current line
-      if (currentLine < lineLengths.length) {
-        bytes += Math.max(0, lineLengths[currentLine] - currentColumn);
-        bytes += 1; // Add newline character
+    line: number,
+    column: number,
+  ): SourceFragment[] {
+    // Find all fragments that contain this position
+    const containingFragments = fragments.filter((fragment) => {
+      // Check if the position is within the fragment's line range
+      if (line < fragment.startLine || line > fragment.endLine) {
+        return false;
       }
 
-      // Add complete lines in between
-      for (
-        let line = currentLine + 1;
-        line < nextLine && line < lineLengths.length;
-        line++
+      // If it's on the start line, check that column is at or after start column
+      if (line === fragment.startLine && column < fragment.startColumn) {
+        return false;
+      }
+
+      // If it's on the end line, check that column is before end column
+      // Note: endColumn is often 0 for many fragments, so be careful here
+      if (
+        line === fragment.endLine &&
+        fragment.endColumn > 0 &&
+        column >= fragment.endColumn
       ) {
-        bytes += lineLengths[line] + 1; // +1 for newline
+        return false;
       }
 
-      // Add characters on next line up to next column
-      if (nextLine < lineLengths.length) {
-        bytes += Math.max(0, nextColumn);
-      }
-    }
+      return true;
+    });
 
-    return bytes;
-  }
-
-  /**
-   * Calculate bytes from mapping to end of content (adapted from BundleService)
-   */
-  private calculateBytesToEnd(
-    mapping: EachMapping,
-    lineLengths: number[],
-  ): number {
-    let bytes = 0;
-
-    const line = mapping.generatedLine - 1; // Convert to 0-based
-    const column = mapping.generatedColumn;
-
-    // Add remaining characters on current line
-    if (line < lineLengths.length) {
-      bytes += Math.max(0, lineLengths[line] - column);
-      bytes += 1; // Add newline character
-    }
-
-    // Add all remaining complete lines
-    for (let i = line + 1; i < lineLengths.length; i++) {
-      bytes += lineLengths[i] + 1; // +1 for newline
-    }
-
-    // Remove the last newline if we added one
-    if (bytes > 0) {
-      bytes -= 1;
-    }
-
-    return Math.max(0, bytes);
-  }
-
-  /**
-   * Get content without source map comment (adapted from BundleService)
-   */
-  private getContentWithoutSourceMap(content: string): string {
-    // Find and remove the source map comment and everything after it
-    const sourceMapCommentIndex = content.lastIndexOf('//# sourceMappingURL=');
-    if (sourceMapCommentIndex !== -1) {
-      // Find the line before the source map comment
-      const beforeSourceMap = content.substring(0, sourceMapCommentIndex);
-      // Remove trailing whitespace/newlines
-      return beforeSourceMap.trimEnd();
-    }
-    return content;
+    return containingFragments;
   }
 }
 

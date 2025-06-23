@@ -18,6 +18,7 @@ export class StorageService {
         totalSize: analysis.totalSize,
         chunks: analysis.chunks,
         sourceBreakdown: Array.from(analysis.sourceBreakdown.entries()),
+        mappingImpacts: Array.from(analysis.mappingImpacts.entries()),
       };
 
       localStorage.setItem(this.BUNDLE_KEY, JSON.stringify(serializable));
@@ -50,6 +51,7 @@ export class StorageService {
         totalSize: serializable.totalSize,
         chunks: serializable.chunks,
         sourceBreakdown: new Map(serializable.sourceBreakdown),
+        mappingImpacts: new Map(serializable.mappingImpacts || []),
       };
     } catch (error) {
       console.warn('Failed to load bundle analysis from localStorage:', error);

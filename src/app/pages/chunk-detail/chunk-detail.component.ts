@@ -1,7 +1,10 @@
 import { Component, inject, computed } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { BundleService } from '../../services/bundle.service';
-import { SourceFileListComponent, SourceFileItem } from '../../components/source-file-list/source-file-list.component';
+import {
+  SourceFileListComponent,
+  SourceFileItem,
+} from '../../components/source-file-list/source-file-list.component';
 
 @Component({
   selector: 'app-chunk-detail',

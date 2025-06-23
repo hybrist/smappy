@@ -1,7 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { SourceFileListComponent, SourceFileItem } from './source-file-list.component';
+import {
+  SourceFileListComponent,
+  SourceFileItem,
+} from './source-file-list.component';
 import { BundleService } from '../../services/bundle.service';
 
 describe('SourceFileListComponent', () => {
@@ -23,13 +26,16 @@ describe('SourceFileListComponent', () => {
 
     fixture = TestBed.createComponent(SourceFileListComponent);
     component = fixture.componentInstance;
-    bundleServiceSpy = TestBed.inject(BundleService) as jasmine.SpyObj<BundleService>;
+    bundleServiceSpy = TestBed.inject(
+      BundleService,
+    ) as jasmine.SpyObj<BundleService>;
 
     // Mock bundle data
     bundleServiceSpy.bundle.and.returnValue({
       totalSize: 1000,
       chunks: [],
       sourceBreakdown: new Map(),
+      mappingImpacts: new Map(),
     });
   });
 
@@ -46,7 +52,9 @@ describe('SourceFileListComponent', () => {
     component.files = mockFiles;
     fixture.detectChanges();
 
-    const fileElements = fixture.nativeElement.querySelectorAll('.hover\\:bg-gray-50');
+    const fileElements = fixture.nativeElement.querySelectorAll(
+      '.hover\\:bg-gray-50',
+    );
     expect(fileElements.length).toBe(2);
   });
 
@@ -90,11 +98,15 @@ describe('SourceFileListComponent', () => {
     component.files = mockFiles;
     fixture.detectChanges();
 
-    const allFileElements = fixture.nativeElement.querySelectorAll('.hover\\:bg-gray-50');
+    const allFileElements = fixture.nativeElement.querySelectorAll(
+      '.hover\\:bg-gray-50',
+    );
     expect(allFileElements.length).toBe(2); // Both files are displayed
-    
+
     // Check that we have the correct structure for both files
-    const fileNames = fixture.nativeElement.querySelectorAll('.text-sm.font-medium.text-gray-900.truncate');
+    const fileNames = fixture.nativeElement.querySelectorAll(
+      '.text-sm.font-medium.text-gray-900.truncate',
+    );
     expect(fileNames.length).toBe(2);
   });
 });

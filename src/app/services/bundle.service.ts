@@ -6,6 +6,7 @@ import {
   ChunkInfo,
   SourceMapData,
   SourceMapMapping,
+  MappingImpact,
 } from '../models/bundle.models';
 import { StorageService } from './storage.service';
 import { of } from 'rxjs';
@@ -110,10 +111,17 @@ export class BundleService {
   private analyzeBundle(chunks: ChunkInfo[]): BundleAnalysis {
     const totalSize = chunks.reduce((sum, chunk) => sum + chunk.size, 0);
     const sourceBreakdown = new Map<string, number>();
+    const mappingImpacts = new Map<string, MappingImpact[]>();
 
     function addSourceSize(source: string, size: number) {
       const currentSize = sourceBreakdown.get(source) || 0;
       sourceBreakdown.set(source, currentSize + size);
+    }
+
+    function addMappingImpact(source: string, impact: MappingImpact) {
+      const impacts = mappingImpacts.get(source) || [];
+      impacts.push(impact);
+      mappingImpacts.set(source, impacts);
     }
 
     for (const chunk of chunks) {
@@ -171,6 +179,19 @@ export class BundleService {
 
             if (bytesToAttribute > 0) {
               addSourceSize(currentMapping.source, bytesToAttribute);
+
+              // Store mapping impact for later reuse
+              if (
+                currentMapping.originalLine &&
+                currentMapping.originalColumn !== undefined
+              ) {
+                addMappingImpact(currentMapping.source, {
+                  chunkId: chunk.id,
+                  originalLine: currentMapping.originalLine,
+                  originalColumn: currentMapping.originalColumn,
+                  sizeImpact: bytesToAttribute,
+                });
+              }
             }
           }
 
@@ -197,6 +218,7 @@ export class BundleService {
       totalSize,
       chunks,
       sourceBreakdown,
+      mappingImpacts,
     };
   }
 
@@ -350,5 +372,13 @@ export class BundleService {
 
   getBundleAge(): number | null {
     return this.storageService.getBundleAnalysisAge();
+  }
+
+  /**
+   * Get precomputed mapping impacts for a source file
+   */
+  getMappingImpacts(sourcePath: string): MappingImpact[] {
+    const bundle = this.currentBundle();
+    return bundle?.mappingImpacts.get(sourcePath) || [];
   }
 }

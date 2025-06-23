@@ -24,7 +24,9 @@ import { BundleService } from '../../services/bundle.service';
         <div class="text-2xl font-semibold text-gray-900">
           {{ formatSize(size()) }}
         </div>
-        <div class="text-sm text-gray-500"><strong class="text-gray-600">{{ percentage() }}%</strong> of bundle</div>
+        <div class="text-sm text-gray-500">
+          <strong class="text-gray-600">{{ percentage() }}%</strong> of bundle
+        </div>
       </div>
     </div>
   `,

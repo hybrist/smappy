@@ -16,7 +16,9 @@ export interface SourceFileItem {
   template: `
     <div class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
       @for (file of files; track file.path) {
-        <div class="px-6 py-3 flex items-center justify-between hover:bg-gray-50">
+        <div
+          class="px-6 py-3 flex items-center justify-between hover:bg-gray-50"
+        >
           <div class="flex items-center min-w-0 flex-1">
             <div
               class="flex-shrink-0 w-8 h-8 bg-gray-100 rounded flex items-center justify-center"

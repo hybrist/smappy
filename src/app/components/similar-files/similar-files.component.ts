@@ -1,5 +1,8 @@
 import { Component, Input, computed } from '@angular/core';
-import { SourceFileListComponent, SourceFileItem } from '../source-file-list/source-file-list.component';
+import {
+  SourceFileListComponent,
+  SourceFileItem,
+} from '../source-file-list/source-file-list.component';
 
 @Component({
   selector: 'section[appSimilarFiles]',

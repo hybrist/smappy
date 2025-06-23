@@ -3,7 +3,10 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { SourceSemanticAnalysisComponent } from './source-semantic-analysis.component';
 import { SourceAnalysisService } from '../../services/source-analysis.service';
 import { BundleService } from '../../services/bundle.service';
-import { SourceAnalysisResult, SourceFragment } from '../../models/source-analysis.models';
+import {
+  SourceAnalysisResult,
+  SourceFragment,
+} from '../../models/source-analysis.models';
 
 describe('SourceSemanticAnalysisComponent', () => {
   let component: SourceSemanticAnalysisComponent;
@@ -12,8 +15,12 @@ describe('SourceSemanticAnalysisComponent', () => {
   let bundleServiceSpy: jasmine.SpyObj<BundleService>;
 
   beforeEach(() => {
-    const sourceAnalysisSpy = jasmine.createSpyObj('SourceAnalysisService', ['analyzeSourceFile']);
-    const bundleSpy = jasmine.createSpyObj('BundleService', ['getSourceContent']);
+    const sourceAnalysisSpy = jasmine.createSpyObj('SourceAnalysisService', [
+      'analyzeSourceFile',
+    ]);
+    const bundleSpy = jasmine.createSpyObj('BundleService', [
+      'getSourceContent',
+    ]);
 
     TestBed.configureTestingModule({
       imports: [SourceSemanticAnalysisComponent],
@@ -26,8 +33,12 @@ describe('SourceSemanticAnalysisComponent', () => {
 
     fixture = TestBed.createComponent(SourceSemanticAnalysisComponent);
     component = fixture.componentInstance;
-    sourceAnalysisServiceSpy = TestBed.inject(SourceAnalysisService) as jasmine.SpyObj<SourceAnalysisService>;
-    bundleServiceSpy = TestBed.inject(BundleService) as jasmine.SpyObj<BundleService>;
+    sourceAnalysisServiceSpy = TestBed.inject(
+      SourceAnalysisService,
+    ) as jasmine.SpyObj<SourceAnalysisService>;
+    bundleServiceSpy = TestBed.inject(
+      BundleService,
+    ) as jasmine.SpyObj<BundleService>;
   });
 
   it('should create', () => {
@@ -36,12 +47,12 @@ describe('SourceSemanticAnalysisComponent', () => {
 
   it('should handle fragment expansion toggle', () => {
     const fragmentId = 'test-fragment-1';
-    
+
     expect(component.isFragmentExpanded(fragmentId)).toBe(false);
-    
+
     component.toggleFragment(fragmentId);
     expect(component.isFragmentExpanded(fragmentId)).toBe(true);
-    
+
     component.toggleFragment(fragmentId);
     expect(component.isFragmentExpanded(fragmentId)).toBe(false);
   });
@@ -73,7 +84,7 @@ line 8`;
     component.path = 'test.ts';
 
     const result = component.getFragmentCode(mockFragment);
-    
+
     // Should contain the actual code content (tokens may be wrapped in spans)
     expect(result).toContain('function');
     expect(result).toContain('testFunction');
@@ -100,7 +111,7 @@ line 8`;
     component.path = 'test.ts';
 
     const result = component.getFragmentCode(mockFragment);
-    
+
     expect(result).toContain('Source content not available');
   });
 
@@ -112,18 +123,96 @@ line 8`;
       totalSourceSize: 1000,
       totalBundleSize: 500,
       fragments: [
-        { id: '1', name: 'MyClass', type: 'class', startLine: 1, endLine: 5, startColumn: 0, endColumn: 1, sourceSize: 200, isIncludedInBundle: true },
-        { id: '2', name: 'myFunc', type: 'function', startLine: 6, endLine: 8, startColumn: 0, endColumn: 1, sourceSize: 150, isIncludedInBundle: true },
-        { id: '3', name: 'myVar', type: 'variable', startLine: 9, endLine: 9, startColumn: 0, endColumn: 1, sourceSize: 50, isIncludedInBundle: false },
+        {
+          id: '1',
+          name: 'MyClass',
+          type: 'class',
+          startLine: 1,
+          endLine: 5,
+          startColumn: 0,
+          endColumn: 1,
+          sourceSize: 200,
+          isIncludedInBundle: true,
+        },
+        {
+          id: '2',
+          name: 'myFunc',
+          type: 'function',
+          startLine: 6,
+          endLine: 8,
+          startColumn: 0,
+          endColumn: 1,
+          sourceSize: 150,
+          isIncludedInBundle: true,
+        },
+        {
+          id: '3',
+          name: 'myVar',
+          type: 'variable',
+          startLine: 9,
+          endLine: 9,
+          startColumn: 0,
+          endColumn: 1,
+          sourceSize: 50,
+          isIncludedInBundle: false,
+        },
       ],
       imports: [],
       exports: [],
-      classes: [{ id: '1', name: 'MyClass', type: 'class', startLine: 1, endLine: 5, startColumn: 0, endColumn: 1, sourceSize: 200, isIncludedInBundle: true }],
+      classes: [
+        {
+          id: '1',
+          name: 'MyClass',
+          type: 'class',
+          startLine: 1,
+          endLine: 5,
+          startColumn: 0,
+          endColumn: 1,
+          sourceSize: 200,
+          isIncludedInBundle: true,
+        },
+      ],
       methods: [],
-      functions: [{ id: '2', name: 'myFunc', type: 'function', startLine: 6, endLine: 8, startColumn: 0, endColumn: 1, sourceSize: 150, isIncludedInBundle: true }],
-      variables: [{ id: '3', name: 'myVar', type: 'variable', startLine: 9, endLine: 9, startColumn: 0, endColumn: 1, sourceSize: 50, isIncludedInBundle: false }],
+      functions: [
+        {
+          id: '2',
+          name: 'myFunc',
+          type: 'function',
+          startLine: 6,
+          endLine: 8,
+          startColumn: 0,
+          endColumn: 1,
+          sourceSize: 150,
+          isIncludedInBundle: true,
+        },
+      ],
+      variables: [
+        {
+          id: '3',
+          name: 'myVar',
+          type: 'variable',
+          startLine: 9,
+          endLine: 9,
+          startColumn: 0,
+          endColumn: 1,
+          sourceSize: 50,
+          isIncludedInBundle: false,
+        },
+      ],
       types: [],
-      unusedFragments: [{ id: '3', name: 'myVar', type: 'variable', startLine: 9, endLine: 9, startColumn: 0, endColumn: 1, sourceSize: 50, isIncludedInBundle: false }],
+      unusedFragments: [
+        {
+          id: '3',
+          name: 'myVar',
+          type: 'variable',
+          startLine: 9,
+          endLine: 9,
+          startColumn: 0,
+          endColumn: 1,
+          sourceSize: 50,
+          isIncludedInBundle: false,
+        },
+      ],
     };
 
     sourceAnalysisServiceSpy.analyzeSourceFile.and.returnValue(mockAnalysis);
