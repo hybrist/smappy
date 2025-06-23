@@ -92,7 +92,9 @@ export class StorageService {
   /**
    * Recalculate mapping impacts from chunk data when loading from storage
    */
-  private recalculateMappingImpacts(chunks: ChunkInfo[]): Map<string, MappingImpact[]> {
+  private recalculateMappingImpacts(
+    chunks: ChunkInfo[],
+  ): Map<string, MappingImpact[]> {
     const mappingImpacts = new Map<string, MappingImpact[]>();
 
     function addMappingImpact(source: string, impact: MappingImpact) {

@@ -300,11 +300,13 @@ line 8`;
         generatedLine: 10,
         generatedColumn: 5,
         sizeImpact: 25,
-        snippet: 'console.log("test");'
-      }
+        snippet: 'console.log("test");',
+      },
     ];
 
-    bundleServiceSpy.getGeneratedLocations.and.returnValue(mockGeneratedLocations);
+    bundleServiceSpy.getGeneratedLocations.and.returnValue(
+      mockGeneratedLocations,
+    );
     component.path = 'test.ts';
 
     // Test the hover functionality indirectly by calling the method
@@ -315,6 +317,10 @@ line 8`;
     expect(mappingInfo.generatedLocations.length).toBe(1);
     expect(mappingInfo.generatedLocations[0].chunkId).toBe('chunk1');
     expect(mappingInfo.generatedLocations[0].sizeImpact).toBe(25);
-    expect(bundleServiceSpy.getGeneratedLocations).toHaveBeenCalledWith('test.ts', 5, 0);
+    expect(bundleServiceSpy.getGeneratedLocations).toHaveBeenCalledWith(
+      'test.ts',
+      5,
+      0,
+    );
   });
 });

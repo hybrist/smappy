@@ -301,9 +301,10 @@ interface HoveredMappingInfo {
                               class="mb-2 border-b border-gray-600 pb-2 last:border-b-0 last:pb-0"
                             >
                               <div class="text-gray-300 text-xs mb-1">
-                                {{ generated.chunkId }}:{{ generated.line }}:{{ generated.column }} ({{
-                                  formatSize(generated.sizeImpact)
-                                }})
+                                {{ generated.chunkId }}:{{ generated.line }}:{{
+                                  generated.column
+                                }}
+                                ({{ formatSize(generated.sizeImpact) }})
                               </div>
                               <pre
                                 class="bg-gray-800 p-2 rounded text-xs max-w-lg whitespace-pre-wrap"
@@ -636,16 +637,50 @@ export class SourceSemanticAnalysisComponent {
    * Handle mouse move events on code snippets to show generated code mappings
    */
   onCodeMouseMove(event: MouseEvent, fragment: SourceFragment): void {
-    const target = event.target as HTMLElement;
+    let target = event.target as ChildNode;
 
     // Check if we're hovering over the actual code (not line numbers)
+    if (!target) {
+      this.hoverTooltip()?.nativeElement.hidePopover();
+      return;
+    }
+
     if (
-      !target ||
-      !(
-        target.tagName.toLowerCase() === 'span' &&
-        target.classList.contains('token')
-      )
+      target instanceof HTMLElement &&
+      target.tagName.toLowerCase() === 'code'
     ) {
+      for (const child of target.childNodes) {
+        if (
+          child.nodeType !== Node.TEXT_NODE ||
+          child.textContent?.trim() === ''
+        ) {
+          continue;
+        }
+        const range = document.createRange();
+        range.selectNode(child);
+        const rect = range.getBoundingClientRect();
+        range.detach();
+
+        if (
+          event.clientX >= rect.left &&
+          event.clientX <= rect.right &&
+          event.clientY >= rect.top &&
+          event.clientY <= rect.bottom
+        ) {
+          target = child; // Use the text node directly
+          break;
+        }
+      }
+    }
+
+    const isTokenSpan =
+      target instanceof HTMLElement &&
+      target.tagName.toLowerCase() === 'span' &&
+      target.classList.contains('token');
+    const isPlainText =
+      target instanceof Text && target.textContent?.trim() !== '';
+
+    if (!isTokenSpan && !isPlainText) {
       this.hoverTooltip()?.nativeElement.hidePopover();
       return;
     }
@@ -669,7 +704,10 @@ export class SourceSemanticAnalysisComponent {
     // Get generated mappings for this source position
     const mappingInfo = this.getGeneratedMappingInfo(line, column);
 
-    const rect = target.getBoundingClientRect();
+    const range = document.createRange();
+    range.selectNode(target);
+    const rect = range.getBoundingClientRect();
+    range.detach();
 
     if (mappingInfo && mappingInfo.generatedLocations.length > 0) {
       this.hoveredMapping.set(mappingInfo);

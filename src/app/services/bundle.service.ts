@@ -385,7 +385,11 @@ export class BundleService {
   /**
    * Get generated code locations for a specific source position
    */
-  getGeneratedLocations(sourcePath: string, originalLine: number, originalColumn: number): Array<{
+  getGeneratedLocations(
+    sourcePath: string,
+    originalLine: number,
+    originalColumn: number,
+  ): Array<{
     chunkId: string;
     generatedLine: number;
     generatedColumn: number;
@@ -431,7 +435,7 @@ export class BundleService {
             const impact = mappingImpacts.find(
               (impact) =>
                 impact.originalLine === originalLine &&
-                Math.abs(impact.originalColumn - originalColumn) <= 5
+                Math.abs(impact.originalColumn - originalColumn) <= 5,
             );
 
             results.push({
@@ -444,7 +448,10 @@ export class BundleService {
           }
         });
       } catch (error) {
-        console.warn('Error processing source map for generated locations:', error);
+        console.warn(
+          'Error processing source map for generated locations:',
+          error,
+        );
       }
     }
 
@@ -458,11 +465,11 @@ export class BundleService {
     content: string,
     line: number,
     column: number,
-    contextChars: number = 120
+    contextChars: number = 120,
   ): string {
     const contentWithoutSourceMap = this.getContentWithoutSourceMap(content);
     const lines = contentWithoutSourceMap.split('\n');
-    
+
     if (line < 1 || line > lines.length) {
       return '';
     }
@@ -470,7 +477,7 @@ export class BundleService {
     const targetLine = lines[line - 1]; // Convert to 0-based index
     const start = column;
     const end = Math.min(targetLine.length, column + contextChars);
-    
+
     let snippet = targetLine.substring(start, end);
 
     return snippet;
