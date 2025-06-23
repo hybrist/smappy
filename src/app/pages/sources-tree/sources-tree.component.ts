@@ -2,6 +2,7 @@ import { Component, inject, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { BundleService } from '../../services/bundle.service';
+import { SourceFileListComponent, SourceFileItem } from '../../components/source-file-list/source-file-list.component';
 
 interface TreeNode {
   name: string;
@@ -14,7 +15,7 @@ interface TreeNode {
 
 @Component({
   selector: 'app-sources-tree',
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule, SourceFileListComponent],
   template: `
     @if (bundle(); as bundleData) {
       <div class="space-y-6">
@@ -167,45 +168,7 @@ interface TreeNode {
           <div class="px-6 py-4 border-b border-gray-200">
             <h3 class="text-lg font-medium text-gray-900">Largest Files</h3>
           </div>
-          <div class="divide-y divide-gray-200">
-            @for (file of topFilesBySize(); track file[0]) {
-              <div class="px-6 py-4 flex items-center justify-between">
-                <div class="flex items-center min-w-0 flex-1">
-                  <div
-                    class="flex-shrink-0 w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center"
-                  >
-                    <svg
-                      class="w-5 h-5 text-red-600"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
-                        clip-rule="evenodd"
-                      ></path>
-                    </svg>
-                  </div>
-                  <div class="ml-4 min-w-0 flex-1">
-                    <div class="text-sm font-medium text-gray-900 truncate">
-                      {{ getFileName(file[0]) }}
-                    </div>
-                    <div class="text-sm text-gray-500 truncate">
-                      {{ file[0] }}
-                    </div>
-                  </div>
-                </div>
-                <div class="text-right ml-4">
-                  <div class="text-sm font-medium text-gray-900">
-                    {{ formatSize(file[1]) }}
-                  </div>
-                  <div class="text-sm text-gray-500">
-                    {{ getPercentage(file[1], bundleData.totalSize) }}%
-                  </div>
-                </div>
-              </div>
-            }
-          </div>
+          <app-source-file-list [files]="largestFileItems()" />
         </div>
       </div>
     }
@@ -286,14 +249,18 @@ export class SourcesTreeComponent {
     return flattenTree(tree);
   });
 
-  topFilesBySize() {
+  readonly largestFileItems = computed((): SourceFileItem[] => {
     const bundle = this.bundle();
     if (!bundle) return [];
 
     return Array.from(bundle.sourceBreakdown.entries())
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 10);
-  }
+      .slice(0, 10)
+      .map(([path, size]) => ({
+        path,
+        size,
+      }));
+  });
 
   formatSize(bytes: number): string {
     if (bytes === 0) return '0 B';

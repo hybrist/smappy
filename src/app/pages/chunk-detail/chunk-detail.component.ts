@@ -1,10 +1,11 @@
 import { Component, inject, computed } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { BundleService } from '../../services/bundle.service';
+import { SourceFileListComponent, SourceFileItem } from '../../components/source-file-list/source-file-list.component';
 
 @Component({
   selector: 'app-chunk-detail',
-  imports: [RouterLink],
+  imports: [RouterLink, SourceFileListComponent],
   template: `
     @if (chunk(); as chunkData) {
       <div class="space-y-6">
@@ -191,58 +192,7 @@ import { BundleService } from '../../services/bundle.service';
                 >{{ chunkData.sourceMap.sources.length }} files</span
               >
             </div>
-            <div class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
-              @for (
-                source of chunkData.sourceMap.sources;
-                track source;
-                let i = $index
-              ) {
-                <div
-                  class="px-6 py-3 flex items-center justify-between hover:bg-gray-50"
-                >
-                  <div class="flex items-center min-w-0 flex-1">
-                    <div
-                      class="flex-shrink-0 w-8 h-8 bg-gray-100 rounded flex items-center justify-center"
-                    >
-                      <svg
-                        class="w-4 h-4 text-gray-600"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fill-rule="evenodd"
-                          d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
-                          clip-rule="evenodd"
-                        ></path>
-                      </svg>
-                    </div>
-                    <div class="ml-3 min-w-0 flex-1">
-                      <div class="text-sm font-medium text-gray-900 truncate">
-                        {{ getFileName(source) }}
-                      </div>
-                      <div class="text-sm text-gray-500 truncate">
-                        {{ source }}
-                      </div>
-                    </div>
-                  </div>
-                  <div class="flex items-center">
-                    @if (hasSourceContent(i)) {
-                      <span
-                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
-                      >
-                        Content Available
-                      </span>
-                    } @else {
-                      <span
-                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-                      >
-                        No Content
-                      </span>
-                    }
-                  </div>
-                </div>
-              }
-            </div>
+            <app-source-file-list [files]="sourceFileItems()" />
           </div>
         } @else {
           <!-- No Source Map -->
@@ -314,6 +264,20 @@ export class ChunkDetailComponent {
     return this.bundleService.getChunkById(chunkId);
   });
 
+  readonly sourceFileItems = computed((): SourceFileItem[] => {
+    const chunkData = this.chunk();
+    if (!chunkData?.sourceMap?.sources) return [];
+
+    return chunkData.sourceMap.sources
+      .filter((source): source is string => source !== null)
+      .map((source, index) => ({
+        path: source,
+        size: 0, // Chunk detail doesn't show individual file sizes
+        displayName: this.getFileName(source),
+        badge: this.hasSourceContent(index) ? 'Content Available' : undefined,
+      }));
+  });
+
   formatSize(bytes: number): string {
     if (bytes === 0) return '0 B';
     const k = 1024;
@@ -322,7 +286,8 @@ export class ChunkDetailComponent {
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   }
 
-  getFileName(path: string): string {
+  getFileName(path: string | null): string {
+    if (path === null) return '(null)';
     return path.split('/').pop() || path;
   }
 
