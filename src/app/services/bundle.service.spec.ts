@@ -269,6 +269,7 @@ describe('BundleService', () => {
           },
         ],
         sourceBreakdown: new Map([['src/main.ts', 500]]),
+        mappingImpacts: new Map(),
       };
 
       storageService.saveBundleAnalysis(mockBundle);

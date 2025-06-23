@@ -21,6 +21,7 @@ describe('SourceSemanticAnalysisComponent', () => {
     const bundleSpy = jasmine.createSpyObj('BundleService', [
       'getSourceContent',
       'getMappingImpacts',
+      'getGeneratedLocations',
     ]);
 
     TestBed.configureTestingModule({
@@ -83,6 +84,7 @@ line 8`;
 
     bundleServiceSpy.getSourceContent.and.returnValue(mockSourceContent);
     bundleServiceSpy.getMappingImpacts.and.returnValue([]);
+    bundleServiceSpy.getGeneratedLocations.and.returnValue([]);
     component.path = 'test.ts';
 
     const result = component.getFragmentCode(mockFragment);
@@ -111,6 +113,7 @@ line 8`;
 
     bundleServiceSpy.getSourceContent.and.returnValue(null);
     bundleServiceSpy.getMappingImpacts.and.returnValue([]);
+    bundleServiceSpy.getGeneratedLocations.and.returnValue([]);
     component.path = 'test.ts';
 
     const result = component.getFragmentCode(mockFragment);
@@ -277,6 +280,7 @@ line 8`;
 
     bundleServiceSpy.getSourceContent.and.returnValue(mockSourceContent);
     bundleServiceSpy.getMappingImpacts.and.returnValue(mockMappingImpacts);
+    bundleServiceSpy.getGeneratedLocations.and.returnValue([]);
     component.path = 'test.ts';
 
     const result = component.getFragmentCode(mockFragment);
@@ -287,5 +291,30 @@ line 8`;
     expect(result).toContain('bg-green-100'); // Medium impact color for line 5 (25 bytes)
     expect(result).toContain('title="Line 5: 25 bytes in bundle"'); // Tooltip
     expect(bundleServiceSpy.getMappingImpacts).toHaveBeenCalledWith('test.ts');
+  });
+
+  it('should show hover tooltips with generated code mappings', () => {
+    const mockGeneratedLocations = [
+      {
+        chunkId: 'chunk1',
+        generatedLine: 10,
+        generatedColumn: 5,
+        sizeImpact: 25,
+        snippet: 'console.log("test");'
+      }
+    ];
+
+    bundleServiceSpy.getGeneratedLocations.and.returnValue(mockGeneratedLocations);
+    component.path = 'test.ts';
+
+    // Test the hover functionality indirectly by calling the method
+    const mappingInfo = (component as any).getGeneratedMappingInfo(5, 0);
+
+    expect(mappingInfo).toBeTruthy();
+    expect(mappingInfo.originalLine).toBe(5);
+    expect(mappingInfo.generatedLocations.length).toBe(1);
+    expect(mappingInfo.generatedLocations[0].chunkId).toBe('chunk1');
+    expect(mappingInfo.generatedLocations[0].sizeImpact).toBe(25);
+    expect(bundleServiceSpy.getGeneratedLocations).toHaveBeenCalledWith('test.ts', 5, 0);
   });
 });

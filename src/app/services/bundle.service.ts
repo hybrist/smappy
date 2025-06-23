@@ -381,4 +381,98 @@ export class BundleService {
     const bundle = this.currentBundle();
     return bundle?.mappingImpacts.get(sourcePath) || [];
   }
+
+  /**
+   * Get generated code locations for a specific source position
+   */
+  getGeneratedLocations(sourcePath: string, originalLine: number, originalColumn: number): Array<{
+    chunkId: string;
+    generatedLine: number;
+    generatedColumn: number;
+    sizeImpact: number;
+    snippet: string;
+  }> {
+    const bundle = this.currentBundle();
+    if (!bundle) return [];
+
+    const results: Array<{
+      chunkId: string;
+      generatedLine: number;
+      generatedColumn: number;
+      sizeImpact: number;
+      snippet: string;
+    }> = [];
+
+    for (const chunk of bundle.chunks) {
+      if (!chunk.sourceMap) continue;
+
+      try {
+        const consumer = new SourceMapConsumer(
+          chunk.sourceMap as any,
+          chunk.fileName,
+        );
+
+        // Find generated positions for this original position
+        consumer.eachMapping((mapping) => {
+          if (
+            mapping.source === sourcePath &&
+            mapping.originalLine === originalLine &&
+            Math.abs((mapping.originalColumn || 0) - originalColumn) <= 5 // Allow some tolerance
+          ) {
+            // Get snippet around the generated position
+            const snippet = this.extractGeneratedSnippet(
+              chunk.content,
+              mapping.generatedLine,
+              mapping.generatedColumn,
+            );
+
+            // Get size impact for this mapping
+            const mappingImpacts = this.getMappingImpacts(sourcePath);
+            const impact = mappingImpacts.find(
+              (impact) =>
+                impact.originalLine === originalLine &&
+                Math.abs(impact.originalColumn - originalColumn) <= 5
+            );
+
+            results.push({
+              chunkId: chunk.id,
+              generatedLine: mapping.generatedLine,
+              generatedColumn: mapping.generatedColumn,
+              sizeImpact: impact?.sizeImpact || 0,
+              snippet,
+            });
+          }
+        });
+      } catch (error) {
+        console.warn('Error processing source map for generated locations:', error);
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Extract a code snippet around a generated position
+   */
+  private extractGeneratedSnippet(
+    content: string,
+    line: number,
+    column: number,
+    contextChars: number = 120
+  ): string {
+    const contentWithoutSourceMap = this.getContentWithoutSourceMap(content);
+    const lines = contentWithoutSourceMap.split('\n');
+    
+    if (line < 1 || line > lines.length) {
+      return '';
+    }
+
+    const targetLine = lines[line - 1]; // Convert to 0-based index
+    const start = column;
+    const end = Math.min(targetLine.length, column + contextChars);
+    
+    let snippet = targetLine.substring(start, end);
+
+    return snippet;
+  }
 }

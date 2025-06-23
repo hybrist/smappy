@@ -1,4 +1,11 @@
-import { Component, Input, computed, signal } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  Input,
+  computed,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { SourceAnalysisService } from '../../services/source-analysis.service';
 import { BundleService } from '../../services/bundle.service';
 import { inject } from '@angular/core';
@@ -13,6 +20,20 @@ import {
   FragmentType,
 } from '../../models/source-analysis.models';
 import { MappingImpact } from '../../models/bundle.models';
+
+interface GeneratedLocation {
+  chunkId: string;
+  line: number;
+  column: number;
+  sizeImpact: number;
+  highlightedCode: string;
+}
+
+interface HoveredMappingInfo {
+  originalLine: number;
+  originalColumn: number;
+  generatedLocations: GeneratedLocation[];
+}
 
 @Component({
   selector: 'section[appSourceSemanticAnalysis]',
@@ -249,7 +270,48 @@ import { MappingImpact } from '../../models/bundle.models';
                     <div class="relative">
                       <pre
                         class="text-sm text-gray-800 bg-white p-4 overflow-y-auto"
+                        (mousemove)="onCodeMouseMove($event, fragment)"
+                        (mouseleave)="hideTooltip()"
                       ><code [innerHTML]="getFragmentCode(fragment)"></code></pre>
+
+                      <!-- Hover Tooltip -->
+                      <div
+                        class="fixed bg-gray-900 text-white text-xs rounded-lg shadow-lg p-3 max-w-lg"
+                        popover="manual"
+                        [style.left.px]="tooltipPosition().x"
+                        [style.top.px]="tooltipPosition().y"
+                        #hoverTooltip
+                      >
+                        @if (hoveredMapping()) {
+                          <div class="font-semibold mb-2">
+                            Generated Code for Line
+                            {{ hoveredMapping()!.originalLine }}:{{
+                              hoveredMapping()!.originalColumn
+                            }}
+                          </div>
+                          @for (
+                            generated of hoveredMapping()!.generatedLocations;
+                            track generated.chunkId +
+                              ':' +
+                              generated.line +
+                              ':' +
+                              generated.column
+                          ) {
+                            <div
+                              class="mb-2 border-b border-gray-600 pb-2 last:border-b-0 last:pb-0"
+                            >
+                              <div class="text-gray-300 text-xs mb-1">
+                                {{ generated.chunkId }}:{{ generated.line }}:{{ generated.column }} ({{
+                                  formatSize(generated.sizeImpact)
+                                }})
+                              </div>
+                              <pre
+                                class="bg-gray-800 p-2 rounded text-xs max-w-lg whitespace-pre-wrap"
+                              ><code [innerHTML]="generated.highlightedCode"></code></pre>
+                            </div>
+                          }
+                        }
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -301,6 +363,10 @@ export class SourceSemanticAnalysisComponent {
   private readonly bundleService = inject(BundleService);
   private readonly activeFilter = signal<string>('all');
   private readonly expandedFragments = signal<Set<string>>(new Set());
+  readonly hoveredMapping = signal<HoveredMappingInfo | null>(null);
+  readonly tooltipPosition = signal<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  private hoverTooltip = viewChild('hoverTooltip', { read: ElementRef });
 
   readonly analysisResult = computed(() => {
     if (!this.path) return null;
@@ -564,5 +630,119 @@ export class SourceSemanticAnalysisComponent {
     } else {
       return 'text-gray-900 bg-red-100 border-l-2 border-red-500 font-semibold'; // Very large contribution
     }
+  }
+
+  /**
+   * Handle mouse move events on code snippets to show generated code mappings
+   */
+  onCodeMouseMove(event: MouseEvent, fragment: SourceFragment): void {
+    const target = event.target as HTMLElement;
+
+    // Check if we're hovering over the actual code (not line numbers)
+    if (
+      !target ||
+      !(
+        target.tagName.toLowerCase() === 'span' &&
+        target.classList.contains('token')
+      )
+    ) {
+      this.hoverTooltip()?.nativeElement.hidePopover();
+      return;
+    }
+
+    // target is a token span, we can use it to determine the line & offset.
+    let column = 0;
+    let line = 0;
+    let el = target.previousSibling;
+    while (el !== null) {
+      if (el instanceof HTMLElement && el.classList.contains('select-none')) {
+        // Line marker!
+        line = parseInt(el.textContent?.trim() || '0', 10);
+        break;
+      }
+
+      // Before we reach the first line marker, we count characters.
+      column += el.textContent?.length || 0;
+      el = el.previousSibling;
+    }
+
+    // Get generated mappings for this source position
+    const mappingInfo = this.getGeneratedMappingInfo(line, column);
+
+    const rect = target.getBoundingClientRect();
+
+    if (mappingInfo && mappingInfo.generatedLocations.length > 0) {
+      this.hoveredMapping.set(mappingInfo);
+      this.tooltipPosition.set({
+        x: Math.min(rect.left), // Keep tooltip within bounds
+        y: Math.max(rect.bottom),
+      });
+      this.hoverTooltip()?.nativeElement.showPopover();
+    } else {
+      this.hoverTooltip()?.nativeElement.hidePopover();
+      this.hoveredMapping.set(null);
+    }
+  }
+
+  /**
+   * Hide the tooltip when mouse leaves the code area
+   */
+  hideTooltip(): void {
+    this.hoveredMapping.set(null);
+  }
+
+  /**
+   * Get generated code locations for a source position
+   */
+  private getGeneratedMappingInfo(
+    originalLine: number,
+    originalColumn: number,
+  ): HoveredMappingInfo | null {
+    const generatedLocations = this.bundleService.getGeneratedLocations(
+      this.path,
+      originalLine,
+      originalColumn,
+    );
+
+    if (generatedLocations.length === 0) {
+      return null;
+    }
+
+    const mappedLocations: GeneratedLocation[] = generatedLocations.map(
+      (loc) => ({
+        chunkId: loc.chunkId,
+        line: loc.generatedLine,
+        column: loc.generatedColumn,
+        sizeImpact: loc.sizeImpact,
+        highlightedCode: this.applyBasicHighlighting(loc.snippet),
+      }),
+    );
+
+    return {
+      originalLine,
+      originalColumn,
+      generatedLocations: mappedLocations,
+    };
+  }
+
+  /**
+   * Apply basic syntax highlighting to generated code snippet
+   */
+  private applyBasicHighlighting(code: string): string {
+    // Basic escaping for HTML
+    let highlighted = code
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    // Apply basic JavaScript syntax highlighting
+    try {
+      const grammar = Prism.languages['javascript'];
+      highlighted = Prism.highlight(highlighted, grammar, 'javascript');
+    } catch (error) {
+      // If highlighting fails, return escaped code
+    }
+
+    return highlighted;
   }
 }
