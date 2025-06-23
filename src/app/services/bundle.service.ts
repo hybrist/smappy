@@ -312,7 +312,10 @@ export class BundleService {
       if (!chunk.sourceMap || !chunk.sourceMap.sourcesContent) continue;
 
       let sourceIndex = chunk.sourceMap.sources.indexOf(sourcePath);
-      if (sourceIndex !== undefined && chunk.sourceMap.sourcesContent[sourceIndex]) {
+      if (
+        sourceIndex !== undefined &&
+        chunk.sourceMap.sourcesContent[sourceIndex]
+      ) {
         return chunk.sourceMap.sourcesContent[sourceIndex];
       }
     }

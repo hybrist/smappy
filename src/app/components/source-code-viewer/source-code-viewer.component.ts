@@ -16,7 +16,9 @@ export interface SourceLine {
           <h3 class="text-lg font-medium text-gray-900">Source Code</h3>
         </div>
         <div class="px-6 py-4">
-          <pre class="bg-gray-50 rounded-lg p-4 overflow-x-auto text-sm font-mono border max-h-96 overflow-y-auto"><code>@for (line of lines; track $index) {<div>{{ line.content }}</div>}</code></pre>
+          <pre
+            class="bg-gray-50 rounded-lg p-4 overflow-x-auto text-sm font-mono border max-h-96 overflow-y-auto"
+          ><code>@for (line of lines; track $index) {<div>{{ line.content }}</div>}</code></pre>
         </div>
       </div>
     } @else {
@@ -26,7 +28,12 @@ export interface SourceLine {
         </div>
         <div class="px-6 py-4">
           <div class="bg-gray-50 rounded-lg p-4 text-center text-gray-500">
-            <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg
+              class="mx-auto h-12 w-12 text-gray-400 mb-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -36,7 +43,8 @@ export interface SourceLine {
             </svg>
             <p>Source content not available</p>
             <p class="text-sm mt-1">
-              This source file does not have embedded source content in the source map.
+              This source file does not have embedded source content in the
+              source map.
             </p>
           </div>
         </div>

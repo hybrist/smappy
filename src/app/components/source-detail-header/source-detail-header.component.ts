@@ -8,7 +8,9 @@ import { RouterLink } from '@angular/router';
     <div class="flex items-center justify-between">
       <div>
         <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-2">
-          <a routerLink="/bundle/sources" class="hover:text-blue-600">Sources</a>
+          <a routerLink="/bundle/sources" class="hover:text-blue-600"
+            >Sources</a
+          >
           <span>/</span>
           <span class="text-gray-900">{{ getFileName(path) }}</span>
         </nav>

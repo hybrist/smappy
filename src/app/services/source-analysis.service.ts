@@ -282,21 +282,115 @@ export class SourceAnalysisService {
     totalBundleSize: number,
   ): void {
     const chunks = this.bundleService.getChunksBySource(filePath);
+
+    // Initialize all fragments as not included
+    fragments.forEach((fragment) => {
+      fragment.isIncludedInBundle = false;
+      fragment.bundleSize = 0;
+    });
+
     for (const chunk of chunks) {
       if (!chunk.sourceMap) {
         continue;
       }
 
-      const consumer = new SourceMapConsumer(chunk.sourceMap as any, chunk.fileName);
+      try {
+        const consumer = new SourceMapConsumer(
+          chunk.sourceMap as any,
+          chunk.fileName,
+        );
 
-      const mappings: EachMapping[] = [];
-      consumer.eachMapping((mapping) => {
-        mappings.push(mapping);
-      });
+        // Calculate the actual content size (excluding source map comment)
+        const contentWithoutSourceMap = this.getContentWithoutSourceMap(
+          chunk.content,
+        );
+        const lines = contentWithoutSourceMap.split('\n');
+        const lineLengths = lines.map((line) => line.length);
 
-      // TODO: Find the fragment that includes this mapping in its range.
-      // Update the fragment to account for the mappings "cost" (size in bytes).
-      console.log(mappings);
+        // Collect all mappings for this source file and sort by generated position
+        const mappings: EachMapping[] = [];
+        consumer.eachMapping((mapping) => {
+          mappings.push(mapping);
+        });
+
+        // Sort mappings by generated line and column
+        mappings.sort((a, b) => {
+          if (a.generatedLine !== b.generatedLine) {
+            return a.generatedLine - b.generatedLine;
+          }
+          return a.generatedColumn - b.generatedColumn;
+        });
+
+        // Calculate bytes between mappings and attribute to fragments
+        for (let i = 0; i < mappings.length; i++) {
+          const currentMapping = mappings[i];
+          const nextMapping = mappings[i + 1];
+
+          if (
+            currentMapping.source !== filePath ||
+            !currentMapping.originalLine ||
+            !currentMapping.originalColumn
+          )
+            continue;
+
+          let bytesToAttribute = 0;
+
+          if (nextMapping) {
+            // Calculate bytes between current and next mapping
+            bytesToAttribute = this.calculateBytesBetweenMappings(
+              currentMapping,
+              nextMapping,
+              lineLengths,
+            );
+          } else {
+            // For the last mapping, calculate bytes to end of content
+            bytesToAttribute = this.calculateBytesToEnd(
+              currentMapping,
+              lineLengths,
+            );
+          }
+
+          if (bytesToAttribute > 0) {
+            // Find the fragments that contains this mapping
+            for (const fragment of fragments) {
+              if (
+                fragment.startLine > currentMapping.originalLine ||
+                fragment.endLine < currentMapping.originalLine
+              ) {
+                continue;
+              }
+              if (
+                fragment.startLine === currentMapping.originalLine &&
+                fragment.startColumn > currentMapping.originalColumn
+              ) {
+                continue;
+              }
+              if (
+                fragment.endLine === currentMapping.originalLine &&
+                fragment.endColumn < currentMapping.originalColumn
+              ) {
+                continue;
+              }
+              fragment.isIncludedInBundle = true;
+              fragment.bundleSize =
+                (fragment.bundleSize || 0) + bytesToAttribute;
+            }
+          }
+        }
+      } catch (error) {
+        console.warn(
+          'Error processing source map for chunk',
+          chunk.fileName,
+          error,
+        );
+        // If source map processing fails, mark all fragments as potentially included
+        // with a proportional size estimate
+        const fragmentShare = totalBundleSize / fragments.length;
+        fragments.forEach((fragment) => {
+          fragment.isIncludedInBundle = true;
+          fragment.bundleSize = Math.floor(fragmentShare);
+        });
+      }
     }
   }
 
@@ -399,5 +493,128 @@ export class SourceAnalysisService {
     endIndex: number,
   ): number {
     return lines.slice(startIndex, endIndex + 1).join('\n').length;
+  }
+
+  /**
+   * Find the fragment that contains a source map mapping
+   */
+  private findFragmentForMapping(
+    fragments: SourceFragment[],
+    mapping: EachMapping,
+  ): SourceFragment | null {
+    if (!mapping.originalLine || !mapping.originalColumn) {
+      return null;
+    }
+
+    // Find fragments that contain this line/column position
+    const candidateFragments = fragments.filter((fragment) => {
+      return (
+        mapping.originalLine! >= fragment.startLine &&
+        mapping.originalLine! <= fragment.endLine
+      );
+    });
+
+    if (candidateFragments.length === 0) {
+      return null;
+    }
+
+    // If we have multiple candidates, prefer the most specific one (smallest range)
+    candidateFragments.sort((a, b) => {
+      const aRange = a.endLine - a.startLine;
+      const bRange = b.endLine - b.startLine;
+      return aRange - bRange;
+    });
+
+    return candidateFragments[0];
+  }
+
+  /**
+   * Calculate bytes between two mappings (adapted from BundleService)
+   */
+  private calculateBytesBetweenMappings(
+    current: EachMapping,
+    next: EachMapping,
+    lineLengths: number[],
+  ): number {
+    let bytes = 0;
+
+    const currentLine = current.generatedLine - 1; // Convert to 0-based
+    const currentColumn = current.generatedColumn;
+    const nextLine = next.generatedLine - 1; // Convert to 0-based
+    const nextColumn = next.generatedColumn;
+
+    if (currentLine === nextLine) {
+      // Same line - just count columns
+      bytes = Math.max(0, nextColumn - currentColumn);
+    } else {
+      // Different lines
+      // Add remaining characters on current line
+      if (currentLine < lineLengths.length) {
+        bytes += Math.max(0, lineLengths[currentLine] - currentColumn);
+        bytes += 1; // Add newline character
+      }
+
+      // Add complete lines in between
+      for (
+        let line = currentLine + 1;
+        line < nextLine && line < lineLengths.length;
+        line++
+      ) {
+        bytes += lineLengths[line] + 1; // +1 for newline
+      }
+
+      // Add characters on next line up to next column
+      if (nextLine < lineLengths.length) {
+        bytes += Math.max(0, nextColumn);
+      }
+    }
+
+    return bytes;
+  }
+
+  /**
+   * Calculate bytes from mapping to end of content (adapted from BundleService)
+   */
+  private calculateBytesToEnd(
+    mapping: EachMapping,
+    lineLengths: number[],
+  ): number {
+    let bytes = 0;
+
+    const line = mapping.generatedLine - 1; // Convert to 0-based
+    const column = mapping.generatedColumn;
+
+    // Add remaining characters on current line
+    if (line < lineLengths.length) {
+      bytes += Math.max(0, lineLengths[line] - column);
+      bytes += 1; // Add newline character
+    }
+
+    // Add all remaining complete lines
+    for (let i = line + 1; i < lineLengths.length; i++) {
+      bytes += lineLengths[i] + 1; // +1 for newline
+    }
+
+    // Remove the last newline if we added one
+    if (bytes > 0) {
+      bytes -= 1;
+    }
+
+    return Math.max(0, bytes);
+  }
+
+  /**
+   * Get content without source map comment (adapted from BundleService)
+   */
+  private getContentWithoutSourceMap(content: string): string {
+    // Find and remove the source map comment and everything after it
+    const sourceMapCommentIndex = content.lastIndexOf('//# sourceMappingURL=');
+    if (sourceMapCommentIndex !== -1) {
+      // Find the line before the source map comment
+      const beforeSourceMap = content.substring(0, sourceMapCommentIndex);
+      // Remove trailing whitespace/newlines
+      return beforeSourceMap.trimEnd();
+    }
+    return content;
   }
 }

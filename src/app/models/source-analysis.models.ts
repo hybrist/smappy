@@ -1,4 +1,15 @@
-export type FragmentType = 'class' | 'function' | 'method' | 'variable' | 'import' | 'export' | 'interface' | 'type' | 'enum' | 'namespace' | 'unknown';
+export type FragmentType =
+  | 'class'
+  | 'function'
+  | 'method'
+  | 'variable'
+  | 'import'
+  | 'export'
+  | 'interface'
+  | 'type'
+  | 'enum'
+  | 'namespace'
+  | 'unknown';
 
 export interface SourceFragment {
   id: string;

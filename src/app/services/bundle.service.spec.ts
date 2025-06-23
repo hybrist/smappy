@@ -180,7 +180,9 @@ describe('BundleService', () => {
 
       await service.loadBundle(config);
 
-      expect(service.getSourceContent('src/main.ts')).toBe('console.log("Hello World");');
+      expect(service.getSourceContent('src/main.ts')).toBe(
+        'console.log("Hello World");',
+      );
     });
   });
 
