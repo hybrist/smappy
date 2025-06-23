@@ -162,6 +162,21 @@ export class SourceAnalysisService {
         ) {
           return;
         }
+        if (
+          path.isVariableDeclaration() &&
+          path.node.declarations.length === 1
+        ) {
+          const [declaration] = path.node.declarations;
+          if (
+            declaration.id.type === 'Identifier' &&
+            (declaration.init?.type === 'ClassExpression' ||
+              declaration.init?.type === 'FunctionExpression')
+          ) {
+            // Ignore variable declarations that are class/function expressions.
+            // They will already be reported as classes/functions above.
+            return;
+          }
+        }
         this.finalizeFragment(
           {
             type: 'unknown',
@@ -417,6 +432,7 @@ export class SourceAnalysisService {
       imports: fragments.filter((f) => f.type === 'import'),
       exports: fragments.filter((f) => f.type === 'export'),
       classes: fragments.filter((f) => f.type === 'class'),
+      methods: fragments.filter((f) => f.type === 'method'),
       functions: fragments.filter((f) => f.type === 'function'),
       variables: fragments.filter((f) => f.type === 'variable'),
       types: fragments.filter(

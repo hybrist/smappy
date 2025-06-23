@@ -42,6 +42,7 @@ export interface SourceAnalysisResult {
   imports: SourceFragment[];
   exports: SourceFragment[];
   classes: SourceFragment[];
+  methods: SourceFragment[];
   functions: SourceFragment[];
   variables: SourceFragment[];
   types: SourceFragment[];

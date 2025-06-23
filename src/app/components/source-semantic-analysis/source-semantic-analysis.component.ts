@@ -40,6 +40,14 @@ import {
                 Classes ({{ analysis.classes.length }})
               </button>
             }
+            @if (analysis.methods.length > 0) {
+              <button
+                (click)="setActiveFilter('method')"
+                [class]="getFilterButtonClass('method')"
+              >
+                Methods ({{ analysis.methods.length }})
+              </button>
+            }
             @if (analysis.functions.length > 0) {
               <button
                 (click)="setActiveFilter('function')"
@@ -92,7 +100,7 @@ import {
         </div>
 
         <!-- Fragment List -->
-        <div class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
+        <div class="divide-y divide-gray-200 max-h-144 overflow-y-auto">
           @for (fragment of filteredFragments(); track fragment.id) {
             <div>
               <div

@@ -48,6 +48,10 @@ export function myFunction(param: string): number {
 
 export const myVariable = 'hello world';
 
+const AliasClass = class OriginalClass {};
+
+const aliasFunction = function originalFunction() {};
+
 interface MyInterface {
   prop: string;
 }`;
@@ -93,10 +97,12 @@ interface MyInterface {
       ).toEqual(
         [
           'class:MyClass',
+          'class:OriginalClass',
           'method:MyClass.constructor',
           'method:MyClass.method1',
           'method:MyClass.method2',
           'function:myFunction',
+          'function:originalFunction',
           'unknown:[ExportNamedDeclaration]',
           'unknown:[TSInterfaceDeclaration]',
         ].sort(),
@@ -136,12 +142,14 @@ interface MyInterface {
         'MyClass.method1': 20,
         'MyClass.method2': 0,
         myFunction: 80,
+        originalFunction: 0,
+        OriginalClass: 0,
         '[ExportNamedDeclaration]': 0,
         '[TSInterfaceDeclaration]': 0,
       });
       expect(result!.includedFragments).toBe(3);
-      expect(result!.fragments.length).toBe(7);
-      expect(result!.unusedFragments.length).toBe(4);
+      expect(result!.fragments.length).toBe(9);
+      expect(result!.unusedFragments.length).toBe(6);
     });
 
     it('should categorize fragments correctly', () => {
