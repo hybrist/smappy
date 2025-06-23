@@ -259,14 +259,6 @@ import {
   `,
   styles: [
     `
-      .rotate-90 {
-        transform: rotate(90deg);
-      }
-
-      .transition-transform {
-        transition: transform 0.2s ease-in-out;
-      }
-
       pre code {
         font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
         line-height: 1.4;
