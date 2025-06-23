@@ -124,7 +124,12 @@ import {
               <div class="flex items-center min-w-0 flex-1">
                 <div
                   class="flex-shrink-0 w-8 h-8 rounded flex items-center justify-center mr-3"
-                  [class]="getFragmentIconClass(fragment.type)"
+                  [class]="
+                    getFragmentIconClass(
+                      fragment.type,
+                      fragment.isIncludedInBundle
+                    )
+                  "
                 >
                   <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path [attr.d]="getFragmentIconPath(fragment.type)"></path>
@@ -132,7 +137,14 @@ import {
                 </div>
                 <div class="min-w-0 flex-1">
                   <div class="flex items-center">
-                    <div class="text-sm font-medium text-gray-900 truncate">
+                    <div
+                      class="text-sm font-medium truncate"
+                      [class]="
+                        fragment.isIncludedInBundle
+                          ? 'text-gray-900'
+                          : 'text-gray-500'
+                      "
+                    >
                       {{ fragment.name }}
                     </div>
                     @if (fragment.signature) {
@@ -147,15 +159,6 @@ import {
                       Line {{ fragment.startLine }}
                     } @else {
                       Lines {{ fragment.startLine }}-{{ fragment.endLine }}
-                    }
-                    @if (fragment.accessibility) {
-                      · {{ fragment.accessibility }}
-                    }
-                    @if (fragment.isStatic) {
-                      · static
-                    }
-                    @if (fragment.isAsync) {
-                      · async
                     }
                   </div>
                 </div>
@@ -172,7 +175,7 @@ import {
                     ></div>
                   } @else {
                     <div class="text-sm font-medium text-gray-400">
-                      {{ formatSize(fragment.sourceSize) }}
+                      (source) {{ formatSize(fragment.sourceSize) }}
                     </div>
                     <div
                       class="w-2 h-2 bg-gray-300 rounded-full"
@@ -307,7 +310,11 @@ export class SourceSemanticAnalysisComponent {
     return `${baseClass} ${this.activeFilter() === filter ? activeClass : inactiveClass}`;
   }
 
-  getFragmentIconClass(type: FragmentType): string {
+  getFragmentIconClass(type: FragmentType, inBundle: boolean): string {
+    if (!inBundle) {
+      return 'bg-gray-100 text-gray-600';
+    }
+
     const iconClasses = {
       class: 'bg-purple-100 text-purple-600',
       function: 'bg-blue-100 text-blue-600',
@@ -319,7 +326,7 @@ export class SourceSemanticAnalysisComponent {
       type: 'bg-indigo-100 text-indigo-600',
       enum: 'bg-pink-100 text-pink-600',
       namespace: 'bg-teal-100 text-teal-600',
-      unknown: 'bg-gray-100 text-gray-600',
+      unknown: 'bg-teal-100 text-teal-600',
     };
     return iconClasses[type] || iconClasses.unknown;
   }
@@ -374,7 +381,7 @@ export class SourceSemanticAnalysisComponent {
     analysis: SourceAnalysisResult,
   ): string {
     const totalSize = analysis.totalBundleSize || analysis.totalSourceSize;
-    const fragmentSize = fragment.bundleSize || fragment.sourceSize;
+    const fragmentSize = fragment.bundleSize || 0;
     if (totalSize === 0) return '0';
     return ((fragmentSize / totalSize) * 100).toFixed(1);
   }

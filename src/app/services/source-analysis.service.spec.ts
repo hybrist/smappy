@@ -88,15 +88,19 @@ interface MyInterface {
       expect(result).toBeTruthy();
       expect(result!.filePath).toBe('src/test.ts');
 
-      expect(result!.fragments.map((f) => `${f.type}:${f.name}`)).toEqual([
-        'class:MyClass',
-        'method:MyClass.constructor',
-        'method:MyClass.method1',
-        'method:MyClass.method2',
-        'function:myFunction',
-        'unknown:[ExportNamedDeclaration]',
-        'unknown:[TSInterfaceDeclaration]',
-      ]);
+      expect(
+        result!.fragments.map((f) => `${f.type}:${f.name}`).sort(),
+      ).toEqual(
+        [
+          'class:MyClass',
+          'method:MyClass.constructor',
+          'method:MyClass.method1',
+          'method:MyClass.method2',
+          'function:myFunction',
+          'unknown:[ExportNamedDeclaration]',
+          'unknown:[TSInterfaceDeclaration]',
+        ].sort(),
+      );
     });
 
     it('should mark fragments as included/excluded from bundle', () => {

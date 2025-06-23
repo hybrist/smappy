@@ -403,6 +403,8 @@ export class SourceAnalysisService {
     sourceContent: string,
     totalBundleSize: number,
   ): SourceAnalysisResult {
+    fragments.sort(byFragmentSize);
+
     const includedFragments = fragments.filter((f) => f.isIncludedInBundle);
 
     return {
@@ -617,4 +619,12 @@ export class SourceAnalysisService {
     }
     return content;
   }
+}
+
+/** Sort by bundled (or source) size, largest fragment(s) first. */
+function byFragmentSize(a: SourceFragment, b: SourceFragment): number {
+  if (a.bundleSize === b.bundleSize) {
+    return b.sourceSize - a.sourceSize;
+  }
+  return (b.bundleSize ?? 0) - (a.bundleSize ?? 0);
 }
