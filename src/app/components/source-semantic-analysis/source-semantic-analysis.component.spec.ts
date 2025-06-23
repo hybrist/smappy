@@ -20,6 +20,7 @@ describe('SourceSemanticAnalysisComponent', () => {
     ]);
     const bundleSpy = jasmine.createSpyObj('BundleService', [
       'getSourceContent',
+      'getMappingImpacts',
     ]);
 
     TestBed.configureTestingModule({
@@ -81,6 +82,7 @@ function testFunction() {
 line 8`;
 
     bundleServiceSpy.getSourceContent.and.returnValue(mockSourceContent);
+    bundleServiceSpy.getMappingImpacts.and.returnValue([]);
     component.path = 'test.ts';
 
     const result = component.getFragmentCode(mockFragment);
@@ -108,6 +110,7 @@ line 8`;
     };
 
     bundleServiceSpy.getSourceContent.and.returnValue(null);
+    bundleServiceSpy.getMappingImpacts.and.returnValue([]);
     component.path = 'test.ts';
 
     const result = component.getFragmentCode(mockFragment);
@@ -242,5 +245,47 @@ line 8`;
     expect(component.formatSize(1024)).toBe('1 KB');
     expect(component.formatSize(1536)).toBe('1.5 KB');
     expect(component.formatSize(1048576)).toBe('1 MB');
+  });
+
+  it('should apply line-level bundle impact colors', () => {
+    const mockFragment: SourceFragment = {
+      id: 'test-1',
+      name: 'testFunction',
+      type: 'function',
+      startLine: 5,
+      endLine: 7,
+      startColumn: 0,
+      endColumn: 10,
+      sourceSize: 100,
+      isIncludedInBundle: true,
+      bundleSize: 50,
+    };
+
+    const mockSourceContent = `line 1
+line 2
+line 3
+line 4
+function testFunction() {
+  return 'hello';
+}
+line 8`;
+
+    const mockMappingImpacts = [
+      { chunkId: 'chunk1', originalLine: 5, originalColumn: 0, sizeImpact: 25 },
+      { chunkId: 'chunk1', originalLine: 6, originalColumn: 2, sizeImpact: 15 },
+    ];
+
+    bundleServiceSpy.getSourceContent.and.returnValue(mockSourceContent);
+    bundleServiceSpy.getMappingImpacts.and.returnValue(mockMappingImpacts);
+    component.path = 'test.ts';
+
+    const result = component.getFragmentCode(mockFragment);
+
+    // Should contain line numbers with bundle impact styling
+    expect(result).toContain('5'); // Line number
+    expect(result).toContain('6'); // Line number
+    expect(result).toContain('bg-green-100'); // Medium impact color for line 5 (25 bytes)
+    expect(result).toContain('title="Line 5: 25 bytes in bundle"'); // Tooltip
+    expect(bundleServiceSpy.getMappingImpacts).toHaveBeenCalledWith('test.ts');
   });
 });

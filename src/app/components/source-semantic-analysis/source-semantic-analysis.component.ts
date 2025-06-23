@@ -12,6 +12,7 @@ import {
   SourceFragment,
   FragmentType,
 } from '../../models/source-analysis.models';
+import { MappingImpact } from '../../models/bundle.models';
 
 @Component({
   selector: 'section[appSourceSemanticAnalysis]',
@@ -214,8 +215,35 @@ import {
                           ({{ getFragmentTypeLabel(fragment.type) }})
                         </span>
                       </div>
-                      <div class="text-xs text-gray-500">
-                        Lines {{ fragment.startLine }}-{{ fragment.endLine }}
+                      <div class="flex items-center space-x-4">
+                        <div class="text-xs text-gray-500">
+                          Lines {{ fragment.startLine }}-{{ fragment.endLine }}
+                        </div>
+                        <div
+                          class="text-xs text-gray-500 flex items-center space-x-1"
+                        >
+                          <span>Bundle impact:</span>
+                          <span
+                            class="inline-block w-3 h-3 bg-green-50 border-l-2 border-green-200"
+                            title="Low impact (<10 bytes)"
+                          ></span>
+                          <span
+                            class="inline-block w-3 h-3 bg-green-100 border-l-2 border-green-300"
+                            title="Small impact (10-50 bytes)"
+                          ></span>
+                          <span
+                            class="inline-block w-3 h-3 bg-yellow-50 border-l-2 border-yellow-300"
+                            title="Medium impact (50-100 bytes)"
+                          ></span>
+                          <span
+                            class="inline-block w-3 h-3 bg-orange-50 border-l-2 border-orange-400"
+                            title="Large impact (100-200 bytes)"
+                          ></span>
+                          <span
+                            class="inline-block w-3 h-3 bg-red-100 border-l-2 border-red-500"
+                            title="Very large impact (200+ bytes)"
+                          ></span>
+                        </div>
                       </div>
                     </div>
                     <div class="relative">
@@ -450,13 +478,24 @@ export class SourceSemanticAnalysisComponent {
         .replace(/>/g, '&gt;');
     }
 
-    // Add line numbers
+    // Get mapping impacts to calculate bundle contribution per line
+    const mappingImpacts = this.bundleService.getMappingImpacts(this.path);
+    const lineBundleBytes =
+      this.calculateLineBundleContribution(mappingImpacts);
+
+    // Add line numbers with bundle impact background colors
     const lines = highlighted.split('\n');
     const numberedLines = lines.map((line, index) => {
       const lineNumber = startLineNumber + index;
       const paddedNumber = lineNumber.toString().padStart(3, ' ');
+      const bundleBytes = lineBundleBytes.get(lineNumber) || 0;
+      const backgroundClass = this.getLineBackgroundClass(bundleBytes);
 
-      return `<span class="text-gray-400 select-none mr-4 inline-block w-8 text-right">${paddedNumber}</span>${line}`;
+      const tooltip =
+        bundleBytes > 0
+          ? `title="Line ${lineNumber}: ${bundleBytes} bytes in bundle"`
+          : '';
+      return `<span class="select-none mr-2 inline-block w-16 text-right px-1 py-0.5 rounded-r ${backgroundClass}" ${tooltip}>${paddedNumber}</span>${line}`;
     });
 
     return numberedLines.join('\n');
@@ -485,6 +524,45 @@ export class SourceSemanticAnalysisComponent {
         return 'html';
       default:
         return 'javascript'; // Default fallback
+    }
+  }
+
+  /**
+   * Calculate bundle size contribution per line from mapping impacts
+   */
+  private calculateLineBundleContribution(
+    mappingImpacts: MappingImpact[],
+  ): Map<number, number> {
+    const lineBundleBytes = new Map<number, number>();
+
+    for (const impact of mappingImpacts) {
+      const line = impact.originalLine;
+      const currentBytes = lineBundleBytes.get(line) || 0;
+      lineBundleBytes.set(line, currentBytes + impact.sizeImpact);
+    }
+
+    return lineBundleBytes;
+  }
+
+  /**
+   * Get background color class based on bundle size contribution
+   */
+  private getLineBackgroundClass(bundleBytes: number): string {
+    if (bundleBytes === 0) {
+      return 'text-gray-400'; // No bundle contribution - default gray
+    }
+
+    // Color intensity based on bundle contribution - more subtle colors for better readability
+    if (bundleBytes < 10) {
+      return 'text-gray-700 bg-green-50 border-l-2 border-green-200'; // Very small contribution
+    } else if (bundleBytes < 50) {
+      return 'text-gray-800 bg-green-100 border-l-2 border-green-300'; // Small contribution
+    } else if (bundleBytes < 100) {
+      return 'text-gray-800 bg-yellow-50 border-l-2 border-yellow-300'; // Medium contribution
+    } else if (bundleBytes < 200) {
+      return 'text-gray-900 bg-orange-50 border-l-2 border-orange-400'; // Large contribution
+    } else {
+      return 'text-gray-900 bg-red-100 border-l-2 border-red-500 font-semibold'; // Very large contribution
     }
   }
 }
