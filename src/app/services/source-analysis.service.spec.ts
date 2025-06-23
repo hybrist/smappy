@@ -162,41 +162,6 @@ interface MyInterface {
     });
   });
 
-  describe('getTopFragmentsBySize', () => {
-    it('should return fragments sorted by bundle size', async () => {
-      const sourceContent = `export function large() { return 'large'; }
-export function small() { return 'x'; }`;
-
-      const mockSourceMap: SourceMapData = {
-        version: 3,
-        sources: ['src/test.ts'],
-        sourcesContent: [sourceContent],
-        names: [],
-        mappings: 'AAAA',
-      };
-
-      const encodedSourceMap = btoa(JSON.stringify(mockSourceMap));
-      const mockChunkContent = `//# sourceMappingURL=data:application/json;base64,${encodedSourceMap}`;
-
-      const mockChunk = new File([mockChunkContent], 'test.js');
-      const config: BundleConfig = { chunks: [mockChunk] };
-
-      await bundleService.loadBundle(config);
-
-      const result = service.analyzeSourceFile('src/test.ts');
-      expect(result).toBeTruthy();
-
-      const topFragments = service.getTopFragmentsBySize(result!, 5);
-
-      // Should return fragments in descending order by bundle size
-      for (let i = 1; i < topFragments.length; i++) {
-        expect(topFragments[i - 1].bundleSize).toBeGreaterThanOrEqual(
-          topFragments[i].bundleSize || 0,
-        );
-      }
-    });
-  });
-
   describe('getUnusedFragments', () => {
     it('should return fragments not included in bundle', async () => {
       const sourceContent = `export function used() { return 'used'; }

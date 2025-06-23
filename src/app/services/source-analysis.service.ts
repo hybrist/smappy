@@ -440,19 +440,6 @@ export class SourceAnalysisService {
   }
 
   /**
-   * Get the most impactful fragments (by bundle size)
-   */
-  getTopFragmentsBySize(
-    analysisResult: SourceAnalysisResult,
-    limit = 10,
-  ): SourceFragment[] {
-    return analysisResult.fragments
-      .filter((f) => f.isIncludedInBundle && f.bundleSize)
-      .sort((a, b) => (b.bundleSize || 0) - (a.bundleSize || 0))
-      .slice(0, limit);
-  }
-
-  /**
    * Get unused fragments that could be eliminated
    */
   getUnusedFragments(analysisResult: SourceAnalysisResult): SourceFragment[] {

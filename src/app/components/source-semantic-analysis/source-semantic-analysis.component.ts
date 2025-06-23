@@ -1,6 +1,12 @@
 import { Component, Input, computed, signal } from '@angular/core';
 import { SourceAnalysisService } from '../../services/source-analysis.service';
+import { BundleService } from '../../services/bundle.service';
 import { inject } from '@angular/core';
+import * as Prism from 'prismjs';
+import 'prismjs/components/prism-typescript';
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-css';
+import 'prismjs/components/prism-json';
 import {
   SourceAnalysisResult,
   SourceFragment,
@@ -15,36 +21,6 @@ import {
       <div class="bg-white rounded-lg shadow">
         <div class="px-6 py-4 border-b border-gray-200">
           <h3 class="text-lg font-medium text-gray-900">Semantic Analysis</h3>
-        </div>
-
-        <!-- Summary Stats -->
-        <div class="px-6 py-4 border-b border-gray-200">
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="text-center">
-              <div class="text-2xl font-semibold text-gray-900">
-                {{ analysis.totalFragments }}
-              </div>
-              <div class="text-sm text-gray-500">Total Fragments</div>
-            </div>
-            <div class="text-center">
-              <div class="text-2xl font-semibold text-green-600">
-                {{ analysis.includedFragments }}
-              </div>
-              <div class="text-sm text-gray-500">In Bundle</div>
-            </div>
-            <div class="text-center">
-              <div class="text-2xl font-semibold text-red-600">
-                {{ analysis.unusedFragments.length }}
-              </div>
-              <div class="text-sm text-gray-500">Unused</div>
-            </div>
-            <div class="text-center">
-              <div class="text-2xl font-semibold text-blue-600">
-                {{ getInclusionPercentage(analysis) }}%
-              </div>
-              <div class="text-sm text-gray-500">Inclusion Rate</div>
-            </div>
-          </div>
         </div>
 
         <!-- Fragment Type Filters -->
@@ -118,111 +94,133 @@ import {
         <!-- Fragment List -->
         <div class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
           @for (fragment of filteredFragments(); track fragment.id) {
-            <div
-              class="px-6 py-3 flex items-center justify-between hover:bg-gray-50"
-            >
-              <div class="flex items-center min-w-0 flex-1">
-                <div
-                  class="flex-shrink-0 w-8 h-8 rounded flex items-center justify-center mr-3"
-                  [class]="
-                    getFragmentIconClass(
-                      fragment.type,
-                      fragment.isIncludedInBundle
-                    )
-                  "
-                >
-                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path [attr.d]="getFragmentIconPath(fragment.type)"></path>
-                  </svg>
-                </div>
-                <div class="min-w-0 flex-1">
-                  <div class="flex items-center">
+            <div>
+              <div
+                class="px-6 py-3 flex items-center justify-between hover:bg-gray-50 cursor-pointer"
+                (click)="toggleFragment(fragment.id)"
+              >
+                <div class="flex items-center min-w-0 flex-1">
+                  <div class="flex items-center mr-3">
+                    <button
+                      class="w-4 h-4 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-transform"
+                      [class.rotate-90]="isFragmentExpanded(fragment.id)"
+                    >
+                      <svg
+                        class="w-3 h-3"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                          clip-rule="evenodd"
+                        ></path>
+                      </svg>
+                    </button>
                     <div
-                      class="text-sm font-medium truncate"
+                      class="flex-shrink-0 w-8 h-8 rounded flex items-center justify-center ml-2"
                       [class]="
-                        fragment.isIncludedInBundle
-                          ? 'text-gray-900'
-                          : 'text-gray-500'
+                        getFragmentIconClass(
+                          fragment.type,
+                          fragment.isIncludedInBundle
+                        )
                       "
                     >
-                      {{ fragment.name }}
+                      <svg
+                        class="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          [attr.d]="getFragmentIconPath(fragment.type)"
+                        ></path>
+                      </svg>
                     </div>
-                    @if (fragment.signature) {
-                      <div class="text-xs text-gray-500 ml-2 font-mono">
-                        {{ fragment.signature }}
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center">
+                      <div
+                        class="text-sm font-medium truncate"
+                        [class]="
+                          fragment.isIncludedInBundle
+                            ? 'text-gray-900'
+                            : 'text-gray-500'
+                        "
+                      >
+                        {{ fragment.name }}
                       </div>
+                      @if (fragment.signature) {
+                        <div class="text-xs text-gray-500 ml-2 font-mono">
+                          {{ fragment.signature }}
+                        </div>
+                      }
+                    </div>
+                    <div class="text-xs text-gray-500">
+                      {{ getFragmentTypeLabel(fragment.type) }} ·
+                      @if (fragment.startLine === fragment.endLine) {
+                        Line {{ fragment.startLine }}
+                      } @else {
+                        Lines {{ fragment.startLine }}-{{ fragment.endLine }}
+                      }
+                    </div>
+                  </div>
+                </div>
+                <div class="text-right ml-4">
+                  <div class="flex items-center space-x-3">
+                    @if (fragment.isIncludedInBundle) {
+                      <div class="text-sm font-medium text-green-600">
+                        {{ formatSize(fragment.bundleSize || 0) }}
+                      </div>
+                      <div
+                        class="w-2 h-2 bg-green-500 rounded-full"
+                        title="Included in bundle"
+                      ></div>
+                    } @else {
+                      <div class="text-sm font-medium text-gray-400">
+                        (source) {{ formatSize(fragment.sourceSize) }}
+                      </div>
+                      <div
+                        class="w-2 h-2 bg-gray-300 rounded-full"
+                        title="Not in bundle"
+                      ></div>
                     }
                   </div>
                   <div class="text-xs text-gray-500">
-                    {{ getFragmentTypeLabel(fragment.type) }} ·
-                    @if (fragment.startLine === fragment.endLine) {
-                      Line {{ fragment.startLine }}
-                    } @else {
-                      Lines {{ fragment.startLine }}-{{ fragment.endLine }}
-                    }
+                    {{ getFragmentSizePercentage(fragment, analysis) }}%
                   </div>
                 </div>
               </div>
-              <div class="text-right ml-4">
-                <div class="flex items-center space-x-3">
-                  @if (fragment.isIncludedInBundle) {
-                    <div class="text-sm font-medium text-green-600">
-                      {{ formatSize(fragment.bundleSize || 0) }}
-                    </div>
-                    <div
-                      class="w-2 h-2 bg-green-500 rounded-full"
-                      title="Included in bundle"
-                    ></div>
-                  } @else {
-                    <div class="text-sm font-medium text-gray-400">
-                      (source) {{ formatSize(fragment.sourceSize) }}
-                    </div>
-                    <div
-                      class="w-2 h-2 bg-gray-300 rounded-full"
-                      title="Not in bundle"
-                    ></div>
-                  }
-                </div>
-                <div class="text-xs text-gray-500">
-                  {{ getFragmentSizePercentage(fragment, analysis) }}%
-                </div>
-              </div>
-            </div>
-          }
-        </div>
 
-        <!-- Top Contributors -->
-        @if (topFragments().length > 0) {
-          <div class="px-6 py-4 border-t border-gray-200">
-            <h4 class="text-sm font-medium text-gray-900 mb-3">
-              Top Contributors to Bundle Size
-            </h4>
-            <div class="space-y-2">
-              @for (
-                fragment of topFragments();
-                track fragment.id;
-                let i = $index
-              ) {
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center min-w-0 flex-1">
-                    <div class="text-sm text-gray-600 w-4">{{ i + 1 }}.</div>
+              <!-- Code Snippet -->
+              @if (isFragmentExpanded(fragment.id)) {
+                <div class="px-6 pb-4 bg-gray-50">
+                  <div
+                    class="bg-white border border-gray-200 rounded-lg overflow-hidden"
+                  >
                     <div
-                      class="text-sm font-medium text-gray-900 truncate ml-2"
+                      class="px-4 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between"
                     >
-                      {{ fragment.name }}
+                      <div class="text-sm font-medium text-gray-700">
+                        {{ fragment.name }}
+                        <span class="text-gray-500">
+                          ({{ getFragmentTypeLabel(fragment.type) }})
+                        </span>
+                      </div>
+                      <div class="text-xs text-gray-500">
+                        Lines {{ fragment.startLine }}-{{ fragment.endLine }}
+                      </div>
                     </div>
-                    <div class="text-xs text-gray-500 ml-2">
-                      ({{ getFragmentTypeLabel(fragment.type) }})
+                    <div class="relative">
+                      <pre
+                        class="text-sm text-gray-800 bg-white p-4 overflow-x-auto max-h-80 overflow-y-auto"
+                      ><code [innerHTML]="getFragmentCode(fragment)"></code></pre>
                     </div>
-                  </div>
-                  <div class="text-sm font-medium text-gray-900">
-                    {{ formatSize(fragment.bundleSize || 0) }}
                   </div>
                 </div>
               }
             </div>
-          </div>
-        }
+          }
+        </div>
       </div>
     } @else {
       <div class="bg-white rounded-lg shadow">
@@ -251,13 +249,30 @@ import {
       </div>
     }
   `,
-  styles: [],
+  styles: [
+    `
+      .rotate-90 {
+        transform: rotate(90deg);
+      }
+
+      .transition-transform {
+        transition: transform 0.2s ease-in-out;
+      }
+
+      pre code {
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        line-height: 1.4;
+      }
+    `,
+  ],
 })
 export class SourceSemanticAnalysisComponent {
   @Input() path!: string;
 
   private readonly sourceAnalysisService = inject(SourceAnalysisService);
+  private readonly bundleService = inject(BundleService);
   private readonly activeFilter = signal<string>('all');
+  private readonly expandedFragments = signal<Set<string>>(new Set());
 
   readonly analysisResult = computed(() => {
     if (!this.path) return null;
@@ -289,12 +304,6 @@ export class SourceSemanticAnalysisComponent {
       default:
         return analysis.fragments.filter((f) => f.type === filter);
     }
-  });
-
-  readonly topFragments = computed(() => {
-    const analysis = this.analysisResult();
-    if (!analysis) return [];
-    return this.sourceAnalysisService.getTopFragmentsBySize(analysis, 5);
   });
 
   setActiveFilter(filter: string): void {
@@ -368,14 +377,6 @@ export class SourceSemanticAnalysisComponent {
     return labels[type] || 'Unknown';
   }
 
-  getInclusionPercentage(analysis: SourceAnalysisResult): string {
-    if (analysis.totalFragments === 0) return '0';
-    return (
-      (analysis.includedFragments / analysis.totalFragments) *
-      100
-    ).toFixed(1);
-  }
-
   getFragmentSizePercentage(
     fragment: SourceFragment,
     analysis: SourceAnalysisResult,
@@ -392,5 +393,98 @@ export class SourceSemanticAnalysisComponent {
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+  }
+
+  toggleFragment(fragmentId: string): void {
+    const expanded = this.expandedFragments();
+    const newExpanded = new Set(expanded);
+
+    if (newExpanded.has(fragmentId)) {
+      newExpanded.delete(fragmentId);
+    } else {
+      newExpanded.add(fragmentId);
+    }
+
+    this.expandedFragments.set(newExpanded);
+  }
+
+  isFragmentExpanded(fragmentId: string): boolean {
+    return this.expandedFragments().has(fragmentId);
+  }
+
+  getFragmentCode(fragment: SourceFragment): string {
+    const sourceContent = this.bundleService.getSourceContent(this.path);
+    if (!sourceContent) {
+      return '<span class="text-gray-500 italic">Source content not available</span>';
+    }
+
+    const lines = sourceContent.split('\n');
+    const startIdx = Math.max(0, fragment.startLine - 1);
+    const endIdx = Math.min(lines.length, fragment.endLine);
+
+    const fragmentLines = lines.slice(startIdx, endIdx);
+    const fragmentCode = fragmentLines.join('\n');
+
+    // Use Prism.js for syntax highlighting
+    return this.applySyntaxHighlighting(fragmentCode, fragment.startLine);
+  }
+
+  private applySyntaxHighlighting(
+    code: string,
+    startLineNumber: number,
+  ): string {
+    // Determine language based on file extension
+    const language = this.getLanguageFromPath(this.path);
+
+    // Use Prism.js to highlight the code
+    let highlighted: string;
+    try {
+      const grammar =
+        Prism.languages[language] || Prism.languages['javascript'];
+      highlighted = Prism.highlight(code, grammar, language);
+    } catch (error) {
+      // Fallback to escaped HTML if highlighting fails
+      highlighted = code
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    // Add line numbers
+    const lines = highlighted.split('\n');
+    const numberedLines = lines.map((line, index) => {
+      const lineNumber = startLineNumber + index;
+      const paddedNumber = lineNumber.toString().padStart(3, ' ');
+
+      return `<span class="text-gray-400 select-none mr-4 inline-block w-8 text-right">${paddedNumber}</span>${line}`;
+    });
+
+    return numberedLines.join('\n');
+  }
+
+  private getLanguageFromPath(filePath: string): string {
+    const extension = filePath.split('.').pop()?.toLowerCase();
+
+    switch (extension) {
+      case 'ts':
+      case 'tsx':
+        return 'typescript';
+      case 'js':
+      case 'jsx':
+      case 'mjs':
+      case 'cjs':
+        return 'javascript';
+      case 'css':
+      case 'scss':
+      case 'sass':
+        return 'css';
+      case 'json':
+        return 'json';
+      case 'html':
+      case 'htm':
+        return 'html';
+      default:
+        return 'javascript'; // Default fallback
+    }
   }
 }
