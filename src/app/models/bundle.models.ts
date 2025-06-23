@@ -61,7 +61,6 @@ export interface SerializableBundleAnalysis {
   totalSize: number;
   chunks: ChunkInfo[];
   sourceBreakdown: [string, number][];
-  mappingImpacts: [string, MappingImpact[]][];
 }
 
 export interface SerializableChunkInfo {

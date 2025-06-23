@@ -43,7 +43,6 @@ describe('StorageService', () => {
           },
         ],
         sourceBreakdown: new Map([['src/main.ts', 500]]),
-        mappingImpacts: new Map(),
       };
 
       service.saveBundleAnalysis(mockAnalysis);
@@ -57,7 +56,6 @@ describe('StorageService', () => {
         totalSize: 1000,
         chunks: [],
         sourceBreakdown: new Map(),
-        mappingImpacts: new Map(),
       };
 
       // Mock localStorage.setItem to throw
@@ -85,7 +83,6 @@ describe('StorageService', () => {
           },
         ],
         sourceBreakdown: new Map([['src/main.ts', 500]]),
-        mappingImpacts: new Map(),
       };
 
       service.saveBundleAnalysis(mockAnalysis);
@@ -102,7 +99,6 @@ describe('StorageService', () => {
         totalSize: 1000,
         chunks: [],
         sourceBreakdown: new Map(),
-        mappingImpacts: new Map(),
       };
 
       // Set an old timestamp (25 hours ago)
@@ -154,7 +150,6 @@ describe('StorageService', () => {
         totalSize: 1000,
         chunks: [],
         sourceBreakdown: new Map(),
-        mappingImpacts: new Map(),
       };
 
       service.saveBundleAnalysis(mockAnalysis);
@@ -172,7 +167,6 @@ describe('StorageService', () => {
         totalSize: 1000,
         chunks: [],
         sourceBreakdown: new Map(),
-        mappingImpacts: new Map(),
       };
 
       service.saveBundleAnalysis(mockAnalysis);
@@ -199,7 +193,6 @@ describe('StorageService', () => {
         totalSize: 1000,
         chunks: [],
         sourceBreakdown: new Map(),
-        mappingImpacts: new Map(),
       };
 
       service.saveBundleAnalysis(mockAnalysis);

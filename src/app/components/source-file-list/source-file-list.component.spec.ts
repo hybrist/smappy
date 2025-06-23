@@ -35,7 +35,6 @@ describe('SourceFileListComponent', () => {
       totalSize: 1000,
       chunks: [],
       sourceBreakdown: new Map(),
-      mappingImpacts: new Map(),
     });
   });
 
