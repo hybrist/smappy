@@ -20,7 +20,7 @@ import {
     @if (analysisResult(); as analysis) {
       <div class="bg-white rounded-lg shadow">
         <div class="px-6 py-4 border-b border-gray-200">
-          <h3 class="text-lg font-medium text-gray-900">Semantic Analysis</h3>
+          <h3 class="text-lg font-medium text-gray-900">Symbols</h3>
         </div>
 
         <!-- Fragment Type Filters -->
@@ -220,7 +220,7 @@ import {
                     </div>
                     <div class="relative">
                       <pre
-                        class="text-sm text-gray-800 bg-white p-4 overflow-x-auto max-h-80 overflow-y-auto"
+                        class="text-sm text-gray-800 bg-white p-4 overflow-y-auto"
                       ><code [innerHTML]="getFragmentCode(fragment)"></code></pre>
                     </div>
                   </div>

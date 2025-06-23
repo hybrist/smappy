@@ -1,5 +1,6 @@
-import { Component, Input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { BundleService } from '../../services/bundle.service';
 
 @Component({
   selector: 'section[appSourceDetailHeader]',
@@ -12,26 +13,34 @@ import { RouterLink } from '@angular/router';
             >Sources</a
           >
           <span>/</span>
-          <span class="text-gray-900">{{ getFileName(path) }}</span>
+          <span class="text-gray-900">{{ getFileName(path()) }}</span>
         </nav>
         <h2 class="text-2xl font-bold text-gray-900">
-          {{ getFileName(path) }}
+          {{ getFileName(path()) }}
         </h2>
-        <p class="text-sm text-gray-500 mt-1">{{ path }}</p>
+        <p class="text-sm text-gray-500 mt-1">{{ path() }}</p>
       </div>
       <div class="text-right">
-        <div class="text-sm text-gray-500">File Size</div>
         <div class="text-2xl font-semibold text-gray-900">
-          {{ formatSize(size) }}
+          {{ formatSize(size()) }}
         </div>
+        <div class="text-sm text-gray-500"><strong class="text-gray-600">{{ percentage() }}%</strong> of bundle</div>
       </div>
     </div>
   `,
   styles: [],
 })
 export class SourceDetailHeaderComponent {
-  @Input() path!: string;
-  @Input() size!: number;
+  readonly path = input.required<string>();
+  readonly size = input.required<number>();
+
+  private readonly bundleService = inject(BundleService);
+
+  percentage = computed(() => {
+    const bundle = this.bundleService.bundle();
+    if (!bundle) return '0';
+    return ((this.size() / bundle.totalSize) * 100).toFixed(1);
+  });
 
   getFileName(path: string): string {
     return path.split('/').pop() || path;

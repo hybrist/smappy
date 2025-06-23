@@ -3,13 +3,6 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { BundleService } from '../../services/bundle.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { SourceDetailHeaderComponent } from '../../components/source-detail-header/source-detail-header.component';
-import { SourceInfoCardsComponent } from '../../components/source-info-cards/source-info-cards.component';
-import {
-  SourceCodeViewerComponent,
-  SourceLine,
-} from '../../components/source-code-viewer/source-code-viewer.component';
-import { SourceAnalysisComponent } from '../../components/source-analysis/source-analysis.component';
-import { SimilarFilesComponent } from '../../components/similar-files/similar-files.component';
 import { SourceSemanticAnalysisComponent } from '../../components/source-semantic-analysis/source-semantic-analysis.component';
 
 @Component({
@@ -17,10 +10,6 @@ import { SourceSemanticAnalysisComponent } from '../../components/source-semanti
   imports: [
     RouterLink,
     SourceDetailHeaderComponent,
-    SourceInfoCardsComponent,
-    SourceCodeViewerComponent,
-    SourceAnalysisComponent,
-    SimilarFilesComponent,
     SourceSemanticAnalysisComponent,
   ],
   template: `
@@ -31,23 +20,7 @@ import { SourceSemanticAnalysisComponent } from '../../components/source-semanti
           [path]="info.path"
           [size]="info.size"
         ></section>
-        <section
-          appSourceInfoCards
-          [size]="info.size"
-          [chunksCount]="info.chunks.length"
-        ></section>
-        <section appSourceCodeViewer [sourceLines]="sourceLines()"></section>
         <section appSourceSemanticAnalysis [path]="info.path"></section>
-        <section
-          appSourceAnalysis
-          [path]="info.path"
-          [size]="info.size"
-        ></section>
-        <section
-          appSimilarFiles
-          [similarFiles]="similarFiles()"
-          [path]="info.path"
-        ></section>
       </div>
     } @else {
       <div class="text-center py-12">
