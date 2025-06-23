@@ -119,6 +119,7 @@ line 8`;
       imports: [],
       exports: [],
       classes: [{ id: '1', name: 'MyClass', type: 'class', startLine: 1, endLine: 5, startColumn: 0, endColumn: 1, sourceSize: 200, isIncludedInBundle: true }],
+      methods: [],
       functions: [{ id: '2', name: 'myFunc', type: 'function', startLine: 6, endLine: 8, startColumn: 0, endColumn: 1, sourceSize: 150, isIncludedInBundle: true }],
       variables: [{ id: '3', name: 'myVar', type: 'variable', startLine: 9, endLine: 9, startColumn: 0, endColumn: 1, sourceSize: 50, isIncludedInBundle: false }],
       types: [],
