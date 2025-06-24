@@ -200,21 +200,19 @@ interface HoveredMappingInfo {
                 <div class="text-right ml-4">
                   <div class="flex items-center space-x-3">
                     @if (fragment.isIncludedInBundle) {
-                      <div class="text-sm font-medium text-green-600">
-                        {{ formatSize(fragment.bundleSize || 0) }}
+                      <div class="text-sm">
+                        {{ formatSize(fragment.sourceSize) }}
+                        →
+                        @if (fragment.bundleSize! < fragment.sourceSize) {
+                          <span class="text-green-600 font-medium">{{ formatSize(fragment.bundleSize || 0) }}</span>
+                        } @else {
+                          <span class="font-medium">{{ formatSize(fragment.bundleSize || 0) }}</span>
+                        }
                       </div>
-                      <div
-                        class="w-2 h-2 bg-green-500 rounded-full"
-                        title="Included in bundle"
-                      ></div>
                     } @else {
-                      <div class="text-sm font-medium text-gray-400">
+                      <div class="text-sm text-gray-500">
                         (source) {{ formatSize(fragment.sourceSize) }}
                       </div>
-                      <div
-                        class="w-2 h-2 bg-gray-300 rounded-full"
-                        title="Not in bundle"
-                      ></div>
                     }
                   </div>
                   <div class="text-xs text-gray-500">
