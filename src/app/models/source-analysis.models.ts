@@ -32,8 +32,18 @@ export interface SourceFragment {
   dependencies?: string[]; // Other fragments this depends on
 }
 
+export interface ASTNodeInfo {
+  startLine: number;
+  startColumn: number;
+  endLine: number;
+  endColumn: number;
+  size: number; // Precomputed size for sorting
+}
+
 export interface SourceAnalysisResult {
   filePath: string;
+  ast: unknown; // The parsed AST, type can vary based on parser used
+  astNodeLookup: Map<string, ASTNodeInfo[]>; // Fast lookup: "line:column" -> sorted nodes
   totalFragments: number;
   includedFragments: number;
   totalSourceSize: number;

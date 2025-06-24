@@ -6,6 +6,7 @@ import {
   SourceFragment,
   SourceAnalysisResult,
   FragmentUsage,
+  ASTNodeInfo,
 } from '../models/source-analysis.models';
 
 @Injectable({
@@ -29,13 +30,18 @@ export class SourceAnalysisService {
     }
 
     const fileSize = bundle.sourceBreakdown.get(filePath) || 0;
-    const fragments = this.parseSourceFragments(sourceContent, filePath);
+    const { ast, fragments, astNodeLookup } = this.parseSourceFragments(
+      sourceContent,
+      filePath,
+    );
 
     // Determine which fragments are included in the bundle
     this.markFragmentsInBundle(fragments, filePath, sourceContent, fileSize);
 
     return this.buildAnalysisResult(
       filePath,
+      ast,
+      astNodeLookup,
       fragments,
       sourceContent,
       fileSize,
@@ -48,9 +54,15 @@ export class SourceAnalysisService {
   private parseSourceFragments(
     sourceContent: string,
     filePath: string,
-  ): SourceFragment[] {
+  ): {
+    ast: unknown;
+    fragments: SourceFragment[];
+    astNodeLookup: Map<string, ASTNodeInfo[]>;
+  } {
     const fragments: SourceFragment[] = [];
     const fileExtension = this.getFileExtension(filePath);
+    let ast = null;
+    let astNodeLookup = new Map<string, ASTNodeInfo[]>();
 
     // Parse based on file type
     switch (fileExtension) {
@@ -60,12 +72,18 @@ export class SourceAnalysisService {
       case 'mjs':
       case 'js':
       case 'jsx':
-        this.parseJavaScriptTypeScript(sourceContent, fragments, filePath);
+        const jsResult = this.parseJavaScriptTypeScript(
+          sourceContent,
+          fragments,
+          filePath,
+        );
+        ast = jsResult.ast;
+        astNodeLookup = jsResult.astNodeLookup;
         break;
       case 'css':
       case 'scss':
       case 'sass':
-        this.parseCSSStyleSheets(
+        ast = this.parseCSSStyleSheets(
           sourceContent.split('\n'),
           fragments,
           filePath,
@@ -73,13 +91,13 @@ export class SourceAnalysisService {
         break;
       case 'html':
       case 'htm':
-        this.parseHTML(sourceContent.split('\n'), fragments, filePath);
+        ast = this.parseHTML(sourceContent.split('\n'), fragments, filePath);
         break;
       default:
-        this.parseGeneric(sourceContent.split('\n'), fragments, filePath);
+        ast = this.parseGeneric(sourceContent.split('\n'), fragments, filePath);
     }
 
-    return fragments;
+    return { ast, fragments, astNodeLookup };
   }
 
   /**
@@ -89,13 +107,53 @@ export class SourceAnalysisService {
     code: string,
     fragments: SourceFragment[],
     filePath: string,
-  ): void {
+  ): { ast: unknown; astNodeLookup: Map<string, ASTNodeInfo[]> } {
     const ast = parse(code, {
       sourceFilename: filePath,
       sourceType: 'unambiguous',
       plugins: ['jsx', 'typescript'],
     });
 
+    const astNodeLookup = new Map<string, ASTNodeInfo[]>();
+
+    // Build AST node lookup table for fast hover detection
+    traverse(ast, {
+      enter: (path) => {
+        const node = path.node;
+        if (!node.loc) return;
+
+        const nodeInfo: ASTNodeInfo = {
+          startLine: node.loc.start.line,
+          startColumn: node.loc.start.column,
+          endLine: node.loc.end.line,
+          endColumn: node.loc.end.column,
+          size:
+            (node.loc.end.line - node.loc.start.line) * 100 +
+            (node.loc.end.column - node.loc.start.column),
+        };
+
+        // Create lookup keys for tolerance range around start position
+        for (let lineOffset = 0; lineOffset <= 0; lineOffset++) {
+          for (let colOffset = -2; colOffset <= 2; colOffset++) {
+            const lookupLine = nodeInfo.startLine + lineOffset;
+            const lookupCol = Math.max(0, nodeInfo.startColumn + colOffset);
+            const key = `${lookupLine}:${lookupCol}`;
+
+            if (!astNodeLookup.has(key)) {
+              astNodeLookup.set(key, []);
+            }
+            astNodeLookup.get(key)!.push(nodeInfo);
+          }
+        }
+      },
+    });
+
+    // Sort nodes by size (largest first) for each lookup key
+    for (const nodes of astNodeLookup.values()) {
+      nodes.sort((a, b) => b.size - a.size);
+    }
+
+    // Parse fragments as before
     traverse(ast, {
       Class: (path) => {
         this.finalizeFragment(
@@ -187,6 +245,8 @@ export class SourceAnalysisService {
         );
       },
     });
+
+    return { ast: ast.program, astNodeLookup };
   }
 
   /**
@@ -342,6 +402,8 @@ export class SourceAnalysisService {
    */
   private buildAnalysisResult(
     filePath: string,
+    ast: unknown,
+    astNodeLookup: Map<string, ASTNodeInfo[]>,
     fragments: SourceFragment[],
     sourceContent: string,
     totalBundleSize: number,
@@ -352,6 +414,8 @@ export class SourceAnalysisService {
 
     return {
       filePath,
+      ast,
+      astNodeLookup,
       totalFragments: fragments.length,
       includedFragments: includedFragments.length,
       totalSourceSize: sourceContent.length,

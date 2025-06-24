@@ -6,6 +6,7 @@ import { BundleService } from '../../services/bundle.service';
 import {
   SourceAnalysisResult,
   SourceFragment,
+  ASTNodeInfo,
 } from '../../models/source-analysis.models';
 
 describe('SourceSemanticAnalysisComponent', () => {
@@ -124,6 +125,8 @@ line 8`;
   it('should filter fragments correctly', () => {
     const mockAnalysis: SourceAnalysisResult = {
       filePath: 'test.ts',
+      ast: null,
+      astNodeLookup: new Map(),
       totalFragments: 3,
       includedFragments: 2,
       totalSourceSize: 1000,

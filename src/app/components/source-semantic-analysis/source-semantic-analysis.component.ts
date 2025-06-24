@@ -14,10 +14,12 @@ import 'prismjs/components/prism-typescript';
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-css';
 import 'prismjs/components/prism-json';
+import traverse from '@babel/traverse';
 import {
   SourceAnalysisResult,
   SourceFragment,
   FragmentType,
+  ASTNodeInfo,
 } from '../../models/source-analysis.models';
 import { MappingImpact } from '../../models/bundle.models';
 
@@ -288,6 +290,9 @@ interface HoveredMappingInfo {
                             {{ hoveredMapping()!.originalLine }}:{{
                               hoveredMapping()!.originalColumn
                             }}
+                            <span class="text-xs text-gray-400 ml-2">
+                              (AST-based range detection)
+                            </span>
                           </div>
                           @for (
                             generated of hoveredMapping()!.generatedLocations;
@@ -636,7 +641,7 @@ export class SourceSemanticAnalysisComponent {
   /**
    * Handle mouse move events on code snippets to show generated code mappings
    */
-  onCodeMouseMove(event: MouseEvent, fragment: SourceFragment): void {
+  onCodeMouseMove(event: MouseEvent, _fragment: SourceFragment): void {
     let target = event.target as ChildNode;
 
     // Check if we're hovering over the actual code (not line numbers)
@@ -701,9 +706,34 @@ export class SourceSemanticAnalysisComponent {
       el = el.previousSibling;
     }
 
-    // Get generated mappings for this source position
-    const mappingInfo = this.getGeneratedMappingInfo(line, column);
+    // Check if we have an AST and can find a node at this position
+    const analysisResult = this.analysisResult();
+    let mappingInfo: HoveredMappingInfo | null = null;
 
+    if (analysisResult?.astNodeLookup) {
+      // Fast lookup using precomputed table
+      const astNode = this.findASTNodeAtPositionFast(
+        analysisResult.astNodeLookup,
+        line,
+        column,
+      );
+      if (astNode) {
+        // Get mappings for the entire AST node range
+        mappingInfo = this.getGeneratedMappingInfoForRange(
+          astNode.startLine,
+          astNode.startColumn,
+          astNode.endLine,
+          astNode.endColumn,
+        );
+      }
+    }
+
+    // Fallback to single point mapping if no AST node found
+    if (!mappingInfo) {
+      mappingInfo = this.getGeneratedMappingInfo(line, column);
+    }
+
+    // Determine anchor position for tooltip.
     const range = document.createRange();
     range.selectNode(target);
     const rect = range.getBoundingClientRect();
@@ -782,5 +812,85 @@ export class SourceSemanticAnalysisComponent {
     }
 
     return highlighted;
+  }
+
+  /**
+   * Find the largest AST node that starts at the given position using fast lookup
+   */
+  private findASTNodeAtPositionFast(
+    astNodeLookup: Map<string, ASTNodeInfo[]>,
+    line: number,
+    column: number,
+  ): ASTNodeInfo | null {
+    const key = `${line}:${column}`;
+    const nodes = astNodeLookup.get(key);
+
+    // Return the largest node (already sorted by size desc)
+    return nodes && nodes.length > 0 ? nodes[0] : null;
+  }
+
+  /**
+   * Get generated code locations for a range of source positions (optimized)
+   */
+  private getGeneratedMappingInfoForRange(
+    startLine: number,
+    startColumn: number,
+    endLine: number,
+    endColumn: number,
+  ): HoveredMappingInfo | null {
+    const allGeneratedLocations: GeneratedLocation[] = [];
+    const seenLocations = new Set<string>(); // For faster duplicate detection
+
+    // Optimize: limit to 3 positions max to keep hover responsive
+    const positions: Array<{ line: number; column: number }> = [];
+
+    if (startLine === endLine) {
+      // Single line - just check start position
+      positions.push({ line: startLine, column: startColumn });
+    } else {
+      // Multi-line - check start, middle (if exists), and a position on end line
+      positions.push({ line: startLine, column: startColumn });
+      if (endLine - startLine > 1) {
+        positions.push({ line: startLine + 1, column: 0 }); // Middle line
+      }
+      positions.push({ line: endLine, column: Math.min(20, endColumn) }); // End line
+    }
+
+    for (const pos of positions) {
+      const generatedLocations = this.bundleService.getGeneratedLocations(
+        this.path,
+        pos.line,
+        pos.column,
+      );
+
+      for (const loc of generatedLocations) {
+        const locationKey = `${loc.chunkId}:${loc.generatedLine}:${loc.generatedColumn}`;
+
+        if (!seenLocations.has(locationKey)) {
+          seenLocations.add(locationKey);
+          allGeneratedLocations.push({
+            chunkId: loc.chunkId,
+            line: loc.generatedLine,
+            column: loc.generatedColumn,
+            sizeImpact: loc.sizeImpact,
+            highlightedCode: this.applyBasicHighlighting(loc.snippet),
+          });
+        }
+      }
+    }
+
+    if (allGeneratedLocations.length === 0) {
+      return null;
+    }
+
+    // Sort by size impact (largest first) and limit results
+    allGeneratedLocations.sort((a, b) => b.sizeImpact - a.sizeImpact);
+    const limitedLocations = allGeneratedLocations.slice(0, 3); // Limit to top 3 for performance
+
+    return {
+      originalLine: startLine,
+      originalColumn: startColumn,
+      generatedLocations: limitedLocations,
+    };
   }
 }
