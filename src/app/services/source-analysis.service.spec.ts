@@ -32,11 +32,11 @@ describe('SourceAnalysisService', () => {
     beforeEach(async () => {
       const sourceContent = `export class MyClass {
   constructor() {}
-  
+
   public method1(): void {
     console.log('test');
   }
-  
+
   private method2(): string {
     return 'test';
   }
@@ -47,6 +47,8 @@ export function myFunction(param: string): number {
 }
 
 export const myVariable = 'hello world';
+
+console.log('hello');
 
 const AliasClass = class OriginalClass {};
 
@@ -103,7 +105,8 @@ interface MyInterface {
           'method:MyClass.method2',
           'function:myFunction',
           'function:originalFunction',
-          'unknown:[ExportNamedDeclaration]',
+          'unknown:console.log(\'hello\')',
+          'unknown:const myVariable',
           'unknown:[TSInterfaceDeclaration]',
         ].sort(),
       );
@@ -144,12 +147,13 @@ interface MyInterface {
         myFunction: 80,
         originalFunction: 0,
         OriginalClass: 0,
-        '[ExportNamedDeclaration]': 0,
+        'const myVariable': 0,
+        'console.log(\'hello\')': 0,
         '[TSInterfaceDeclaration]': 0,
       });
       expect(result!.includedFragments).toBe(3);
-      expect(result!.fragments.length).toBe(9);
-      expect(result!.unusedFragments.length).toBe(6);
+      expect(result!.fragments.length).toBe(10);
+      expect(result!.unusedFragments.length).toBe(7);
     });
 
     it('should categorize fragments correctly', () => {

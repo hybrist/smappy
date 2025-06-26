@@ -116,12 +116,13 @@ export class SourceAnalysisService {
 
     const astNodeLookup = new Map<string, ASTNodeInfo[]>();
 
-    // Build AST node lookup table for fast hover detection
+    // Parse fragments as before
     traverse(ast, {
       enter: (path) => {
         const node = path.node;
         if (!node.loc) return;
 
+        // Build AST node lookup table for fast hover detection
         const nodeInfo: ASTNodeInfo = {
           startLine: node.loc.start.line,
           startColumn: node.loc.start.column,
@@ -146,15 +147,7 @@ export class SourceAnalysisService {
           }
         }
       },
-    });
 
-    // Sort nodes by size (largest first) for each lookup key
-    for (const nodes of astNodeLookup.values()) {
-      nodes.sort((a, b) => b.size - a.size);
-    }
-
-    // Parse fragments as before
-    traverse(ast, {
       Class: (path) => {
         this.finalizeFragment(
           {
@@ -219,19 +212,57 @@ export class SourceAnalysisService {
           return;
         }
         if (
-          path.isVariableDeclaration() &&
-          path.node.declarations.length === 1
+          (path.isVariableDeclaration() &&
+            path.node.declarations.length === 1)
+          || (path.isExportNamedDeclaration() && path.node.declaration?.type === 'VariableDeclaration')
         ) {
-          const [declaration] = path.node.declarations;
-          if (
-            declaration.id.type === 'Identifier' &&
-            (declaration.init?.type === 'ClassExpression' ||
-              declaration.init?.type === 'FunctionExpression')
-          ) {
-            // Ignore variable declarations that are class/function expressions.
-            // They will already be reported as classes/functions above.
+          let declaration;
+          let declarator;
+          if (path.isVariableDeclaration()) {
+            declaration = path.node;
+            declarator = path.node.declarations[0]!;
+          } else if (path.node.declaration?.type === 'VariableDeclaration') {
+            declaration = path.node.declaration;
+            declarator = path.node.declaration.declarations[0]!;
+          }
+
+          if (declarator && declaration) {
+            if (
+              declarator.id.type === 'Identifier' &&
+              (declarator.init?.type === 'ClassExpression' ||
+                declarator.init?.type === 'FunctionExpression')
+            ) {
+              // Ignore variable declarations that are class/function expressions.
+              // They will already be reported as classes/functions above.
+              return;
+            }
+            const varName = code.slice(declarator.id.start!, declarator.id.end!);
+            this.finalizeFragment(
+              {
+                type: 'unknown',
+                name: `${declaration.kind} ${varName}`,
+                startLine: path.node.loc?.start.line || 0,
+                startColumn: path.node.loc?.start.column || 0,
+              },
+              path.node.loc?.end.line || 0,
+              fragments,
+            );
             return;
           }
+        }
+        if (path.isExpressionStatement()) {
+          const expr = code.slice(path.node.expression.start!, path.node.expression.end!);
+          this.finalizeFragment(
+            {
+              type: 'unknown',
+              name: expr.length > 20 ? `${expr.slice(0, 20)}...` : expr,
+              startLine: path.node.loc?.start.line || 0,
+              startColumn: path.node.loc?.start.column || 0,
+            },
+            path.node.loc?.end.line || 0,
+            fragments,
+          );
+          return;
         }
         this.finalizeFragment(
           {
@@ -245,6 +276,11 @@ export class SourceAnalysisService {
         );
       },
     });
+
+    // Sort nodes by size (largest first) for each lookup key
+    for (const nodes of astNodeLookup.values()) {
+      nodes.sort((a, b) => b.size - a.size);
+    }
 
     return { ast: ast.program, astNodeLookup };
   }
