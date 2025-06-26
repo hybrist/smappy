@@ -3,6 +3,8 @@ import { GenMapping, addMapping, toEncodedMap } from '@jridgewell/gen-mapping';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { BundleService } from './bundle.service';
 import { StorageService } from './storage.service';
+import { BundleCalculationService } from './bundle-calculation.service';
+import { SourceMapProcessorService } from './source-map-processor.service';
 import { BundleConfig, SourceMapData } from '../models/bundle.models';
 
 describe('BundleService', () => {
@@ -11,7 +13,11 @@ describe('BundleService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideZonelessChangeDetection()],
+      providers: [
+        provideZonelessChangeDetection(),
+        BundleCalculationService,
+        SourceMapProcessorService,
+      ],
     });
     service = TestBed.inject(BundleService);
     storageService = TestBed.inject(StorageService);

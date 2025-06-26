@@ -5,37 +5,24 @@ import {
   computed,
   signal,
   viewChild,
+  inject,
 } from '@angular/core';
 import { SourceAnalysisService } from '../../services/source-analysis.service';
 import { BundleService } from '../../services/bundle.service';
-import { inject } from '@angular/core';
-import * as Prism from 'prismjs';
-import 'prismjs/components/prism-typescript';
-import 'prismjs/components/prism-javascript';
-import 'prismjs/components/prism-css';
-import 'prismjs/components/prism-json';
-import traverse from '@babel/traverse';
 import {
   SourceAnalysisResult,
   SourceFragment,
-  FragmentType,
   ASTNodeInfo,
 } from '../../models/source-analysis.models';
-import { MappingImpact } from '../../models/bundle.models';
+import {
+  GeneratedLocation,
+  HoveredMappingInfo,
+  TooltipPosition,
+} from '../../models/ui.models';
+import { SyntaxHighlightingUtils } from '../../utils/syntax-highlighting.utils';
+import { BundleSizeUtils } from '../../utils/bundle-size.utils';
+import { FragmentIconUtils } from '../../utils/fragment-icon.utils';
 
-interface GeneratedLocation {
-  chunkId: string;
-  line: number;
-  column: number;
-  sizeImpact: number;
-  highlightedCode: string;
-}
-
-interface HoveredMappingInfo {
-  originalLine: number;
-  originalColumn: number;
-  generatedLocations: GeneratedLocation[];
-}
 
 @Component({
   selector: 'section[appSourceSemanticAnalysis]',
@@ -368,7 +355,7 @@ export class SourceSemanticAnalysisComponent {
   private readonly activeFilter = signal<string>('all');
   private readonly expandedFragments = signal<Set<string>>(new Set());
   readonly hoveredMapping = signal<HoveredMappingInfo | null>(null);
-  readonly tooltipPosition = signal<{ x: number; y: number }>({ x: 0, y: 0 });
+  readonly tooltipPosition = signal<TooltipPosition>({ x: 0, y: 0 });
 
   private hoverTooltip = viewChild('hoverTooltip', { read: ElementRef });
 
@@ -417,62 +404,16 @@ export class SourceSemanticAnalysisComponent {
     return `${baseClass} ${this.activeFilter() === filter ? activeClass : inactiveClass}`;
   }
 
-  getFragmentIconClass(type: FragmentType, inBundle: boolean): string {
-    if (!inBundle) {
-      return 'bg-gray-100 text-gray-600';
-    }
-
-    const iconClasses = {
-      class: 'bg-purple-100 text-purple-600',
-      function: 'bg-blue-100 text-blue-600',
-      method: 'bg-blue-100 text-blue-600',
-      variable: 'bg-green-100 text-green-600',
-      import: 'bg-yellow-100 text-yellow-600',
-      export: 'bg-orange-100 text-orange-600',
-      interface: 'bg-indigo-100 text-indigo-600',
-      type: 'bg-indigo-100 text-indigo-600',
-      enum: 'bg-pink-100 text-pink-600',
-      namespace: 'bg-teal-100 text-teal-600',
-      unknown: 'bg-teal-100 text-teal-600',
-    };
-    return iconClasses[type] || iconClasses.unknown;
+  getFragmentIconClass(type: string, inBundle: boolean): string {
+    return FragmentIconUtils.getIconClass(type as any, inBundle);
   }
 
-  getFragmentIconPath(type: FragmentType): string {
-    const iconPaths = {
-      class:
-        'M7 8a3 3 0 000 6h6a3 3 0 000-6H7zM4.5 12a4.5 4.5 0 019 0 4.5 4.5 0 01-9 0z',
-      function: 'M4 6h16M4 12h16M4 18h16',
-      method: 'M4 6h16M4 12h16M4 18h16',
-      variable: 'M5 12h14M12 5l7 7-7 7',
-      import: 'M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4',
-      export: 'M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l4 4m0 0l-4 4m4-4H7',
-      interface:
-        'M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
-      type: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
-      enum: 'M4 6h16M4 10h16M4 14h16M4 18h16',
-      namespace: 'M19 11H5m14-4H5m14 8H5',
-      unknown:
-        'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
-    };
-    return iconPaths[type] || iconPaths.unknown;
+  getFragmentIconPath(type: string): string {
+    return FragmentIconUtils.getIconPath(type as any);
   }
 
-  getFragmentTypeLabel(type: FragmentType): string {
-    const labels = {
-      class: 'Class',
-      function: 'Function',
-      method: 'Method',
-      variable: 'Variable',
-      import: 'Import',
-      export: 'Export',
-      interface: 'Interface',
-      type: 'Type Alias',
-      enum: 'Enum',
-      namespace: 'Namespace',
-      unknown: 'Unknown',
-    };
-    return labels[type] || 'Unknown';
+  getFragmentTypeLabel(type: string): string {
+    return FragmentIconUtils.getTypeLabel(type as any);
   }
 
   getFragmentSizePercentage(
@@ -486,11 +427,7 @@ export class SourceSemanticAnalysisComponent {
   }
 
   formatSize(bytes: number): string {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+    return BundleSizeUtils.formatSize(bytes);
   }
 
   toggleFragment(fragmentId: string): void {
@@ -523,7 +460,6 @@ export class SourceSemanticAnalysisComponent {
     const fragmentLines = lines.slice(startIdx, endIdx);
     const fragmentCode = fragmentLines.join('\n');
 
-    // Use Prism.js for syntax highlighting
     return this.applySyntaxHighlighting(fragmentCode, fragment.startLine);
   }
 
@@ -531,35 +467,18 @@ export class SourceSemanticAnalysisComponent {
     code: string,
     startLineNumber: number,
   ): string {
-    // Determine language based on file extension
-    const language = this.getLanguageFromPath(this.path);
+    const language = SyntaxHighlightingUtils.getLanguageFromPath(this.path);
+    const highlighted = SyntaxHighlightingUtils.highlightCode(code, language);
 
-    // Use Prism.js to highlight the code
-    let highlighted: string;
-    try {
-      const grammar =
-        Prism.languages[language] || Prism.languages['javascript'];
-      highlighted = Prism.highlight(code, grammar, language);
-    } catch (error) {
-      // Fallback to escaped HTML if highlighting fails
-      highlighted = code
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-    }
-
-    // Get mapping impacts to calculate bundle contribution per line
     const mappingImpacts = this.bundleService.getMappingImpacts(this.path);
-    const lineBundleBytes =
-      this.calculateLineBundleContribution(mappingImpacts);
+    const lineBundleBytes = BundleSizeUtils.calculateLineBundleContribution(mappingImpacts);
 
-    // Add line numbers with bundle impact background colors
     const lines = highlighted.split('\n');
     const numberedLines = lines.map((line, index) => {
       const lineNumber = startLineNumber + index;
       const paddedNumber = lineNumber.toString().padStart(3, ' ');
       const bundleBytes = lineBundleBytes.get(lineNumber) || 0;
-      const backgroundClass = this.getLineBackgroundClass(bundleBytes);
+      const backgroundClass = BundleSizeUtils.getLineBackgroundClass(bundleBytes);
 
       const tooltip =
         bundleBytes > 0
@@ -571,70 +490,8 @@ export class SourceSemanticAnalysisComponent {
     return numberedLines.join('\n');
   }
 
-  private getLanguageFromPath(filePath: string): string {
-    const extension = filePath.split('.').pop()?.toLowerCase();
 
-    switch (extension) {
-      case 'ts':
-      case 'tsx':
-        return 'typescript';
-      case 'js':
-      case 'jsx':
-      case 'mjs':
-      case 'cjs':
-        return 'javascript';
-      case 'css':
-      case 'scss':
-      case 'sass':
-        return 'css';
-      case 'json':
-        return 'json';
-      case 'html':
-      case 'htm':
-        return 'html';
-      default:
-        return 'javascript'; // Default fallback
-    }
-  }
 
-  /**
-   * Calculate bundle size contribution per line from mapping impacts
-   */
-  private calculateLineBundleContribution(
-    mappingImpacts: MappingImpact[],
-  ): Map<number, number> {
-    const lineBundleBytes = new Map<number, number>();
-
-    for (const impact of mappingImpacts) {
-      const line = impact.originalLine;
-      const currentBytes = lineBundleBytes.get(line) || 0;
-      lineBundleBytes.set(line, currentBytes + impact.sizeImpact);
-    }
-
-    return lineBundleBytes;
-  }
-
-  /**
-   * Get background color class based on bundle size contribution
-   */
-  private getLineBackgroundClass(bundleBytes: number): string {
-    if (bundleBytes === 0) {
-      return 'text-gray-400'; // No bundle contribution - default gray
-    }
-
-    // Color intensity based on bundle contribution - more subtle colors for better readability
-    if (bundleBytes < 10) {
-      return 'text-gray-700 bg-green-50 border-l-2 border-green-200'; // Very small contribution
-    } else if (bundleBytes < 50) {
-      return 'text-gray-800 bg-green-100 border-l-2 border-green-300'; // Small contribution
-    } else if (bundleBytes < 100) {
-      return 'text-gray-800 bg-yellow-50 border-l-2 border-yellow-300'; // Medium contribution
-    } else if (bundleBytes < 200) {
-      return 'text-gray-900 bg-orange-50 border-l-2 border-orange-400'; // Large contribution
-    } else {
-      return 'text-gray-900 bg-red-100 border-l-2 border-red-500 font-semibold'; // Very large contribution
-    }
-  }
 
   /**
    * Handle mouse move events on code snippets to show generated code mappings
@@ -780,7 +637,7 @@ export class SourceSemanticAnalysisComponent {
         line: loc.generatedLine,
         column: loc.generatedColumn,
         sizeImpact: loc.sizeImpact,
-        highlightedCode: this.applyBasicHighlighting(loc.snippet),
+        highlightedCode: SyntaxHighlightingUtils.applyBasicHighlighting(loc.snippet),
       }),
     );
 
@@ -791,26 +648,6 @@ export class SourceSemanticAnalysisComponent {
     };
   }
 
-  /**
-   * Apply basic syntax highlighting to generated code snippet
-   */
-  private applyBasicHighlighting(code: string): string {
-    // Basic escaping for HTML
-    let highlighted = code
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-
-    // Apply basic JavaScript syntax highlighting
-    try {
-      const grammar = Prism.languages['javascript'];
-      highlighted = Prism.highlight(highlighted, grammar, 'javascript');
-    } catch (error) {
-      // If highlighting fails, return escaped code
-    }
-
-    return highlighted;
-  }
 
   /**
    * Find the largest AST node that starts at the given position using fast lookup
@@ -871,7 +708,7 @@ export class SourceSemanticAnalysisComponent {
             line: loc.generatedLine,
             column: loc.generatedColumn,
             sizeImpact: loc.sizeImpact,
-            highlightedCode: this.applyBasicHighlighting(loc.snippet),
+            highlightedCode: SyntaxHighlightingUtils.applyBasicHighlighting(loc.snippet),
           });
         }
       }

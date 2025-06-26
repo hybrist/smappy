@@ -2,6 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { SourceAnalysisService } from './source-analysis.service';
 import { BundleService } from './bundle.service';
+import { AstParserService } from '../parsers/ast-parser.service';
+import { FileParsersService } from '../parsers/file-parsers.service';
 import {
   GenMapping,
   addMapping,
@@ -17,7 +19,11 @@ describe('SourceAnalysisService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideZonelessChangeDetection()],
+      providers: [
+        provideZonelessChangeDetection(),
+        AstParserService,
+        FileParsersService,
+      ],
     });
     service = TestBed.inject(SourceAnalysisService);
     bundleService = TestBed.inject(BundleService);

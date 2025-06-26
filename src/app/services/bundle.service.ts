@@ -1,5 +1,4 @@
 import { Injectable, signal, inject } from '@angular/core';
-import { SourceMapConsumer } from '@jridgewell/source-map';
 import {
   BundleAnalysis,
   BundleConfig,
@@ -9,13 +8,16 @@ import {
   MappingImpact,
 } from '../models/bundle.models';
 import { StorageService } from './storage.service';
-import { of } from 'rxjs';
+import { BundleCalculationService } from './bundle-calculation.service';
+import { SourceMapProcessorService } from './source-map-processor.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class BundleService {
   private readonly storageService = inject(StorageService);
+  private readonly bundleCalculation = inject(BundleCalculationService);
+  private readonly sourceMapProcessor = inject(SourceMapProcessorService);
 
   private readonly currentBundle = signal<BundleAnalysis | null>(null);
   private readonly isLoading = signal<boolean>(false);
@@ -45,7 +47,7 @@ export class BundleService {
         chunks.push(chunk);
       }
 
-      const analysis = this.analyzeBundle(chunks);
+      const analysis = await this.bundleCalculation.analyzeBundle(chunks);
       this.currentBundle.set(analysis);
 
       // Save to localStorage for persistence
@@ -70,8 +72,7 @@ export class BundleService {
       const sourceMapContent = await this.readFileAsText(sourceMapFile);
       sourceMap = JSON.parse(sourceMapContent) as SourceMapData;
     } else {
-      // Try to extract inline source map
-      sourceMap = this.extractInlineSourceMap(content);
+      sourceMap = this.sourceMapProcessor.extractInlineSourceMap(content);
     }
 
     return {
@@ -93,212 +94,10 @@ export class BundleService {
     });
   }
 
-  private extractInlineSourceMap(content: string): SourceMapData | undefined {
-    const sourceMapMatch = content.match(
-      /\/\/# sourceMappingURL=data:application\/json;base64,(.+)$/m,
-    );
-    if (sourceMapMatch) {
-      try {
-        const decoded = atob(sourceMapMatch[1]);
-        return JSON.parse(decoded) as SourceMapData;
-      } catch {
-        return undefined;
-      }
-    }
-    return undefined;
-  }
 
-  private analyzeBundle(chunks: ChunkInfo[]): BundleAnalysis {
-    const totalSize = chunks.reduce((sum, chunk) => sum + chunk.size, 0);
-    const sourceBreakdown = new Map<string, number>();
-    const mappingImpacts = new Map<string, MappingImpact[]>();
 
-    function addSourceSize(source: string, size: number) {
-      const currentSize = sourceBreakdown.get(source) || 0;
-      sourceBreakdown.set(source, currentSize + size);
-    }
 
-    function addMappingImpact(source: string, impact: MappingImpact) {
-      const impacts = mappingImpacts.get(source) || [];
-      impacts.push(impact);
-      mappingImpacts.set(source, impacts);
-    }
 
-    for (const chunk of chunks) {
-      if (chunk.sourceMap) {
-        try {
-          const consumer = new SourceMapConsumer(
-            chunk.sourceMap as any,
-            chunk.fileName,
-          );
-
-          // Calculate the actual content size (excluding source map comment)
-          const contentWithoutSourceMap = this.getContentWithoutSourceMap(
-            chunk.content,
-          );
-          const lines = contentWithoutSourceMap.split('\n');
-          const lineLengths = lines.map((line) => line.length);
-
-          // Collect all mappings and sort by generated position
-          const mappings: any[] = [];
-          consumer.eachMapping((mapping) => {
-            mappings.push(mapping);
-          });
-
-          // Sort mappings by generated line and column
-          mappings.sort((a, b) => {
-            if (a.generatedLine !== b.generatedLine) {
-              return a.generatedLine - b.generatedLine;
-            }
-            return a.generatedColumn - b.generatedColumn;
-          });
-
-          // Calculate bytes between mappings
-          for (let i = 0; i < mappings.length; i++) {
-            const currentMapping = mappings[i];
-            const nextMapping = mappings[i + 1];
-
-            if (!currentMapping.source) continue;
-
-            let bytesToAttribute = 0;
-
-            if (nextMapping) {
-              // Calculate bytes between current and next mapping
-              bytesToAttribute = this.calculateBytesBetweenMappings(
-                currentMapping,
-                nextMapping,
-                lineLengths,
-              );
-            } else {
-              // For the last mapping, calculate bytes to end of content
-              bytesToAttribute = this.calculateBytesToEnd(
-                currentMapping,
-                lineLengths,
-              );
-            }
-
-            if (bytesToAttribute > 0) {
-              addSourceSize(currentMapping.source, bytesToAttribute);
-
-              // Store mapping impact for later reuse
-              if (
-                currentMapping.originalLine &&
-                currentMapping.originalColumn !== undefined
-              ) {
-                addMappingImpact(currentMapping.source, {
-                  chunkId: chunk.id,
-                  originalLine: currentMapping.originalLine,
-                  originalColumn: currentMapping.originalColumn,
-                  sizeImpact: bytesToAttribute,
-                });
-              }
-            }
-          }
-
-          // If no mappings found, attribute entire content to unknown source
-          if (mappings.length === 0) {
-            addSourceSize('<unknown>', contentWithoutSourceMap.length);
-          }
-        } catch (error) {
-          console.warn(
-            'Error processing source map for chunk',
-            chunk.fileName,
-            error,
-          );
-          // If source map processing fails, attribute entire chunk to unknown source
-          addSourceSize('<unknown>', chunk.size);
-        }
-      } else {
-        // No source map available, attribute entire chunk to unknown source
-        addSourceSize('<unknown>', chunk.size);
-      }
-    }
-
-    return {
-      totalSize,
-      chunks,
-      sourceBreakdown,
-      mappingImpacts,
-    };
-  }
-
-  private getContentWithoutSourceMap(content: string): string {
-    // Find and remove the source map comment and everything after it
-    const sourceMapCommentIndex = content.lastIndexOf('//# sourceMappingURL=');
-    if (sourceMapCommentIndex !== -1) {
-      // Find the line before the source map comment
-      const beforeSourceMap = content.substring(0, sourceMapCommentIndex);
-      // Remove trailing whitespace/newlines
-      return beforeSourceMap.trimEnd();
-    }
-    return content;
-  }
-
-  private calculateBytesBetweenMappings(
-    current: any,
-    next: any,
-    lineLengths: number[],
-  ): number {
-    let bytes = 0;
-
-    const currentLine = current.generatedLine - 1; // Convert to 0-based
-    const currentColumn = current.generatedColumn;
-    const nextLine = next.generatedLine - 1; // Convert to 0-based
-    const nextColumn = next.generatedColumn;
-
-    if (currentLine === nextLine) {
-      // Same line - just count columns
-      bytes = Math.max(0, nextColumn - currentColumn);
-    } else {
-      // Different lines
-      // Add remaining characters on current line
-      if (currentLine < lineLengths.length) {
-        bytes += Math.max(0, lineLengths[currentLine] - currentColumn);
-        bytes += 1; // Add newline character
-      }
-
-      // Add complete lines in between
-      for (
-        let line = currentLine + 1;
-        line < nextLine && line < lineLengths.length;
-        line++
-      ) {
-        bytes += lineLengths[line] + 1; // +1 for newline
-      }
-
-      // Add characters on next line up to next column
-      if (nextLine < lineLengths.length) {
-        bytes += Math.max(0, nextColumn);
-      }
-    }
-
-    return bytes;
-  }
-
-  private calculateBytesToEnd(mapping: any, lineLengths: number[]): number {
-    let bytes = 0;
-
-    const line = mapping.generatedLine - 1; // Convert to 0-based
-    const column = mapping.generatedColumn;
-
-    // Add remaining characters on current line
-    if (line < lineLengths.length) {
-      bytes += Math.max(0, lineLengths[line] - column);
-      bytes += 1; // Add newline character
-    }
-
-    // Add all remaining complete lines
-    for (let i = line + 1; i < lineLengths.length; i++) {
-      bytes += lineLengths[i] + 1; // +1 for newline
-    }
-
-    // Remove the last newline if we added one
-    if (bytes > 0) {
-      bytes -= 1;
-    }
-
-    return Math.max(0, bytes);
-  }
 
   getChunkById(id: string): ChunkInfo | undefined {
     return this.currentBundle()?.chunks.find((chunk) => chunk.id === id);
@@ -407,79 +206,27 @@ export class BundleService {
       snippet: string;
     }> = [];
 
-    for (const chunk of bundle.chunks) {
-      if (!chunk.sourceMap) continue;
+    const locations = this.sourceMapProcessor.getGeneratedLocations(
+      bundle.chunks,
+      sourcePath,
+      originalLine,
+      originalColumn,
+    );
 
-      try {
-        const consumer = new SourceMapConsumer(
-          chunk.sourceMap as any,
-          chunk.fileName,
-        );
-
-        // Find generated positions for this original position
-        consumer.eachMapping((mapping) => {
-          if (
-            mapping.source === sourcePath &&
-            mapping.originalLine === originalLine &&
-            Math.abs((mapping.originalColumn || 0) - originalColumn) <= 5 // Allow some tolerance
-          ) {
-            // Get snippet around the generated position
-            const snippet = this.extractGeneratedSnippet(
-              chunk.content,
-              mapping.generatedLine,
-              mapping.generatedColumn,
-            );
-
-            // Get size impact for this mapping
-            const mappingImpacts = this.getMappingImpacts(sourcePath);
-            const impact = mappingImpacts.find(
-              (impact) =>
-                impact.originalLine === originalLine &&
-                Math.abs(impact.originalColumn - originalColumn) <= 5,
-            );
-
-            results.push({
-              chunkId: chunk.id,
-              generatedLine: mapping.generatedLine,
-              generatedColumn: mapping.generatedColumn,
-              sizeImpact: impact?.sizeImpact || 0,
-              snippet,
-            });
-          }
-        });
-      } catch (error) {
-        console.warn(
-          'Error processing source map for generated locations:',
-          error,
-        );
-      }
+    const mappingImpacts = this.getMappingImpacts(sourcePath);
+    for (const location of locations) {
+      const impact = mappingImpacts.find(
+        (impact) =>
+          impact.originalLine === originalLine &&
+          Math.abs(impact.originalColumn - originalColumn) <= 5,
+      );
+      results.push({
+        ...location,
+        sizeImpact: impact?.sizeImpact || 0,
+      });
     }
 
     return results;
   }
 
-  /**
-   * Extract a code snippet around a generated position
-   */
-  private extractGeneratedSnippet(
-    content: string,
-    line: number,
-    column: number,
-    contextChars: number = 120,
-  ): string {
-    const contentWithoutSourceMap = this.getContentWithoutSourceMap(content);
-    const lines = contentWithoutSourceMap.split('\n');
-
-    if (line < 1 || line > lines.length) {
-      return '';
-    }
-
-    const targetLine = lines[line - 1]; // Convert to 0-based index
-    const start = column;
-    const end = Math.min(targetLine.length, column + contextChars);
-
-    let snippet = targetLine.substring(start, end);
-
-    return snippet;
-  }
 }

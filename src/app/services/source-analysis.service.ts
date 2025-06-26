@@ -1,6 +1,4 @@
 import { Injectable, inject } from '@angular/core';
-import { parse } from '@babel/parser';
-import traverse from '@babel/traverse';
 import { BundleService } from './bundle.service';
 import {
   SourceFragment,
@@ -8,12 +6,16 @@ import {
   FragmentUsage,
   ASTNodeInfo,
 } from '../models/source-analysis.models';
+import { AstParserService } from '../parsers/ast-parser.service';
+import { FileParsersService } from '../parsers/file-parsers.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SourceAnalysisService {
   private readonly bundleService = inject(BundleService);
+  private readonly astParser = inject(AstParserService);
+  private readonly fileParsers = inject(FileParsersService);
 
   /**
    * Analyze a source file and extract semantic fragments
@@ -60,7 +62,7 @@ export class SourceAnalysisService {
     astNodeLookup: Map<string, ASTNodeInfo[]>;
   } {
     const fragments: SourceFragment[] = [];
-    const fileExtension = this.getFileExtension(filePath);
+    const fileExtension = this.fileParsers.getFileExtension(filePath);
     let ast = null;
     let astNodeLookup = new Map<string, ASTNodeInfo[]>();
 
@@ -72,7 +74,7 @@ export class SourceAnalysisService {
       case 'mjs':
       case 'js':
       case 'jsx':
-        const jsResult = this.parseJavaScriptTypeScript(
+        const jsResult = this.astParser.parseJavaScriptTypeScript(
           sourceContent,
           fragments,
           filePath,
@@ -83,7 +85,7 @@ export class SourceAnalysisService {
       case 'css':
       case 'scss':
       case 'sass':
-        ast = this.parseCSSStyleSheets(
+        this.fileParsers.parseCSSStyleSheets(
           sourceContent.split('\n'),
           fragments,
           filePath,
@@ -91,295 +93,18 @@ export class SourceAnalysisService {
         break;
       case 'html':
       case 'htm':
-        ast = this.parseHTML(sourceContent.split('\n'), fragments, filePath);
+        this.fileParsers.parseHTML(sourceContent.split('\n'), fragments, filePath);
         break;
       default:
-        ast = this.parseGeneric(sourceContent.split('\n'), fragments, filePath);
+        this.fileParsers.parseGeneric(sourceContent.split('\n'), fragments, filePath);
     }
 
     return { ast, fragments, astNodeLookup };
   }
 
-  /**
-   * Parse JavaScript/TypeScript files
-   */
-  private parseJavaScriptTypeScript(
-    code: string,
-    fragments: SourceFragment[],
-    filePath: string,
-  ): { ast: unknown; astNodeLookup: Map<string, ASTNodeInfo[]> } {
-    const ast = parse(code, {
-      sourceFilename: filePath,
-      sourceType: 'unambiguous',
-      plugins: ['jsx', 'typescript'],
-    });
 
-    const astNodeLookup = new Map<string, ASTNodeInfo[]>();
 
-    // Parse fragments as before
-    traverse(ast, {
-      enter: (path) => {
-        const node = path.node;
-        if (!node.loc) return;
 
-        // Build AST node lookup table for fast hover detection
-        const nodeInfo: ASTNodeInfo = {
-          startLine: node.loc.start.line,
-          startColumn: node.loc.start.column,
-          endLine: node.loc.end.line,
-          endColumn: node.loc.end.column,
-          size:
-            (node.loc.end.line - node.loc.start.line) * 100 +
-            (node.loc.end.column - node.loc.start.column),
-        };
-
-        // Create lookup keys for tolerance range around start position
-        for (let lineOffset = 0; lineOffset <= 0; lineOffset++) {
-          for (let colOffset = -2; colOffset <= 2; colOffset++) {
-            const lookupLine = nodeInfo.startLine + lineOffset;
-            const lookupCol = Math.max(0, nodeInfo.startColumn + colOffset);
-            const key = `${lookupLine}:${lookupCol}`;
-
-            if (!astNodeLookup.has(key)) {
-              astNodeLookup.set(key, []);
-            }
-            astNodeLookup.get(key)!.push(nodeInfo);
-          }
-        }
-      },
-
-      Class: (path) => {
-        this.finalizeFragment(
-          {
-            type: 'class',
-            name: path.node.id?.name || 'anonymous',
-            startLine: path.node.loc?.start.line || 0,
-            startColumn: path.node.loc?.start.column || 0,
-          },
-          path.node.loc?.end.line || 0,
-          fragments,
-        );
-      },
-      Function: (path) => {
-        let name: string | undefined;
-        if ('key' in path.node && path.node.key.type === 'Identifier') {
-          name = name || path.node.key?.name;
-        }
-        if ('id' in path.node) {
-          name = name || path.node.id?.name;
-        }
-        if (
-          path.parentPath.isClassBody() &&
-          path.parentPath.parentPath.isClass()
-        ) {
-          const parentName =
-            path.parentPath.parentPath.node.id?.name || 'anonymous';
-          name = `${parentName}.${name || 'anonymous'}`;
-        }
-        this.finalizeFragment(
-          {
-            type: path.isMethod() ? 'method' : 'function',
-            name,
-            startLine: path.node.loc?.start.line || 0,
-            startColumn: path.node.loc?.start.column || 0,
-          },
-          path.node.loc?.end.line || 0,
-          fragments,
-        );
-      },
-      Statement: (path) => {
-        if (!path.parentPath.isProgram()) {
-          return;
-        }
-        if (path.isImportDeclaration()) {
-          return;
-        }
-        if (path.isClassDeclaration() || path.isFunctionDeclaration()) {
-          return;
-        }
-        if (
-          path.isExportDefaultDeclaration() &&
-          (path.node.declaration.type === 'FunctionDeclaration' ||
-            path.node.declaration.type === 'ClassDeclaration')
-        ) {
-          return;
-        }
-        if (
-          path.isExportNamedDeclaration() &&
-          (path.node.declaration?.type === 'FunctionDeclaration' ||
-            path.node.declaration?.type === 'ClassDeclaration')
-        ) {
-          return;
-        }
-        if (
-          (path.isVariableDeclaration() &&
-            path.node.declarations.length === 1)
-          || (path.isExportNamedDeclaration() && path.node.declaration?.type === 'VariableDeclaration')
-        ) {
-          let declaration;
-          let declarator;
-          if (path.isVariableDeclaration()) {
-            declaration = path.node;
-            declarator = path.node.declarations[0]!;
-          } else if (path.node.declaration?.type === 'VariableDeclaration') {
-            declaration = path.node.declaration;
-            declarator = path.node.declaration.declarations[0]!;
-          }
-
-          if (declarator && declaration) {
-            if (
-              declarator.id.type === 'Identifier' &&
-              (declarator.init?.type === 'ClassExpression' ||
-                declarator.init?.type === 'FunctionExpression')
-            ) {
-              // Ignore variable declarations that are class/function expressions.
-              // They will already be reported as classes/functions above.
-              return;
-            }
-            const varName = code.slice(declarator.id.start!, declarator.id.end!);
-            this.finalizeFragment(
-              {
-                type: 'unknown',
-                name: `${declaration.kind} ${varName}`,
-                startLine: path.node.loc?.start.line || 0,
-                startColumn: path.node.loc?.start.column || 0,
-              },
-              path.node.loc?.end.line || 0,
-              fragments,
-            );
-            return;
-          }
-        }
-        if (path.isExpressionStatement()) {
-          const expr = code.slice(path.node.expression.start!, path.node.expression.end!);
-          this.finalizeFragment(
-            {
-              type: 'unknown',
-              name: expr.length > 20 ? `${expr.slice(0, 20)}...` : expr,
-              startLine: path.node.loc?.start.line || 0,
-              startColumn: path.node.loc?.start.column || 0,
-            },
-            path.node.loc?.end.line || 0,
-            fragments,
-          );
-          return;
-        }
-        this.finalizeFragment(
-          {
-            type: 'unknown',
-            name: `[${path.node.type}]`,
-            startLine: path.node.loc?.start.line || 0,
-            startColumn: path.node.loc?.start.column || 0,
-          },
-          path.node.loc?.end.line || 0,
-          fragments,
-        );
-      },
-    });
-
-    // Sort nodes by size (largest first) for each lookup key
-    for (const nodes of astNodeLookup.values()) {
-      nodes.sort((a, b) => b.size - a.size);
-    }
-
-    return { ast: ast.program, astNodeLookup };
-  }
-
-  /**
-   * Parse CSS/SCSS files
-   */
-  private parseCSSStyleSheets(
-    lines: string[],
-    fragments: SourceFragment[],
-    filePath: string,
-  ): void {
-    let currentSelector = '';
-    let startLine = 0;
-    let bracketDepth = 0;
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-
-      if (!line || line.startsWith('//') || line.startsWith('/*')) continue;
-
-      if (line.includes('{')) {
-        if (bracketDepth === 0) {
-          currentSelector = line.replace('{', '').trim();
-          startLine = i + 1;
-        }
-        bracketDepth++;
-      }
-
-      if (line.includes('}')) {
-        bracketDepth--;
-        if (bracketDepth === 0 && currentSelector) {
-          fragments.push({
-            id: `${filePath}:${startLine}`,
-            name: currentSelector,
-            type: 'unknown', // CSS doesn't have semantic types like JS
-            startLine,
-            endLine: i + 1,
-            startColumn: 0,
-            endColumn: line.length,
-            sourceSize: this.calculateFragmentSize(lines, startLine - 1, i),
-            isIncludedInBundle: true, // Assume CSS is included
-          });
-          currentSelector = '';
-        }
-      }
-    }
-  }
-
-  /**
-   * Parse HTML files
-   */
-  private parseHTML(
-    lines: string[],
-    fragments: SourceFragment[],
-    filePath: string,
-  ): void {
-    // Simple HTML parsing - could be enhanced with proper HTML parser
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-      const tagMatch = line.match(/<(\w+)(?:\s|>)/);
-
-      if (tagMatch) {
-        fragments.push({
-          id: `${filePath}:${i + 1}`,
-          name: tagMatch[1],
-          type: 'unknown',
-          startLine: i + 1,
-          endLine: i + 1,
-          startColumn: 0,
-          endColumn: line.length,
-          sourceSize: line.length,
-          isIncludedInBundle: true,
-        });
-      }
-    }
-  }
-
-  /**
-   * Generic parser for unknown file types
-   */
-  private parseGeneric(
-    lines: string[],
-    fragments: SourceFragment[],
-    filePath: string,
-  ): void {
-    // For unknown file types, just create one fragment for the entire file
-    fragments.push({
-      id: `${filePath}:1`,
-      name: filePath.split('/').pop() || 'unknown',
-      type: 'unknown',
-      startLine: 1,
-      endLine: lines.length,
-      startColumn: 0,
-      endColumn: 0,
-      sourceSize: lines.join('\n').length,
-      isIncludedInBundle: true,
-    });
-  }
 
   /**
    * Mark which fragments are included in the bundle using precomputed mapping impacts
@@ -492,41 +217,8 @@ export class SourceAnalysisService {
     );
   }
 
-  // Helper methods
-  private getFileExtension(filePath: string): string {
-    return filePath.split('.').pop()?.toLowerCase() || '';
-  }
 
-  private finalizeFragment(
-    fragment: Partial<SourceFragment>,
-    endLine: number,
-    fragments: SourceFragment[],
-  ): void {
-    const name = fragment.name || 'anonymous';
-    if (fragment.type && fragment.startLine) {
-      const finalFragment: SourceFragment = {
-        id: `${name}:${fragment.startLine}:${fragment.startColumn || 0}`,
-        name: name,
-        type: fragment.type,
-        startLine: fragment.startLine,
-        endLine,
-        startColumn: fragment.startColumn || 0,
-        endColumn: 0,
-        sourceSize: (endLine - fragment.startLine + 1) * 50, // Rough estimate
-        isIncludedInBundle: false, // Will be determined later
-        ...fragment,
-      };
-      fragments.push(finalFragment);
-    }
-  }
 
-  private calculateFragmentSize(
-    lines: string[],
-    startIndex: number,
-    endIndex: number,
-  ): number {
-    return lines.slice(startIndex, endIndex + 1).join('\n').length;
-  }
 
   /**
    * Find all fragments that contain the given line/column position

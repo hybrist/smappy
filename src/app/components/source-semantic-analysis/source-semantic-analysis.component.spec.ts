@@ -3,6 +3,9 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { SourceSemanticAnalysisComponent } from './source-semantic-analysis.component';
 import { SourceAnalysisService } from '../../services/source-analysis.service';
 import { BundleService } from '../../services/bundle.service';
+import { SyntaxHighlightingUtils } from '../../utils/syntax-highlighting.utils';
+import { BundleSizeUtils } from '../../utils/bundle-size.utils';
+import { FragmentIconUtils } from '../../utils/fragment-icon.utils';
 import {
   SourceAnalysisResult,
   SourceFragment,
