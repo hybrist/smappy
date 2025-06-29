@@ -105,8 +105,8 @@ describe('StorageService', () => {
         mappingImpacts: new Map(),
       };
 
-      // Set an old timestamp (25 hours ago)
-      const oldTimestamp = Date.now() - 25 * 60 * 60 * 1000;
+      // Set an old timestamp (31 days ago)
+      const oldTimestamp = Date.now() - 31 * 24 * 60 * 60 * 1000;
       localStorage.setItem('smappy_bundle_timestamp', oldTimestamp.toString());
       localStorage.setItem(
         'smappy_bundle_analysis',
@@ -185,7 +185,7 @@ describe('StorageService', () => {
 
     it('should return false when data is expired', () => {
       // Set old timestamp
-      const oldTimestamp = Date.now() - 25 * 60 * 60 * 1000;
+      const oldTimestamp = Date.now() - 31 * 24 * 60 * 60 * 1000;
       localStorage.setItem('smappy_bundle_timestamp', oldTimestamp.toString());
       localStorage.setItem('smappy_bundle_analysis', '{}');
 

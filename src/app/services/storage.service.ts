@@ -13,7 +13,7 @@ import {
 export class StorageService {
   private readonly BUNDLE_KEY = 'smappy_bundle_analysis';
   private readonly BUNDLE_TIMESTAMP_KEY = 'smappy_bundle_timestamp';
-  private readonly MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+  private readonly MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
   saveBundleAnalysis(analysis: BundleAnalysis): void {
     try {
