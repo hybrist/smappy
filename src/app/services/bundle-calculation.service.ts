@@ -1,6 +1,10 @@
 import { Injectable } from '@angular/core';
 import { SourceMapConsumer } from '@jridgewell/source-map';
-import { BundleAnalysis, ChunkInfo, MappingImpact } from '../models/bundle.models';
+import {
+  BundleAnalysis,
+  ChunkInfo,
+  MappingImpact,
+} from '../models/bundle.models';
 
 @Injectable({
   providedIn: 'root',
@@ -24,7 +28,11 @@ export class BundleCalculationService {
 
     const promises = chunks.map(async (chunk) => {
       if (chunk.sourceMap) {
-        await this.processChunkWithSourceMap(chunk, addSourceSize, addMappingImpact);
+        await this.processChunkWithSourceMap(
+          chunk,
+          addSourceSize,
+          addMappingImpact,
+        );
       } else {
         addSourceSize('<unknown>', chunk.size);
       }

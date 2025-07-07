@@ -1,10 +1,7 @@
 import { Injectable } from '@angular/core';
 import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
-import {
-  SourceFragment,
-  ASTNodeInfo,
-} from '../models/source-analysis.models';
+import { SourceFragment, ASTNodeInfo } from '../models/source-analysis.models';
 
 @Injectable({
   providedIn: 'root',
@@ -117,8 +114,9 @@ export class AstParserService {
         }
         if (
           (path.isVariableDeclaration() &&
-            path.node.declarations.length === 1)
-          || (path.isExportNamedDeclaration() && path.node.declaration?.type === 'VariableDeclaration')
+            path.node.declarations.length === 1) ||
+          (path.isExportNamedDeclaration() &&
+            path.node.declaration?.type === 'VariableDeclaration')
         ) {
           let declaration;
           let declarator;
@@ -138,7 +136,10 @@ export class AstParserService {
             ) {
               return;
             }
-            const varName = code.slice(declarator.id.start!, declarator.id.end!);
+            const varName = code.slice(
+              declarator.id.start!,
+              declarator.id.end!,
+            );
             this.finalizeFragment(
               {
                 type: 'unknown',
@@ -153,7 +154,10 @@ export class AstParserService {
           }
         }
         if (path.isExpressionStatement()) {
-          const expr = code.slice(path.node.expression.start!, path.node.expression.end!);
+          const expr = code.slice(
+            path.node.expression.start!,
+            path.node.expression.end!,
+          );
           this.finalizeFragment(
             {
               type: 'unknown',

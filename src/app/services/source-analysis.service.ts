@@ -93,18 +93,22 @@ export class SourceAnalysisService {
         break;
       case 'html':
       case 'htm':
-        this.fileParsers.parseHTML(sourceContent.split('\n'), fragments, filePath);
+        this.fileParsers.parseHTML(
+          sourceContent.split('\n'),
+          fragments,
+          filePath,
+        );
         break;
       default:
-        this.fileParsers.parseGeneric(sourceContent.split('\n'), fragments, filePath);
+        this.fileParsers.parseGeneric(
+          sourceContent.split('\n'),
+          fragments,
+          filePath,
+        );
     }
 
     return { ast, fragments, astNodeLookup };
   }
-
-
-
-
 
   /**
    * Mark which fragments are included in the bundle using precomputed mapping impacts
@@ -216,9 +220,6 @@ export class SourceAnalysisService {
       (f) => f.type !== 'import' && f.type !== 'export', // Imports/exports might be used differently
     );
   }
-
-
-
 
   /**
    * Find all fragments that contain the given line/column position

@@ -33,7 +33,8 @@ export class SyntaxHighlightingUtils {
 
   static highlightCode(code: string, language: string): string {
     try {
-      const grammar = Prism.languages[language] || Prism.languages['javascript'];
+      const grammar =
+        Prism.languages[language] || Prism.languages['javascript'];
       return Prism.highlight(code, grammar, language);
     } catch (error) {
       return code

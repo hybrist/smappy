@@ -111,7 +111,7 @@ interface MyInterface {
           'method:MyClass.method2',
           'function:myFunction',
           'function:originalFunction',
-          'unknown:console.log(\'hello\')',
+          "unknown:console.log('hello')",
           'unknown:const myVariable',
           'unknown:[TSInterfaceDeclaration]',
         ].sort(),
@@ -154,7 +154,7 @@ interface MyInterface {
         originalFunction: 0,
         OriginalClass: 0,
         'const myVariable': 0,
-        'console.log(\'hello\')': 0,
+        "console.log('hello')": 0,
         '[TSInterfaceDeclaration]': 0,
       });
       expect(result!.includedFragments).toBe(3);

@@ -23,7 +23,6 @@ import { SyntaxHighlightingUtils } from '../../utils/syntax-highlighting.utils';
 import { BundleSizeUtils } from '../../utils/bundle-size.utils';
 import { FragmentIconUtils } from '../../utils/fragment-icon.utils';
 
-
 @Component({
   selector: 'section[appSourceSemanticAnalysis]',
   imports: [],
@@ -191,9 +190,13 @@ import { FragmentIconUtils } from '../../utils/fragment-icon.utils';
                         {{ formatSize(fragment.sourceSize) }}
                         →
                         @if (fragment.bundleSize! < fragment.sourceSize) {
-                          <span class="text-green-600 font-medium">{{ formatSize(fragment.bundleSize || 0) }}</span>
+                          <span class="text-green-600 font-medium">{{
+                            formatSize(fragment.bundleSize || 0)
+                          }}</span>
                         } @else {
-                          <span class="font-medium">{{ formatSize(fragment.bundleSize || 0) }}</span>
+                          <span class="font-medium">{{
+                            formatSize(fragment.bundleSize || 0)
+                          }}</span>
                         }
                       </div>
                     } @else {
@@ -471,14 +474,16 @@ export class SourceSemanticAnalysisComponent {
     const highlighted = SyntaxHighlightingUtils.highlightCode(code, language);
 
     const mappingImpacts = this.bundleService.getMappingImpacts(this.path);
-    const lineBundleBytes = BundleSizeUtils.calculateLineBundleContribution(mappingImpacts);
+    const lineBundleBytes =
+      BundleSizeUtils.calculateLineBundleContribution(mappingImpacts);
 
     const lines = highlighted.split('\n');
     const numberedLines = lines.map((line, index) => {
       const lineNumber = startLineNumber + index;
       const paddedNumber = lineNumber.toString().padStart(3, ' ');
       const bundleBytes = lineBundleBytes.get(lineNumber) || 0;
-      const backgroundClass = BundleSizeUtils.getLineBackgroundClass(bundleBytes);
+      const backgroundClass =
+        BundleSizeUtils.getLineBackgroundClass(bundleBytes);
 
       const tooltip =
         bundleBytes > 0
@@ -489,9 +494,6 @@ export class SourceSemanticAnalysisComponent {
 
     return numberedLines.join('\n');
   }
-
-
-
 
   /**
    * Handle mouse move events on code snippets to show generated code mappings
@@ -637,7 +639,9 @@ export class SourceSemanticAnalysisComponent {
         line: loc.generatedLine,
         column: loc.generatedColumn,
         sizeImpact: loc.sizeImpact,
-        highlightedCode: SyntaxHighlightingUtils.applyBasicHighlighting(loc.snippet),
+        highlightedCode: SyntaxHighlightingUtils.applyBasicHighlighting(
+          loc.snippet,
+        ),
       }),
     );
 
@@ -647,7 +651,6 @@ export class SourceSemanticAnalysisComponent {
       generatedLocations: mappedLocations,
     };
   }
-
 
   /**
    * Find the largest AST node that starts at the given position using fast lookup
@@ -708,7 +711,9 @@ export class SourceSemanticAnalysisComponent {
             line: loc.generatedLine,
             column: loc.generatedColumn,
             sizeImpact: loc.sizeImpact,
-            highlightedCode: SyntaxHighlightingUtils.applyBasicHighlighting(loc.snippet),
+            highlightedCode: SyntaxHighlightingUtils.applyBasicHighlighting(
+              loc.snippet,
+            ),
           });
         }
       }

@@ -11,11 +11,11 @@ import {
   providedIn: 'root',
 })
 export class StorageService {
-  private readonly BUNDLE_KEY = 'smappy_bundle_analysis';
-  private readonly BUNDLE_TIMESTAMP_KEY = 'smappy_bundle_timestamp';
+  private readonly STORAGE_DIRECTORY = 'bundle-analyses';
   private readonly MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+  private directoryHandle: FileSystemDirectoryHandle | null = null;
 
-  saveBundleAnalysis(analysis: BundleAnalysis): void {
+  async saveBundleAnalysis(analysis: BundleAnalysis): Promise<void> {
     try {
       const serializable: SerializableBundleAnalysis = {
         totalSize: analysis.totalSize,
@@ -23,29 +23,43 @@ export class StorageService {
         sourceBreakdown: Array.from(analysis.sourceBreakdown.entries()),
       };
 
-      localStorage.setItem(this.BUNDLE_KEY, JSON.stringify(serializable));
-      localStorage.setItem(this.BUNDLE_TIMESTAMP_KEY, Date.now().toString());
+      const timestamp = Date.now();
+      const filename = `bundle-${timestamp}.json`;
+
+      const directoryHandle = await this.getDirectoryHandle();
+      const fileHandle = await directoryHandle.getFileHandle(filename, {
+        create: true,
+      });
+      const writable = await fileHandle.createWritable();
+
+      await writable.write(JSON.stringify(serializable));
+      await writable.close();
     } catch (error) {
-      console.warn('Failed to save bundle analysis to localStorage:', error);
+      console.warn('Failed to save bundle analysis to file system:', error);
     }
   }
 
-  loadBundleAnalysis(): BundleAnalysis | null {
+  async loadBundleAnalysis(): Promise<BundleAnalysis | null> {
     try {
-      const timestampStr = localStorage.getItem(this.BUNDLE_TIMESTAMP_KEY);
-      if (!timestampStr) return null;
+      const files = await this.listBundleAnalyses();
+      if (files.length === 0) return null;
 
-      const timestamp = parseInt(timestampStr, 10);
-      const age = Date.now() - timestamp;
+      // Get the most recent file
+      const latestFile = files[files.length - 1];
+      const age = Date.now() - latestFile.timestamp;
 
       // Check if data is too old
       if (age > this.MAX_AGE_MS) {
-        this.clearBundleAnalysis();
+        await this.clearBundleAnalysis();
         return null;
       }
 
-      const dataStr = localStorage.getItem(this.BUNDLE_KEY);
-      if (!dataStr) return null;
+      const directoryHandle = await this.getDirectoryHandle();
+      const fileHandle = await directoryHandle.getFileHandle(
+        latestFile.filename,
+      );
+      const file = await fileHandle.getFile();
+      const dataStr = await file.text();
 
       const serializable: SerializableBundleAnalysis = JSON.parse(dataStr);
 
@@ -56,37 +70,132 @@ export class StorageService {
         mappingImpacts: this.recalculateMappingImpacts(serializable.chunks),
       };
     } catch (error) {
-      console.warn('Failed to load bundle analysis from localStorage:', error);
-      this.clearBundleAnalysis();
+      console.warn('Failed to load bundle analysis from file system:', error);
+      await this.clearBundleAnalysis();
       return null;
     }
   }
 
-  clearBundleAnalysis(): void {
+  async clearBundleAnalysis(): Promise<void> {
     try {
-      localStorage.removeItem(this.BUNDLE_KEY);
-      localStorage.removeItem(this.BUNDLE_TIMESTAMP_KEY);
+      const directoryHandle = await this.getDirectoryHandle();
+      const files = await this.listBundleAnalyses();
+
+      for (const file of files) {
+        await directoryHandle.removeEntry(file.filename);
+      }
     } catch (error) {
-      console.warn('Failed to clear bundle analysis from localStorage:', error);
+      console.warn('Failed to clear bundle analysis from file system:', error);
     }
   }
 
-  hasSavedBundleAnalysis(): boolean {
-    const timestampStr = localStorage.getItem(this.BUNDLE_TIMESTAMP_KEY);
-    if (!timestampStr) return false;
+  async hasSavedBundleAnalysis(): Promise<boolean> {
+    try {
+      const files = await this.listBundleAnalyses();
+      if (files.length === 0) return false;
 
-    const timestamp = parseInt(timestampStr, 10);
-    const age = Date.now() - timestamp;
+      const latestFile = files[files.length - 1];
+      const age = Date.now() - latestFile.timestamp;
 
-    return age <= this.MAX_AGE_MS && !!localStorage.getItem(this.BUNDLE_KEY);
+      return age <= this.MAX_AGE_MS;
+    } catch (error) {
+      console.warn('Failed to check for saved bundle analysis:', error);
+      return false;
+    }
   }
 
-  getBundleAnalysisAge(): number | null {
-    const timestampStr = localStorage.getItem(this.BUNDLE_TIMESTAMP_KEY);
-    if (!timestampStr) return null;
+  async getBundleAnalysisAge(): Promise<number | null> {
+    try {
+      const files = await this.listBundleAnalyses();
+      if (files.length === 0) return null;
 
-    const timestamp = parseInt(timestampStr, 10);
-    return Date.now() - timestamp;
+      const latestFile = files[files.length - 1];
+      return Date.now() - latestFile.timestamp;
+    } catch (error) {
+      console.warn('Failed to get bundle analysis age:', error);
+      return null;
+    }
+  }
+
+  private async getDirectoryHandle(): Promise<FileSystemDirectoryHandle> {
+    if (!this.directoryHandle) {
+      const opfsRoot = await navigator.storage.getDirectory();
+      this.directoryHandle = await opfsRoot.getDirectoryHandle(
+        this.STORAGE_DIRECTORY,
+        { create: true },
+      );
+    }
+    return this.directoryHandle;
+  }
+
+  private async listBundleAnalyses(): Promise<
+    { filename: string; timestamp: number }[]
+  > {
+    try {
+      const directoryHandle = await this.getDirectoryHandle();
+      const files: { filename: string; timestamp: number }[] = [];
+
+      for await (const [name, handle] of directoryHandle.entries()) {
+        if (
+          handle.kind === 'file' &&
+          name.startsWith('bundle-') &&
+          name.endsWith('.json')
+        ) {
+          const timestampStr = name.replace('bundle-', '').replace('.json', '');
+          const timestamp = parseInt(timestampStr, 10);
+          if (!isNaN(timestamp)) {
+            files.push({ filename: name, timestamp });
+          }
+        }
+      }
+
+      return files.sort((a, b) => a.timestamp - b.timestamp);
+    } catch (error) {
+      console.warn('Failed to list bundle analyses:', error);
+      return [];
+    }
+  }
+
+  async getAllBundleAnalyses(): Promise<
+    { filename: string; timestamp: number; age: number }[]
+  > {
+    try {
+      const files = await this.listBundleAnalyses();
+      const now = Date.now();
+
+      return files.map((file) => ({
+        ...file,
+        age: now - file.timestamp,
+      }));
+    } catch (error) {
+      console.warn('Failed to get all bundle analyses:', error);
+      return [];
+    }
+  }
+
+  async deleteBundleAnalysis(filename: string): Promise<void> {
+    try {
+      const directoryHandle = await this.getDirectoryHandle();
+      await directoryHandle.removeEntry(filename);
+    } catch (error) {
+      console.warn('Failed to delete bundle analysis:', error);
+    }
+  }
+
+  async cleanupOldAnalyses(): Promise<void> {
+    try {
+      const files = await this.listBundleAnalyses();
+      const now = Date.now();
+
+      for (const file of files) {
+        const age = now - file.timestamp;
+        if (age > this.MAX_AGE_MS) {
+          await this.deleteBundleAnalysis(file.filename);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to cleanup old analyses:', error);
+    }
   }
 
   /**

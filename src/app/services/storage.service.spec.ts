@@ -5,19 +5,55 @@ import { BundleAnalysis } from '../models/bundle.models';
 
 describe('StorageService', () => {
   let service: StorageService;
+  let mockDirectoryHandle: any;
+  let mockFileHandle: any;
+  let mockWritable: any;
 
   beforeEach(() => {
+    // Mock FileSystemDirectoryHandle
+    mockDirectoryHandle = {
+      getFileHandle: jasmine
+        .createSpy('getFileHandle')
+        .and.returnValue(Promise.resolve(mockFileHandle)),
+      removeEntry: jasmine
+        .createSpy('removeEntry')
+        .and.returnValue(Promise.resolve()),
+      entries: jasmine
+        .createSpy('entries')
+        .and.returnValue(Promise.resolve([].entries())),
+    };
+
+    // Mock FileSystemFileHandle
+    mockFileHandle = {
+      createWritable: jasmine
+        .createSpy('createWritable')
+        .and.returnValue(Promise.resolve(mockWritable)),
+      getFile: jasmine
+        .createSpy('getFile')
+        .and.returnValue(
+          Promise.resolve(new File(['{"test": "data"}'], 'bundle-123.json')),
+        ),
+    };
+
+    // Mock FileSystemWritableFileStream
+    mockWritable = {
+      write: jasmine.createSpy('write').and.returnValue(Promise.resolve()),
+      close: jasmine.createSpy('close').and.returnValue(Promise.resolve()),
+    };
+
+    // Mock navigator.storage.getDirectory
+    spyOn(navigator.storage, 'getDirectory').and.returnValue(
+      Promise.resolve({
+        getDirectoryHandle: jasmine
+          .createSpy('getDirectoryHandle')
+          .and.returnValue(Promise.resolve(mockDirectoryHandle)),
+      } as any),
+    );
+
     TestBed.configureTestingModule({
       providers: [provideZonelessChangeDetection()],
     });
     service = TestBed.inject(StorageService);
-
-    // Clear localStorage before each test
-    localStorage.clear();
-  });
-
-  afterEach(() => {
-    localStorage.clear();
   });
 
   it('should be created', () => {
@@ -25,7 +61,7 @@ describe('StorageService', () => {
   });
 
   describe('saveBundleAnalysis', () => {
-    it('should save bundle analysis to localStorage', () => {
+    it('should save bundle analysis to file system', async () => {
       const mockAnalysis: BundleAnalysis = {
         totalSize: 1000,
         chunks: [
@@ -46,10 +82,11 @@ describe('StorageService', () => {
         mappingImpacts: new Map(),
       };
 
-      service.saveBundleAnalysis(mockAnalysis);
+      await service.saveBundleAnalysis(mockAnalysis);
 
-      expect(localStorage.getItem('smappy_bundle_analysis')).toBeTruthy();
-      expect(localStorage.getItem('smappy_bundle_timestamp')).toBeTruthy();
+      expect(mockDirectoryHandle.getFileHandle).toHaveBeenCalled();
+      expect(mockWritable.write).toHaveBeenCalled();
+      expect(mockWritable.close).toHaveBeenCalled();
     });
 
     it('should handle localStorage errors gracefully', () => {
@@ -88,8 +125,8 @@ describe('StorageService', () => {
         mappingImpacts: new Map(),
       };
 
-      service.saveBundleAnalysis(mockAnalysis);
-      const loaded = service.loadBundleAnalysis();
+      await service.saveBundleAnalysis(mockAnalysis);
+      const loaded = await service.loadBundleAnalysis();
 
       expect(loaded).toBeTruthy();
       expect(loaded?.totalSize).toBe(1000);
@@ -175,12 +212,12 @@ describe('StorageService', () => {
         mappingImpacts: new Map(),
       };
 
-      service.saveBundleAnalysis(mockAnalysis);
-      expect(service.hasSavedBundleAnalysis()).toBe(true);
+      await service.saveBundleAnalysis(mockAnalysis);
+      expect(await service.hasSavedBundleAnalysis()).toBe(true);
     });
 
-    it('should return false when no data exists', () => {
-      expect(service.hasSavedBundleAnalysis()).toBe(false);
+    it('should return false when no data exists', async () => {
+      expect(await service.hasSavedBundleAnalysis()).toBe(false);
     });
 
     it('should return false when data is expired', () => {
@@ -189,7 +226,7 @@ describe('StorageService', () => {
       localStorage.setItem('smappy_bundle_timestamp', oldTimestamp.toString());
       localStorage.setItem('smappy_bundle_analysis', '{}');
 
-      expect(service.hasSavedBundleAnalysis()).toBe(false);
+      expect(await service.hasSavedBundleAnalysis()).toBe(false);
     });
   });
 

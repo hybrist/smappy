@@ -257,8 +257,8 @@ describe('BundleService', () => {
 
       await service.loadBundle(config);
 
-      expect(storageService.hasSavedBundleAnalysis()).toBe(true);
-      const savedBundle = storageService.loadBundleAnalysis();
+      expect(await storageService.hasSavedBundleAnalysis()).toBe(true);
+      const savedBundle = await storageService.loadBundleAnalysis();
       expect(savedBundle?.totalSize).toBe(service.bundle()?.totalSize);
     });
 
@@ -297,11 +297,11 @@ describe('BundleService', () => {
       const config: BundleConfig = { chunks: [mockChunk] };
 
       await service.loadBundle(config);
-      expect(storageService.hasSavedBundleAnalysis()).toBe(true);
+      expect(await storageService.hasSavedBundleAnalysis()).toBe(true);
 
-      service.reset();
+      await service.reset();
 
-      expect(storageService.hasSavedBundleAnalysis()).toBe(false);
+      expect(await storageService.hasSavedBundleAnalysis()).toBe(false);
       expect(service.bundle()).toBeNull();
     });
 

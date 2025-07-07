@@ -34,7 +34,7 @@ import { BundleConfig } from '../../models/bundle.models';
                 </p>
                 <p class="text-sm text-green-700">
                   {{ formatSize(bundle()!.totalSize) }} •
-                  {{ bundle()!.chunks.length }} chunks • {{ getBundleAge() }}
+                  {{ bundle()!.chunks.length }} chunks • {{ bundleAge }}
                 </p>
               </div>
             </div>
@@ -119,6 +119,11 @@ export class HomeComponent {
 
   chunks: File[] = [];
   sourceMaps: File[] = [];
+  bundleAge: string = '';
+
+  constructor() {
+    this.updateBundleAge();
+  }
 
   onFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -150,25 +155,34 @@ export class HomeComponent {
     this.router.navigate(['/bundle']);
   }
 
-  startNewAnalysis(): void {
-    this.bundleService.reset();
+  async startNewAnalysis(): Promise<void> {
+    await this.bundleService.reset();
     this.chunks = [];
     this.sourceMaps = [];
+    this.bundleAge = '';
   }
 
-  getBundleAge(): string {
-    const age = this.bundleService.getBundleAge();
-    if (!age) return '';
+  private async updateBundleAge(): Promise<void> {
+    try {
+      const age = await this.bundleService.getBundleAge();
+      if (!age) {
+        this.bundleAge = '';
+        return;
+      }
 
-    const hours = Math.floor(age / (1000 * 60 * 60));
-    const minutes = Math.floor((age % (1000 * 60 * 60)) / (1000 * 60));
+      const hours = Math.floor(age / (1000 * 60 * 60));
+      const minutes = Math.floor((age % (1000 * 60 * 60)) / (1000 * 60));
 
-    if (hours > 0) {
-      return `${hours}h ago`;
-    } else if (minutes > 0) {
-      return `${minutes}m ago`;
-    } else {
-      return 'just now';
+      if (hours > 0) {
+        this.bundleAge = `${hours}h ago`;
+      } else if (minutes > 0) {
+        this.bundleAge = `${minutes}m ago`;
+      } else {
+        this.bundleAge = 'just now';
+      }
+    } catch (error) {
+      console.warn('Failed to update bundle age:', error);
+      this.bundleAge = '';
     }
   }
 

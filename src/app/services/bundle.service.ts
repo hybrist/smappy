@@ -28,7 +28,7 @@ export class BundleService {
   readonly errorMessage = this.error.asReadonly();
 
   constructor() {
-    // Try to restore bundle from localStorage on initialization
+    // Try to restore bundle from file system on initialization
     this.restoreBundleFromStorage();
   }
 
@@ -50,8 +50,8 @@ export class BundleService {
       const analysis = await this.bundleCalculation.analyzeBundle(chunks);
       this.currentBundle.set(analysis);
 
-      // Save to localStorage for persistence
-      this.storageService.saveBundleAnalysis(analysis);
+      // Save to file system for persistence
+      await this.storageService.saveBundleAnalysis(analysis);
     } catch (err) {
       this.error.set(
         err instanceof Error ? err.message : 'Failed to load bundle',
@@ -93,11 +93,6 @@ export class BundleService {
       reader.readAsText(file);
     });
   }
-
-
-
-
-
 
   getChunkById(id: string): ChunkInfo | undefined {
     return this.currentBundle()?.chunks.find((chunk) => chunk.id === id);
@@ -144,33 +139,33 @@ export class BundleService {
     return null;
   }
 
-  reset(): void {
+  async reset(): Promise<void> {
     this.currentBundle.set(null);
     this.error.set(null);
     this.isLoading.set(false);
 
-    // Clear from localStorage
-    this.storageService.clearBundleAnalysis();
+    // Clear from file system
+    await this.storageService.clearBundleAnalysis();
   }
 
-  private restoreBundleFromStorage(): void {
+  private async restoreBundleFromStorage(): Promise<void> {
     try {
-      const savedBundle = this.storageService.loadBundleAnalysis();
+      const savedBundle = await this.storageService.loadBundleAnalysis();
       if (savedBundle) {
         this.currentBundle.set(savedBundle);
       }
     } catch (error) {
       console.warn('Failed to restore bundle from storage:', error);
-      this.storageService.clearBundleAnalysis();
+      await this.storageService.clearBundleAnalysis();
     }
   }
 
-  hasSavedBundle(): boolean {
-    return this.storageService.hasSavedBundleAnalysis();
+  async hasSavedBundle(): Promise<boolean> {
+    return await this.storageService.hasSavedBundleAnalysis();
   }
 
-  getBundleAge(): number | null {
-    return this.storageService.getBundleAnalysisAge();
+  async getBundleAge(): Promise<number | null> {
+    return await this.storageService.getBundleAnalysisAge();
   }
 
   /**
@@ -228,5 +223,4 @@ export class BundleService {
 
     return results;
   }
-
 }
