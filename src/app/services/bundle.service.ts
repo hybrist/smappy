@@ -168,6 +168,18 @@ export class BundleService {
     return await this.storageService.getBundleAnalysisAge();
   }
 
+  async loadStoredBundleAnalysis(filename: string): Promise<void> {
+    try {
+      const analysis =
+        await this.storageService.loadBundleAnalysisByFilename(filename);
+      if (analysis) {
+        this.currentBundle.set(analysis);
+      }
+    } catch (error) {
+      console.warn('Failed to load stored bundle analysis:', error);
+    }
+  }
+
   /**
    * Get precomputed mapping impacts for a source file
    */

@@ -1,6 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { BundleService } from '../../services/bundle.service';
+import { StorageService } from '../../services/storage.service';
 import { BundleConfig } from '../../models/bundle.models';
 
 @Component({
@@ -14,43 +15,72 @@ import { BundleConfig } from '../../models/bundle.models';
           Analyze your JavaScript bundles and source maps
         </p>
 
-        @if (bundle()) {
+        @if (storedAnalyses().length > 0) {
           <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-            <div class="flex items-center">
-              <svg
-                class="w-5 h-5 text-green-600 mr-2"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clip-rule="evenodd"
-                ></path>
-              </svg>
-              <div>
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center">
+                <svg
+                  class="w-5 h-5 text-green-600 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clip-rule="evenodd"
+                  ></path>
+                </svg>
                 <p class="text-sm font-medium text-green-800">
-                  Previous Analysis Available
-                </p>
-                <p class="text-sm text-green-700">
-                  {{ formatSize(bundle()!.totalSize) }} •
-                  {{ bundle()!.chunks.length }} chunks • {{ bundleAge }}
+                  {{ storedAnalyses().length }} Stored Analysis{{
+                    storedAnalyses().length > 1 ? 'es' : ''
+                  }}
                 </p>
               </div>
-            </div>
-            <div class="mt-3 flex space-x-3">
-              <button
-                (click)="viewExistingBundle()"
-                class="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
-              >
-                View Analysis
-              </button>
               <button
                 (click)="startNewAnalysis()"
-                class="text-sm bg-white text-green-700 border border-green-600 px-3 py-1 rounded hover:bg-green-50"
+                class="text-xs bg-white text-green-700 border border-green-600 px-2 py-1 rounded hover:bg-green-50"
               >
-                New Analysis
+                Clear All
               </button>
+            </div>
+
+            <div class="space-y-2 max-h-48 overflow-y-auto">
+              @for (analysis of storedAnalyses(); track analysis.filename) {
+                <div
+                  class="bg-white border border-green-200 rounded p-3 hover:bg-green-25 cursor-pointer"
+                  (click)="loadBundleAnalysis(analysis.filename)"
+                >
+                  <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                      <p class="text-sm font-medium text-gray-900">
+                        @if (analysis.totalSize) {
+                          {{ formatSize(analysis.totalSize) }}
+                          @if (analysis.chunkCount) {
+                            • {{ analysis.chunkCount }} chunk{{
+                              analysis.chunkCount > 1 ? 's' : ''
+                            }}
+                          }
+                        } @else {
+                          Bundle Analysis
+                        }
+                      </p>
+                      <p class="text-xs text-gray-600">
+                        {{ analysis.displayDateTime }} •
+                        {{ analysis.displayAge }}
+                      </p>
+                    </div>
+                    <button
+                      class="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 flex-shrink-0 ml-2"
+                      (click)="
+                        loadBundleAnalysis(analysis.filename);
+                        $event.stopPropagation()
+                      "
+                    >
+                      Open
+                    </button>
+                  </div>
+                </div>
+              }
             </div>
           </div>
         }
@@ -112,6 +142,7 @@ import { BundleConfig } from '../../models/bundle.models';
 export class HomeComponent {
   private readonly router = inject(Router);
   private readonly bundleService = inject(BundleService);
+  private readonly storageService = inject(StorageService);
 
   readonly loading = this.bundleService.loading;
   readonly errorMessage = this.bundleService.errorMessage;
@@ -120,9 +151,20 @@ export class HomeComponent {
   chunks: File[] = [];
   sourceMaps: File[] = [];
   bundleAge: string = '';
+  storedAnalyses = signal<
+    {
+      filename: string;
+      timestamp: number;
+      age: number;
+      displayAge: string;
+      displayDateTime: string;
+      totalSize?: number;
+      chunkCount?: number;
+    }[]
+  >([]);
 
   constructor() {
-    this.updateBundleAge();
+    this.loadStoredAnalyses();
   }
 
   onFilesSelected(event: Event): void {
@@ -160,30 +202,80 @@ export class HomeComponent {
     this.chunks = [];
     this.sourceMaps = [];
     this.bundleAge = '';
+    await this.loadStoredAnalyses();
   }
 
-  private async updateBundleAge(): Promise<void> {
+  private async loadStoredAnalyses(): Promise<void> {
     try {
-      const age = await this.bundleService.getBundleAge();
-      if (!age) {
-        this.bundleAge = '';
-        return;
-      }
+      const analyses = await this.storageService.getAllBundleAnalyses();
 
-      const hours = Math.floor(age / (1000 * 60 * 60));
-      const minutes = Math.floor((age % (1000 * 60 * 60)) / (1000 * 60));
+      // Load details for each analysis
+      const analysesWithDetails = await Promise.all(
+        analyses.map(async (analysis) => {
+          try {
+            const bundleData =
+              await this.storageService.loadBundleAnalysisByFilename(
+                analysis.filename,
+              );
+            return {
+              ...analysis,
+              displayAge: this.formatAge(analysis.age),
+              displayDateTime: this.formatTimestamp(analysis.timestamp),
+              totalSize: bundleData?.totalSize,
+              chunkCount: bundleData?.chunks.length,
+            };
+          } catch (error) {
+            return {
+              ...analysis,
+              displayAge: this.formatAge(analysis.age),
+              displayDateTime: this.formatTimestamp(analysis.timestamp),
+            };
+          }
+        }),
+      );
 
-      if (hours > 0) {
-        this.bundleAge = `${hours}h ago`;
-      } else if (minutes > 0) {
-        this.bundleAge = `${minutes}m ago`;
-      } else {
-        this.bundleAge = 'just now';
+      analysesWithDetails.sort((a, b) => b.timestamp - a.timestamp); // Most recent first
+      this.storedAnalyses.set(analysesWithDetails);
+    } catch (error) {
+      console.warn('Failed to load stored analyses:', error);
+      this.storedAnalyses.set([]);
+    }
+  }
+
+  async loadBundleAnalysis(filename: string): Promise<void> {
+    try {
+      await this.bundleService.loadStoredBundleAnalysis(filename);
+      if (this.bundleService.bundle()) {
+        this.router.navigate(['/bundle']);
       }
     } catch (error) {
-      console.warn('Failed to update bundle age:', error);
-      this.bundleAge = '';
+      console.warn('Failed to load bundle analysis:', error);
     }
+  }
+
+  private formatAge(ageMs: number): string {
+    const hours = Math.floor(ageMs / (1000 * 60 * 60));
+    const minutes = Math.floor((ageMs % (1000 * 60 * 60)) / (1000 * 60));
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) {
+      return `${days}d ago`;
+    } else if (hours > 0) {
+      return `${hours}h ago`;
+    } else if (minutes > 0) {
+      return `${minutes}m ago`;
+    } else {
+      return 'just now';
+    }
+  }
+
+  private formatTimestamp(timestamp: number): string {
+    const date = new Date(timestamp);
+    return (
+      date.toLocaleDateString() +
+      ' ' +
+      date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    );
   }
 
   formatSize(bytes: number): string {

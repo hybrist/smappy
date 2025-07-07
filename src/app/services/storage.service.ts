@@ -198,6 +198,29 @@ export class StorageService {
     }
   }
 
+  async loadBundleAnalysisByFilename(
+    filename: string,
+  ): Promise<BundleAnalysis | null> {
+    try {
+      const directoryHandle = await this.getDirectoryHandle();
+      const fileHandle = await directoryHandle.getFileHandle(filename);
+      const file = await fileHandle.getFile();
+      const dataStr = await file.text();
+
+      const serializable: SerializableBundleAnalysis = JSON.parse(dataStr);
+
+      return {
+        totalSize: serializable.totalSize,
+        chunks: serializable.chunks,
+        sourceBreakdown: new Map(serializable.sourceBreakdown),
+        mappingImpacts: this.recalculateMappingImpacts(serializable.chunks),
+      };
+    } catch (error) {
+      console.warn('Failed to load bundle analysis by filename:', error);
+      return null;
+    }
+  }
+
   /**
    * Recalculate mapping impacts from chunk data when loading from storage
    */
