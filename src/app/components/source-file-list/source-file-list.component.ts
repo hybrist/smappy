@@ -39,7 +39,7 @@ export interface SourceFileItem {
               <div class="text-sm font-medium text-gray-900 truncate">
                 @if (file.clickable !== false) {
                   <a
-                    [routerLink]="['/bundle/sources/details']"
+                    [routerLink]="['/bundle', bundleId(), 'sources', 'details']"
                     [queryParams]="{ p: file.path }"
                     class="hover:text-blue-600"
                   >
@@ -81,6 +81,8 @@ export class SourceFileListComponent {
   @Input() files: SourceFileItem[] = [];
 
   private readonly bundleService = inject(BundleService);
+
+  protected readonly bundleId = this.bundleService.bundleId;
 
   getFileName(path: string): string {
     return path.split('/').pop() || path;

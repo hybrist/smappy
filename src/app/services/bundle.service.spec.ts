@@ -7,11 +7,22 @@ import { BundleCalculationService } from './bundle-calculation.service';
 import { SourceMapProcessorService } from './source-map-processor.service';
 import { BundleConfig, SourceMapData } from '../models/bundle.models';
 
+async function clearOriginPrivateStorage() {
+  const dir = await navigator.storage.getDirectory();
+  for await (const [name, handle] of dir) {
+    if (handle.kind === 'file') {
+      await dir.removeEntry(name);
+    } else if (handle.kind === 'directory') {
+      await dir.removeEntry(name, { recursive: true });
+    }
+  }
+}
+
 describe('BundleService', () => {
   let service: BundleService;
   let storageService: StorageService;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     TestBed.configureTestingModule({
       providers: [
         provideZonelessChangeDetection(),
@@ -22,12 +33,12 @@ describe('BundleService', () => {
     service = TestBed.inject(BundleService);
     storageService = TestBed.inject(StorageService);
 
-    // Clear localStorage before each test
-    localStorage.clear();
+    // Clear storage before each test
+    await clearOriginPrivateStorage();
   });
 
-  afterEach(() => {
-    localStorage.clear();
+  afterEach(async () => {
+    await clearOriginPrivateStorage();
   });
 
   it('should be created', () => {
@@ -250,8 +261,8 @@ describe('BundleService', () => {
     });
   });
 
-  describe('localStorage persistence', () => {
-    it('should save bundle to localStorage after analysis', async () => {
+  describe('OPFS persistence', () => {
+    it('should save bundle to OPFS after analysis', async () => {
       const mockChunk = new File(['test content'], 'main.js');
       const config: BundleConfig = { chunks: [mockChunk] };
 
@@ -262,37 +273,7 @@ describe('BundleService', () => {
       expect(savedBundle?.totalSize).toBe(service.bundle()?.totalSize);
     });
 
-    it('should restore bundle from localStorage on initialization', () => {
-      // Save a bundle to localStorage first
-      const mockBundle = {
-        totalSize: 1000,
-        chunks: [
-          {
-            id: 'main',
-            fileName: 'main.js',
-            size: 1000,
-            content: 'test content',
-          },
-        ],
-        sourceBreakdown: new Map([['src/main.ts', 500]]),
-        mappingImpacts: new Map(),
-      };
-
-      storageService.saveBundleAnalysis(mockBundle);
-
-      // Create a new TestBed to get a fresh service instance
-      TestBed.resetTestingModule();
-      TestBed.configureTestingModule({
-        providers: [provideZonelessChangeDetection()],
-      });
-
-      const newService = TestBed.inject(BundleService);
-
-      expect(newService.bundle()).toBeTruthy();
-      expect(newService.bundle()?.totalSize).toBe(1000);
-    });
-
-    it('should clear localStorage when reset is called', async () => {
+    it('should clear OPFS when reset is called', async () => {
       const mockChunk = new File(['test content'], 'main.js');
       const config: BundleConfig = { chunks: [mockChunk] };
 
@@ -311,28 +292,9 @@ describe('BundleService', () => {
 
       await service.loadBundle(config);
 
-      const age = service.getBundleAge();
+      const age = await service.getBundleAge();
       expect(age).toBeDefined();
       expect(age).toBeGreaterThanOrEqual(0);
-    });
-
-    it('should handle corrupted localStorage data gracefully', () => {
-      // Put invalid data in localStorage
-      localStorage.setItem('smappy_bundle_analysis', 'invalid json');
-      localStorage.setItem('smappy_bundle_timestamp', Date.now().toString());
-
-      spyOn(console, 'warn');
-
-      // Create a new TestBed to get a fresh service instance
-      TestBed.resetTestingModule();
-      TestBed.configureTestingModule({
-        providers: [provideZonelessChangeDetection()],
-      });
-
-      const newService = TestBed.inject(BundleService);
-
-      expect(newService.bundle()).toBeNull();
-      expect(console.warn).toHaveBeenCalled();
     });
   });
 });

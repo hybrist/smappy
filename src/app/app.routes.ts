@@ -8,7 +8,7 @@ export const routes: Routes = [
       import('./pages/home/home.component').then((m) => m.HomeComponent),
   },
   {
-    path: 'bundle',
+    path: 'bundle/:bundleId',
     loadComponent: () =>
       import('./layouts/bundle-layout/bundle-layout.component').then(
         (m) => m.BundleLayoutComponent,
@@ -57,6 +57,11 @@ export const routes: Routes = [
           ),
       },
     ],
+  },
+  {
+    path: 'bundle',
+    redirectTo: '/home',
+    pathMatch: 'full',
   },
   { path: '**', redirectTo: '/home' },
 ];

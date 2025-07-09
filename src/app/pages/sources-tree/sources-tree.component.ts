@@ -129,7 +129,7 @@ interface TreeNode {
                   <div class="min-w-0 flex-1">
                     @if (node.isFile) {
                       <a
-                        [routerLink]="['/bundle/sources/details']"
+                        [routerLink]="['/bundle', bundleId(), 'sources', 'details']"
                         [queryParams]="{ p: node.path }"
                         class="text-sm font-medium text-gray-900 hover:text-blue-600 truncate block"
                       >
@@ -182,6 +182,7 @@ export class SourcesTreeComponent {
   private readonly bundleService = inject(BundleService);
 
   readonly bundle = this.bundleService.bundle;
+  readonly bundleId = this.bundleService.bundleId;
   readonly filterText = signal('');
 
   readonly sourceTree = computed(() => {

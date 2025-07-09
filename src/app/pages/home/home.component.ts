@@ -186,15 +186,11 @@ export class HomeComponent {
       sourceMaps: this.sourceMaps.length > 0 ? this.sourceMaps : undefined,
     };
 
-    await this.bundleService.loadBundle(config);
+    const bundleId = await this.bundleService.loadBundle(config);
 
-    if (this.bundleService.bundle()) {
-      this.router.navigate(['/bundle']);
+    if (bundleId && this.bundleService.bundle()) {
+      this.router.navigate(['/bundle', bundleId]);
     }
-  }
-
-  viewExistingBundle(): void {
-    this.router.navigate(['/bundle']);
   }
 
   async startNewAnalysis(): Promise<void> {
@@ -246,7 +242,9 @@ export class HomeComponent {
     try {
       await this.bundleService.loadStoredBundleAnalysis(filename);
       if (this.bundleService.bundle()) {
-        this.router.navigate(['/bundle']);
+        // Extract bundle ID from filename (remove .json extension)
+        const bundleId = filename.replace('.json', '');
+        this.router.navigate(['/bundle', bundleId]);
       }
     } catch (error) {
       console.warn('Failed to load bundle analysis:', error);

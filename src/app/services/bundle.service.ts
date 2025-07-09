@@ -20,19 +20,16 @@ export class BundleService {
   private readonly sourceMapProcessor = inject(SourceMapProcessorService);
 
   private readonly currentBundle = signal<BundleAnalysis | null>(null);
+  private readonly currentBundleId = signal<string | null>(null);
   private readonly isLoading = signal<boolean>(false);
   private readonly error = signal<string | null>(null);
 
   readonly bundle = this.currentBundle.asReadonly();
+  readonly bundleId = this.currentBundleId.asReadonly();
   readonly loading = this.isLoading.asReadonly();
   readonly errorMessage = this.error.asReadonly();
 
-  constructor() {
-    // Try to restore bundle from file system on initialization
-    this.restoreBundleFromStorage();
-  }
-
-  async loadBundle(config: BundleConfig): Promise<void> {
+  async loadBundle(config: BundleConfig): Promise<string | null> {
     this.isLoading.set(true);
     this.error.set(null);
 
@@ -50,12 +47,18 @@ export class BundleService {
       const analysis = await this.bundleCalculation.analyzeBundle(chunks);
       this.currentBundle.set(analysis);
 
-      // Save to file system for persistence
-      await this.storageService.saveBundleAnalysis(analysis);
+      // Save to file system for persistence and get the filename
+      const filename = await this.storageService.saveBundleAnalysis(analysis);
+      const bundleId = filename ? filename.replace('.json', '') : null;
+      this.currentBundleId.set(bundleId);
+
+      // Return bundle ID (filename without extension)
+      return bundleId;
     } catch (err) {
       this.error.set(
         err instanceof Error ? err.message : 'Failed to load bundle',
       );
+      return null;
     } finally {
       this.isLoading.set(false);
     }
@@ -141,23 +144,12 @@ export class BundleService {
 
   async reset(): Promise<void> {
     this.currentBundle.set(null);
+    this.currentBundleId.set(null);
     this.error.set(null);
     this.isLoading.set(false);
 
     // Clear from file system
     await this.storageService.clearBundleAnalysis();
-  }
-
-  private async restoreBundleFromStorage(): Promise<void> {
-    try {
-      const savedBundle = await this.storageService.loadBundleAnalysis();
-      if (savedBundle) {
-        this.currentBundle.set(savedBundle);
-      }
-    } catch (error) {
-      console.warn('Failed to restore bundle from storage:', error);
-      await this.storageService.clearBundleAnalysis();
-    }
   }
 
   async hasSavedBundle(): Promise<boolean> {
@@ -174,6 +166,8 @@ export class BundleService {
         await this.storageService.loadBundleAnalysisByFilename(filename);
       if (analysis) {
         this.currentBundle.set(analysis);
+        const bundleId = filename.replace('.json', '');
+        this.currentBundleId.set(bundleId);
       }
     } catch (error) {
       console.warn('Failed to load stored bundle analysis:', error);

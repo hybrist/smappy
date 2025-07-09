@@ -15,7 +15,7 @@ export class StorageService {
   private readonly MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
   private directoryHandle: FileSystemDirectoryHandle | null = null;
 
-  async saveBundleAnalysis(analysis: BundleAnalysis): Promise<void> {
+  async saveBundleAnalysis(analysis: BundleAnalysis): Promise<string | null> {
     try {
       const serializable: SerializableBundleAnalysis = {
         totalSize: analysis.totalSize,
@@ -34,8 +34,11 @@ export class StorageService {
 
       await writable.write(JSON.stringify(serializable));
       await writable.close();
+
+      return filename;
     } catch (error) {
       console.warn('Failed to save bundle analysis to file system:', error);
+      return null;
     }
   }
 

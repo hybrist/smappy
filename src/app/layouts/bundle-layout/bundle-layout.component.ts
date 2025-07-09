@@ -1,9 +1,10 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import {
   RouterOutlet,
   RouterLink,
   RouterLinkActive,
   Router,
+  ActivatedRoute,
 } from '@angular/router';
 import { BundleService } from '../../services/bundle.service';
 
@@ -27,9 +28,9 @@ import { BundleService } from '../../services/bundle.service';
             </div>
 
             <div class="flex items-center space-x-6">
-              @if (bundle()) {
+              @if (bundle() && bundleId) {
                 <a
-                  routerLink="/bundle"
+                  [routerLink]="['/bundle', bundleId]"
                   routerLinkActive="text-blue-600 border-blue-600"
                   [routerLinkActiveOptions]="{ exact: true }"
                   class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium border-b-2 border-transparent"
@@ -37,21 +38,21 @@ import { BundleService } from '../../services/bundle.service';
                   Overview
                 </a>
                 <a
-                  routerLink="/bundle/chunks"
+                  [routerLink]="['/bundle', bundleId, 'chunks']"
                   routerLinkActive="text-blue-600 border-blue-600"
                   class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium border-b-2 border-transparent"
                 >
                   Chunks
                 </a>
                 <a
-                  routerLink="/bundle/sources"
+                  [routerLink]="['/bundle', bundleId, 'sources']"
                   routerLinkActive="text-blue-600 border-blue-600"
                   class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium border-b-2 border-transparent"
                 >
                   Sources
                 </a>
                 <a
-                  routerLink="/bundle/analysis"
+                  [routerLink]="['/bundle', bundleId, 'analysis']"
                   routerLinkActive="text-blue-600 border-blue-600"
                   class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium border-b-2 border-transparent"
                 >
@@ -86,14 +87,45 @@ import { BundleService } from '../../services/bundle.service';
   `,
   styles: [],
 })
-export class BundleLayoutComponent {
+export class BundleLayoutComponent implements OnInit {
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly bundleService = inject(BundleService);
 
   readonly bundle = this.bundleService.bundle;
+  bundleId: string | null = null;
+  isLoading = false;
 
-  reset(): void {
-    this.bundleService.reset();
+  async ngOnInit() {
+    this.route.params.subscribe(async (params) => {
+      const bundleId = params['bundleId'];
+      if (bundleId) {
+        this.bundleId = bundleId;
+        await this.loadBundleFromId(bundleId);
+      }
+    });
+  }
+
+  private async loadBundleFromId(bundleId: string): Promise<void> {
+    try {
+      this.isLoading = true;
+      const filename = `${bundleId}.json`;
+      await this.bundleService.loadStoredBundleAnalysis(filename);
+
+      if (!this.bundleService.bundle()) {
+        // Bundle not found, redirect to home
+        this.router.navigate(['/home']);
+      }
+    } catch (error) {
+      console.warn('Failed to load bundle from URL:', error);
+      this.router.navigate(['/home']);
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  async reset(): Promise<void> {
+    await this.bundleService.reset();
     this.router.navigate(['/home']);
   }
 

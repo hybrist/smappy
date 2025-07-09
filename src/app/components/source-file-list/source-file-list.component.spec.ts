@@ -13,7 +13,7 @@ describe('SourceFileListComponent', () => {
   let bundleServiceSpy: jasmine.SpyObj<BundleService>;
 
   beforeEach(() => {
-    const spy = jasmine.createSpyObj('BundleService', ['bundle']);
+    const spy = jasmine.createSpyObj('BundleService', ['bundle', 'bundleId']);
 
     TestBed.configureTestingModule({
       imports: [SourceFileListComponent],
@@ -37,6 +37,7 @@ describe('SourceFileListComponent', () => {
       sourceBreakdown: new Map(),
       mappingImpacts: new Map(),
     });
+    bundleServiceSpy.bundleId.and.returnValue('my-bundle-id');
   });
 
   it('should create', () => {

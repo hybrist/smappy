@@ -53,7 +53,7 @@ import { BundleService } from '../../services/bundle.service';
                       <div class="ml-4">
                         <div class="text-sm font-medium text-gray-900">
                           <a
-                            [routerLink]="['/bundle/chunks', chunk.id]"
+                            [routerLink]="['/bundle', bundleId(), 'chunks', chunk.id]"
                             class="hover:text-blue-600"
                           >
                             {{ chunk.fileName }}
@@ -152,6 +152,7 @@ export class ChunksListComponent {
   private readonly bundleService = inject(BundleService);
 
   readonly bundle = this.bundleService.bundle;
+  readonly bundleId = this.bundleService.bundleId;
 
   sortedChunks() {
     const bundle = this.bundle();
