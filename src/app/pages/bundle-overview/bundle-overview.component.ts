@@ -193,7 +193,12 @@ import { BundleService } from '../../services/bundle.service';
                     <div class="ml-4 min-w-0 flex-1">
                       <div class="text-sm font-medium text-gray-900 truncate">
                         <a
-                          [routerLink]="['/bundle', bundleId(), 'sources', 'details']"
+                          [routerLink]="[
+                            '/bundle',
+                            bundleId(),
+                            'sources',
+                            'details',
+                          ]"
                           [queryParams]="{ p: source[0] }"
                           >{{ getFileName(source[0]) }}</a
                         >

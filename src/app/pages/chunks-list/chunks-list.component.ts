@@ -53,7 +53,12 @@ import { BundleService } from '../../services/bundle.service';
                       <div class="ml-4">
                         <div class="text-sm font-medium text-gray-900">
                           <a
-                            [routerLink]="['/bundle', bundleId(), 'chunks', chunk.id]"
+                            [routerLink]="[
+                              '/bundle',
+                              bundleId(),
+                              'chunks',
+                              chunk.id,
+                            ]"
                             class="hover:text-blue-600"
                           >
                             {{ chunk.fileName }}

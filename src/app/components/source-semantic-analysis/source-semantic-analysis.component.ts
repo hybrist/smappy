@@ -1,7 +1,7 @@
 import {
   Component,
   ElementRef,
-  Input,
+  input,
   computed,
   signal,
   viewChild,
@@ -351,7 +351,7 @@ import { FragmentIconUtils } from '../../utils/fragment-icon.utils';
   ],
 })
 export class SourceSemanticAnalysisComponent {
-  @Input() path!: string;
+  path = input.required<string>();
 
   private readonly sourceAnalysisService = inject(SourceAnalysisService);
   private readonly bundleService = inject(BundleService);
@@ -363,8 +363,9 @@ export class SourceSemanticAnalysisComponent {
   private hoverTooltip = viewChild('hoverTooltip', { read: ElementRef });
 
   readonly analysisResult = computed(() => {
-    if (!this.path) return null;
-    return this.sourceAnalysisService.analyzeSourceFile(this.path);
+    const currentPath = this.path();
+    if (!currentPath) return null;
+    return this.sourceAnalysisService.analyzeSourceFile(currentPath);
   });
 
   readonly filteredFragments = computed(() => {
@@ -451,7 +452,7 @@ export class SourceSemanticAnalysisComponent {
   }
 
   getFragmentCode(fragment: SourceFragment): string {
-    const sourceContent = this.bundleService.getSourceContent(this.path);
+    const sourceContent = this.bundleService.getSourceContent(this.path());
     if (!sourceContent) {
       return '<span class="text-gray-500 italic">Source content not available</span>';
     }
@@ -470,10 +471,10 @@ export class SourceSemanticAnalysisComponent {
     code: string,
     startLineNumber: number,
   ): string {
-    const language = SyntaxHighlightingUtils.getLanguageFromPath(this.path);
+    const language = SyntaxHighlightingUtils.getLanguageFromPath(this.path());
     const highlighted = SyntaxHighlightingUtils.highlightCode(code, language);
 
-    const mappingImpacts = this.bundleService.getMappingImpacts(this.path);
+    const mappingImpacts = this.bundleService.getMappingImpacts(this.path());
     const lineBundleBytes =
       BundleSizeUtils.calculateLineBundleContribution(mappingImpacts);
 
@@ -624,7 +625,7 @@ export class SourceSemanticAnalysisComponent {
     originalColumn: number,
   ): HoveredMappingInfo | null {
     const generatedLocations = this.bundleService.getGeneratedLocations(
-      this.path,
+      this.path(),
       originalLine,
       originalColumn,
     );
@@ -696,7 +697,7 @@ export class SourceSemanticAnalysisComponent {
 
     for (const pos of positions) {
       const generatedLocations = this.bundleService.getGeneratedLocations(
-        this.path,
+        this.path(),
         pos.line,
         pos.column,
       );

@@ -1,4 +1,4 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, input, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BundleService } from '../../services/bundle.service';
 
@@ -15,7 +15,7 @@ export interface SourceFileItem {
   imports: [RouterLink],
   template: `
     <div class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
-      @for (file of files; track file.path) {
+      @for (file of files(); track file.path) {
         <div
           class="px-6 py-3 flex items-center justify-between hover:bg-gray-50"
         >
@@ -78,7 +78,7 @@ export interface SourceFileItem {
   styles: [],
 })
 export class SourceFileListComponent {
-  @Input() files: SourceFileItem[] = [];
+  files = input<SourceFileItem[]>([]);
 
   private readonly bundleService = inject(BundleService);
 
