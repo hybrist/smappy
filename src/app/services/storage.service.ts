@@ -49,13 +49,6 @@ export class StorageService {
 
       // Get the most recent file
       const latestFile = files[files.length - 1];
-      const age = Date.now() - latestFile.timestamp;
-
-      // Check if data is too old
-      if (age > this.MAX_AGE_MS) {
-        await this.clearBundleAnalysis();
-        return null;
-      }
 
       const directoryHandle = await this.getDirectoryHandle();
       const fileHandle = await directoryHandle.getFileHandle(
@@ -95,12 +88,7 @@ export class StorageService {
   async hasSavedBundleAnalysis(): Promise<boolean> {
     try {
       const files = await this.listBundleAnalyses();
-      if (files.length === 0) return false;
-
-      const latestFile = files[files.length - 1];
-      const age = Date.now() - latestFile.timestamp;
-
-      return age <= this.MAX_AGE_MS;
+      return files.length !== 0;
     } catch (error) {
       console.warn('Failed to check for saved bundle analysis:', error);
       return false;
