@@ -7,6 +7,7 @@ import {
   SourceMapMapping,
   MappingImpact,
 } from '../models/bundle.models';
+import { InputBundle, InputBundleFile } from '../models/storage';
 import { StorageService } from './storage.service';
 import { BundleCalculationService } from './bundle-calculation.service';
 import { SourceMapProcessorService } from './source-map-processor.service';
@@ -35,25 +36,89 @@ export class BundleService {
 
     try {
       const chunks: ChunkInfo[] = [];
+      const fileContents = new Map<string, string>();
+      const bundleFiles: InputBundleFile[] = [];
+      const existingPaths = new Set<string>();
 
+      // Process each chunk file
       for (let i = 0; i < config.chunks.length; i++) {
         const chunkFile = config.chunks[i];
         const sourceMapFile = config.sourceMaps?.[i];
 
-        const chunk = await this.processChunk(chunkFile, sourceMapFile);
+        // Read chunk content
+        const chunkContent = await this.readFileAsText(chunkFile);
+        const chunkStoragePath = this.storageService.createStoragePath(
+          chunkFile.name,
+          existingPaths
+        );
+        existingPaths.add(chunkStoragePath);
+
+        // Store chunk content
+        fileContents.set(chunkStoragePath, chunkContent);
+        bundleFiles.push({
+          name: chunkFile.name,
+          storagePath: chunkStoragePath,
+        });
+
+        // Process source map if provided
+        let sourceMap: SourceMapData | undefined;
+        if (sourceMapFile) {
+          const sourceMapContent = await this.readFileAsText(sourceMapFile);
+          const sourceMapStoragePath = this.storageService.createStoragePath(
+            sourceMapFile.name,
+            existingPaths
+          );
+          existingPaths.add(sourceMapStoragePath);
+
+          // Store source map content
+          fileContents.set(sourceMapStoragePath, sourceMapContent);
+          bundleFiles.push({
+            name: sourceMapFile.name,
+            storagePath: sourceMapStoragePath,
+          });
+
+          sourceMap = JSON.parse(sourceMapContent) as SourceMapData;
+        } else {
+          sourceMap = this.sourceMapProcessor.extractInlineSourceMap(chunkContent);
+        }
+
+        // Create chunk info
+        const chunk: ChunkInfo = {
+          id: chunkFile.name.replace(/\.[^/.]+$/, ''),
+          fileName: chunkFile.name,
+          size: chunkContent.length,
+          content: chunkContent,
+          sourceMap,
+        };
         chunks.push(chunk);
       }
 
+      // Analyze the bundle
       const analysis = await this.bundleCalculation.analyzeBundle(chunks);
       this.currentBundle.set(analysis);
 
-      // Save to file system for persistence and get the filename
-      const filename = await this.storageService.saveBundleAnalysis(analysis);
-      const bundleId = filename ? filename.replace('.json', '') : null;
-      this.currentBundleId.set(bundleId);
+      // Create bundle metadata
+      const bundleId = this.storageService.generateBundleId();
+      const bundleName = `Bundle ${new Date().toLocaleString()}`;
+      const inputBundle: InputBundle = {
+        id: bundleId,
+        name: bundleName,
+        importedAt: Date.now(),
+        files: bundleFiles,
+      };
 
-      // Return bundle ID (filename without extension)
-      return bundleId;
+      // Save to storage
+      const savedBundleId = await this.storageService.storeBundleWithFiles(
+        inputBundle,
+        fileContents
+      );
+      
+      if (savedBundleId) {
+        this.currentBundleId.set(savedBundleId);
+        return savedBundleId;
+      } else {
+        throw new Error('Failed to save bundle to storage');
+      }
     } catch (err) {
       this.error.set(
         err instanceof Error ? err.message : 'Failed to load bundle',
@@ -64,28 +129,6 @@ export class BundleService {
     }
   }
 
-  private async processChunk(
-    chunkFile: File,
-    sourceMapFile?: File,
-  ): Promise<ChunkInfo> {
-    const content = await this.readFileAsText(chunkFile);
-    let sourceMap: SourceMapData | undefined;
-
-    if (sourceMapFile) {
-      const sourceMapContent = await this.readFileAsText(sourceMapFile);
-      sourceMap = JSON.parse(sourceMapContent) as SourceMapData;
-    } else {
-      sourceMap = this.sourceMapProcessor.extractInlineSourceMap(content);
-    }
-
-    return {
-      id: chunkFile.name.replace(/\.[^/.]+$/, ''),
-      fileName: chunkFile.name,
-      size: content.length,
-      content,
-      sourceMap,
-    };
-  }
 
   private async readFileAsText(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -149,28 +192,83 @@ export class BundleService {
     this.isLoading.set(false);
 
     // Clear from file system
-    await this.storageService.clearBundleAnalysis();
+    await this.storageService.clearAllData();
   }
 
   async hasSavedBundle(): Promise<boolean> {
-    return await this.storageService.hasSavedBundleAnalysis();
+    const bundles = await this.storageService.listAllBundles();
+    return bundles.length > 0;
   }
 
-  async getBundleAge(): Promise<number | null> {
-    return await this.storageService.getBundleAnalysisAge();
+  async getBundleAge(bundleId: string): Promise<number | null> {
+    return await this.storageService.getBundleAge(bundleId);
   }
 
-  async loadStoredBundleAnalysis(filename: string): Promise<void> {
+  async loadStoredBundle(bundleId: string): Promise<void> {
     try {
-      const analysis =
-        await this.storageService.loadBundleAnalysisByFilename(filename);
-      if (analysis) {
-        this.currentBundle.set(analysis);
-        const bundleId = filename.replace('.json', '');
-        this.currentBundleId.set(bundleId);
+      this.isLoading.set(true);
+      this.error.set(null);
+
+      // Load bundle metadata
+      const bundleMetadata = await this.storageService.loadBundleMetadata(bundleId);
+      if (!bundleMetadata) {
+        throw new Error(`Bundle ${bundleId} not found`);
       }
+
+      // Load all file contents
+      const fileContents = await this.storageService.loadAllFileContents(bundleId);
+
+      // Reconstruct chunks from stored data
+      const chunks: ChunkInfo[] = [];
+      const chunkFiles = bundleMetadata.files.filter(file => 
+        !file.name.endsWith('.map') && !file.name.endsWith('.sourcemap')
+      );
+
+      for (const chunkFile of chunkFiles) {
+        const chunkContent = fileContents.get(chunkFile.storagePath);
+        if (!chunkContent) {
+          console.warn(`Chunk content not found for ${chunkFile.name}`);
+          continue;
+        }
+
+        // Look for corresponding source map file
+        const sourceMapFile = bundleMetadata.files.find(file => 
+          file.name === `${chunkFile.name}.map` || 
+          file.name.endsWith('.map') || 
+          file.name.endsWith('.sourcemap')
+        );
+
+        let sourceMap: SourceMapData | undefined;
+        if (sourceMapFile) {
+          const sourceMapContent = fileContents.get(sourceMapFile.storagePath);
+          if (sourceMapContent) {
+            sourceMap = JSON.parse(sourceMapContent) as SourceMapData;
+          }
+        } else {
+          sourceMap = this.sourceMapProcessor.extractInlineSourceMap(chunkContent);
+        }
+
+        const chunk: ChunkInfo = {
+          id: chunkFile.name.replace(/\.[^/.]+$/, ''),
+          fileName: chunkFile.name,
+          size: chunkContent.length,
+          content: chunkContent,
+          sourceMap,
+        };
+        chunks.push(chunk);
+      }
+
+      // Analyze the reconstructed bundle
+      const analysis = await this.bundleCalculation.analyzeBundle(chunks);
+      this.currentBundle.set(analysis);
+      this.currentBundleId.set(bundleId);
     } catch (error) {
-      console.warn('Failed to load stored bundle analysis:', error);
+      this.error.set(
+        error instanceof Error ? error.message : 'Failed to load bundle'
+      );
+      console.warn('Failed to load stored bundle:', error);
+    } finally {
+      this.isLoading.set(false);
     }
   }
 

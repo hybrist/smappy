@@ -102,8 +102,7 @@ export class BundleLayoutComponent implements OnInit {
   private async loadBundleFromId(bundleId: string): Promise<void> {
     try {
       this.isLoading = true;
-      const filename = `${bundleId}.json`;
-      await this.bundleService.loadStoredBundleAnalysis(filename);
+      await this.bundleService.loadStoredBundle(bundleId);
 
       if (!this.bundleService.bundle()) {
         // Bundle not found, redirect to home

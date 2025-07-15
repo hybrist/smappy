@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { BundleService } from '../../services/bundle.service';
 import { StorageService } from '../../services/storage.service';
+import { InputBundle } from '../../models/storage';
 import { BundleConfig } from '../../models/bundle.models';
 
 @Component({
@@ -15,7 +16,7 @@ import { BundleConfig } from '../../models/bundle.models';
           Analyze your JavaScript bundles and source maps
         </p>
 
-        @if (storedAnalyses().length > 0) {
+        @if (storedBundles().length > 0) {
           <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
             <div class="flex items-center justify-between mb-3">
               <div class="flex items-center">
@@ -31,13 +32,13 @@ import { BundleConfig } from '../../models/bundle.models';
                   ></path>
                 </svg>
                 <p class="text-sm font-medium text-green-800">
-                  {{ storedAnalyses().length }} Stored Analysis{{
-                    storedAnalyses().length > 1 ? 'es' : ''
+                  {{ storedBundles().length }} Stored Bundle{{
+                    storedBundles().length > 1 ? 's' : ''
                   }}
                 </p>
               </div>
               <button
-                (click)="startNewAnalysis()"
+                (click)="clearAllBundles()"
                 class="text-xs bg-white text-green-700 border border-green-600 px-2 py-1 rounded hover:bg-green-50"
               >
                 Clear All
@@ -45,34 +46,30 @@ import { BundleConfig } from '../../models/bundle.models';
             </div>
 
             <div class="space-y-2 max-h-48 overflow-y-auto">
-              @for (analysis of storedAnalyses(); track analysis.filename) {
+              @for (bundle of storedBundles(); track bundle.id) {
                 <div
                   class="bg-white border border-green-200 rounded p-3 hover:bg-green-25 cursor-pointer"
-                  (click)="loadBundleAnalysis(analysis.filename)"
+                  (click)="loadBundle(bundle.id)"
                 >
                   <div class="flex justify-between items-start">
                     <div class="flex-1">
                       <p class="text-sm font-medium text-gray-900">
-                        @if (analysis.totalSize) {
-                          {{ formatSize(analysis.totalSize) }}
-                          @if (analysis.chunkCount) {
-                            • {{ analysis.chunkCount }} chunk{{
-                              analysis.chunkCount > 1 ? 's' : ''
-                            }}
-                          }
-                        } @else {
-                          Bundle Analysis
+                        {{ bundle.name }}
+                        @if (bundle.files.length > 0) {
+                          • {{ bundle.files.length }} file{{
+                            bundle.files.length > 1 ? 's' : ''
+                          }}
                         }
                       </p>
                       <p class="text-xs text-gray-600">
-                        {{ analysis.displayDateTime }} •
-                        {{ analysis.displayAge }}
+                        {{ bundle.displayDateTime }} •
+                        {{ bundle.displayAge }}
                       </p>
                     </div>
                     <button
                       class="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 flex-shrink-0 ml-2"
                       (click)="
-                        loadBundleAnalysis(analysis.filename);
+                        loadBundle(bundle.id);
                         $event.stopPropagation()
                       "
                     >
@@ -151,20 +148,15 @@ export class HomeComponent {
   chunks: File[] = [];
   sourceMaps: File[] = [];
   bundleAge: string = '';
-  storedAnalyses = signal<
-    {
-      filename: string;
-      timestamp: number;
-      age: number;
+  storedBundles = signal<
+    (InputBundle & {
       displayAge: string;
       displayDateTime: string;
-      totalSize?: number;
-      chunkCount?: number;
-    }[]
+    })[]
   >([]);
 
   constructor() {
-    this.loadStoredAnalyses();
+    this.loadStoredBundles();
   }
 
   onFilesSelected(event: Event): void {
@@ -198,56 +190,42 @@ export class HomeComponent {
     this.chunks = [];
     this.sourceMaps = [];
     this.bundleAge = '';
-    await this.loadStoredAnalyses();
+    await this.loadStoredBundles();
   }
 
-  private async loadStoredAnalyses(): Promise<void> {
+  async clearAllBundles(): Promise<void> {
+    await this.storageService.clearAllData();
+    await this.loadStoredBundles();
+  }
+
+  private async loadStoredBundles(): Promise<void> {
     try {
-      const analyses = await this.storageService.getAllBundleAnalyses();
+      const bundles = await this.storageService.listAllBundles();
 
-      // Load details for each analysis
-      const analysesWithDetails = await Promise.all(
-        analyses.map(async (analysis) => {
-          try {
-            const bundleData =
-              await this.storageService.loadBundleAnalysisByFilename(
-                analysis.filename,
-              );
-            return {
-              ...analysis,
-              displayAge: this.formatAge(analysis.age),
-              displayDateTime: this.formatTimestamp(analysis.timestamp),
-              totalSize: bundleData?.totalSize,
-              chunkCount: bundleData?.chunks.length,
-            };
-          } catch (error) {
-            return {
-              ...analysis,
-              displayAge: this.formatAge(analysis.age),
-              displayDateTime: this.formatTimestamp(analysis.timestamp),
-            };
-          }
-        }),
-      );
+      const bundlesWithDetails = bundles.map((bundle) => {
+        const age = Date.now() - bundle.importedAt;
+        return {
+          ...bundle,
+          displayAge: this.formatAge(age),
+          displayDateTime: this.formatTimestamp(bundle.importedAt),
+        };
+      });
 
-      analysesWithDetails.sort((a, b) => b.timestamp - a.timestamp); // Most recent first
-      this.storedAnalyses.set(analysesWithDetails);
+      this.storedBundles.set(bundlesWithDetails);
     } catch (error) {
-      console.warn('Failed to load stored analyses:', error);
-      this.storedAnalyses.set([]);
+      console.warn('Failed to load stored bundles:', error);
+      this.storedBundles.set([]);
     }
   }
 
-  async loadBundleAnalysis(filename: string): Promise<void> {
+  async loadBundle(bundleId: string): Promise<void> {
     try {
-      await this.bundleService.loadStoredBundleAnalysis(filename);
+      await this.bundleService.loadStoredBundle(bundleId);
       if (this.bundleService.bundle()) {
-        // Extract bundle ID from filename (remove .json extension)
-        const bundleId = filename.replace('.json', '');
         this.router.navigate(['/bundle', bundleId]);
       }
     } catch (error) {
-      console.warn('Failed to load bundle analysis:', error);
+      console.warn('Failed to load bundle:', error);
     }
   }
 

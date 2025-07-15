@@ -15,7 +15,7 @@ export class AstParserService {
     const ast = parse(code, {
       sourceFilename: filePath,
       sourceType: 'unambiguous',
-      plugins: ['jsx', 'typescript'],
+      plugins: ['jsx', 'typescript', 'decorators'],
     });
 
     const astNodeLookup = new Map<string, ASTNodeInfo[]>();
