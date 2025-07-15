@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideZonelessChangeDetection } from '@angular/core';
+import { inputBinding, provideZonelessChangeDetection, signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import {
   SourceFileListComponent,
@@ -11,6 +11,7 @@ describe('SourceFileListComponent', () => {
   let component: SourceFileListComponent;
   let fixture: any;
   let bundleServiceSpy: jasmine.SpyObj<BundleService>;
+  let mockFiles = signal<SourceFileItem[]>([]);
 
   beforeEach(() => {
     const spy = jasmine.createSpyObj('BundleService', ['bundle', 'bundleId']);
@@ -24,7 +25,9 @@ describe('SourceFileListComponent', () => {
       ],
     });
 
-    fixture = TestBed.createComponent(SourceFileListComponent);
+    fixture = TestBed.createComponent(SourceFileListComponent, {
+      bindings: [inputBinding('files', mockFiles)],
+    });
     component = fixture.componentInstance;
     bundleServiceSpy = TestBed.inject(
       BundleService,
@@ -45,12 +48,11 @@ describe('SourceFileListComponent', () => {
   });
 
   it('should display file list with basic information', () => {
-    const mockFiles: SourceFileItem[] = [
+    mockFiles.set([
       { path: 'src/app/component.ts', size: 500 },
       { path: 'src/utils/helper.js', size: 300 },
-    ];
+    ]);
 
-    component.files = mockFiles;
     fixture.detectChanges();
 
     const fileElements = fixture.nativeElement.querySelectorAll(
@@ -60,11 +62,10 @@ describe('SourceFileListComponent', () => {
   });
 
   it('should display badges when provided', () => {
-    const mockFiles: SourceFileItem[] = [
+     mockFiles.set([
       { path: 'src/test.ts', size: 100, badge: 'Content Available' },
-    ];
+    ]);
 
-    component.files = mockFiles;
     fixture.detectChanges();
 
     const badge = fixture.nativeElement.querySelector('.bg-green-100');
@@ -91,12 +92,11 @@ describe('SourceFileListComponent', () => {
   });
 
   it('should handle clickable and non-clickable files correctly', () => {
-    const mockFiles: SourceFileItem[] = [
+    mockFiles.set([
       { path: 'src/default.ts', size: 100 }, // Default is clickable
       { path: 'src/non-clickable.ts', size: 100, clickable: false },
-    ];
+    ]);
 
-    component.files = mockFiles;
     fixture.detectChanges();
 
     const allFileElements = fixture.nativeElement.querySelectorAll(

@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideZonelessChangeDetection } from '@angular/core';
+import { inputBinding, provideZonelessChangeDetection, signal } from '@angular/core';
 import { SourceSemanticAnalysisComponent } from './source-semantic-analysis.component';
 import { SourceAnalysisService } from '../../services/source-analysis.service';
 import { BundleService } from '../../services/bundle.service';
@@ -13,6 +13,7 @@ describe('SourceSemanticAnalysisComponent', () => {
   let fixture: any;
   let sourceAnalysisServiceSpy: jasmine.SpyObj<SourceAnalysisService>;
   let bundleServiceSpy: jasmine.SpyObj<BundleService>;
+  let pathSignal = signal('test.js');
 
   beforeEach(() => {
     const sourceAnalysisSpy = jasmine.createSpyObj('SourceAnalysisService', [
@@ -33,7 +34,11 @@ describe('SourceSemanticAnalysisComponent', () => {
       ],
     });
 
-    fixture = TestBed.createComponent(SourceSemanticAnalysisComponent);
+    fixture = TestBed.createComponent(SourceSemanticAnalysisComponent, {
+      bindings: [
+        inputBinding('path', pathSignal),
+      ],
+    });
     component = fixture.componentInstance;
     sourceAnalysisServiceSpy = TestBed.inject(
       SourceAnalysisService,
@@ -85,7 +90,6 @@ line 8`;
     bundleServiceSpy.getSourceContent.and.returnValue(mockSourceContent);
     bundleServiceSpy.getMappingImpacts.and.returnValue([]);
     bundleServiceSpy.getGeneratedLocations.and.returnValue([]);
-    component.path = 'test.ts';
 
     const result = component.getFragmentCode(mockFragment);
 
@@ -114,7 +118,6 @@ line 8`;
     bundleServiceSpy.getSourceContent.and.returnValue(null);
     bundleServiceSpy.getMappingImpacts.and.returnValue([]);
     bundleServiceSpy.getGeneratedLocations.and.returnValue([]);
-    component.path = 'test.ts';
 
     const result = component.getFragmentCode(mockFragment);
 
@@ -224,7 +227,6 @@ line 8`;
     };
 
     sourceAnalysisServiceSpy.analyzeSourceFile.and.returnValue(mockAnalysis);
-    component.path = 'test.ts';
     fixture.detectChanges();
 
     // Test "all" filter
@@ -283,7 +285,6 @@ line 8`;
     bundleServiceSpy.getSourceContent.and.returnValue(mockSourceContent);
     bundleServiceSpy.getMappingImpacts.and.returnValue(mockMappingImpacts);
     bundleServiceSpy.getGeneratedLocations.and.returnValue([]);
-    component.path = 'test.ts';
 
     const result = component.getFragmentCode(mockFragment);
 
@@ -309,7 +310,6 @@ line 8`;
     bundleServiceSpy.getGeneratedLocations.and.returnValue(
       mockGeneratedLocations,
     );
-    component.path = 'test.ts';
 
     // Test the hover functionality indirectly by calling the method
     const mappingInfo = (component as any).getGeneratedMappingInfo(5, 0);
