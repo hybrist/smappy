@@ -11,7 +11,7 @@ import {
   providedIn: 'root',
 })
 export class StorageService {
-  private readonly STORAGE_DIRECTORY = 'bundle-analyses';
+  private readonly STORAGE_DIRECTORY = 'smappy';
   private readonly MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
   private directoryHandle: FileSystemDirectoryHandle | null = null;
 
