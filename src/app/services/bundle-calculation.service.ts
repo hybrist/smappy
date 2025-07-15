@@ -10,7 +10,7 @@ import {
   providedIn: 'root',
 })
 export class BundleCalculationService {
-  async analyzeBundle(chunks: ChunkInfo[]): Promise<BundleAnalysis> {
+  analyzeBundle(chunks: ChunkInfo[]): BundleAnalysis {
     const totalSize = chunks.reduce((sum, chunk) => sum + chunk.size, 0);
     const sourceBreakdown = new Map<string, number>();
     const mappingImpacts = new Map<string, MappingImpact[]>();
@@ -26,9 +26,9 @@ export class BundleCalculationService {
       mappingImpacts.set(source, impacts);
     }
 
-    const promises = chunks.map(async (chunk) => {
+    chunks.forEach(async (chunk) => {
       if (chunk.sourceMap) {
-        await this.processChunkWithSourceMap(
+        this.processChunkWithSourceMap(
           chunk,
           addSourceSize,
           addMappingImpact,
@@ -38,8 +38,6 @@ export class BundleCalculationService {
       }
     });
 
-    await Promise.all(promises);
-
     return {
       totalSize,
       chunks,
@@ -48,11 +46,11 @@ export class BundleCalculationService {
     };
   }
 
-  private async processChunkWithSourceMap(
+  private processChunkWithSourceMap(
     chunk: ChunkInfo,
     addSourceSize: (source: string, size: number) => void,
     addMappingImpact: (source: string, impact: MappingImpact) => void,
-  ): Promise<void> {
+  ): void {
     try {
       const consumer = new SourceMapConsumer(
         chunk.sourceMap as any,

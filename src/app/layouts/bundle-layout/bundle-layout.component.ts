@@ -51,13 +51,6 @@ import { BundleService } from '../../services/bundle.service';
                 >
                   Sources
                 </a>
-                <a
-                  [routerLink]="['/bundle', bundleId, 'analysis']"
-                  routerLinkActive="text-blue-600 border-blue-600"
-                  class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium border-b-2 border-transparent"
-                >
-                  Analysis
-                </a>
               }
 
               <button

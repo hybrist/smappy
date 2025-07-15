@@ -49,13 +49,6 @@ export const routes: Routes = [
             (m) => m.SourceDetailComponent,
           ),
       },
-      {
-        path: 'analysis',
-        loadComponent: () =>
-          import('./pages/analysis-overview/analysis-overview.component').then(
-            (m) => m.AnalysisOverviewComponent,
-          ),
-      },
     ],
   },
   {
