@@ -285,51 +285,6 @@ export class StorageService {
   }
 
   /**
-   * Gets storage statistics
-   * @returns Promise resolving to storage statistics
-   */
-  async getStorageStats(): Promise<{
-    totalBundles: number;
-    totalFiles: number;
-    oldestBundle: number | null;
-    newestBundle: number | null;
-  }> {
-    try {
-      const bundles = await this.listAllBundles();
-      const totalBundles = bundles.length;
-      
-      if (totalBundles === 0) {
-        return {
-          totalBundles: 0,
-          totalFiles: 0,
-          oldestBundle: null,
-          newestBundle: null,
-        };
-      }
-      
-      const totalFiles = bundles.reduce((sum, bundle) => sum + bundle.files.length, 0);
-      const timestamps = bundles.map(bundle => bundle.importedAt);
-      const oldestBundle = Math.min(...timestamps);
-      const newestBundle = Math.max(...timestamps);
-      
-      return {
-        totalBundles,
-        totalFiles,
-        oldestBundle,
-        newestBundle,
-      };
-    } catch (error) {
-      console.warn('Failed to get storage stats:', error);
-      return {
-        totalBundles: 0,
-        totalFiles: 0,
-        oldestBundle: null,
-        newestBundle: null,
-      };
-    }
-  }
-
-  /**
    * Clears all stored data
    * @returns Promise resolving to true if successful
    */

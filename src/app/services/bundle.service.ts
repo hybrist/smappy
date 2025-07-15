@@ -12,6 +12,10 @@ import { StorageService } from './storage.service';
 import { BundleCalculationService } from './bundle-calculation.service';
 import { SourceMapProcessorService } from './source-map-processor.service';
 
+function isSourceMapFile(file: File): boolean {
+  return file.name.endsWith('.map') || file.name.endsWith('.sourcemap');
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -30,9 +34,14 @@ export class BundleService {
   readonly loading = this.isLoading.asReadonly();
   readonly errorMessage = this.error.asReadonly();
 
-  async loadBundle(config: BundleConfig): Promise<string | null> {
+  async loadBundle(files: File[]): Promise<string | null> {
     this.isLoading.set(true);
     this.error.set(null);
+
+    const config: BundleConfig = {
+      chunks: files.filter(file => !isSourceMapFile(file)),
+      sourceMaps: files.filter(isSourceMapFile),
+    };
 
     try {
       const chunks: ChunkInfo[] = [];

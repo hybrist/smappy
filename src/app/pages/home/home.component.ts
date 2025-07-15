@@ -3,7 +3,6 @@ import { Router } from '@angular/router';
 import { BundleService } from '../../services/bundle.service';
 import { StorageService } from '../../services/storage.service';
 import { InputBundle } from '../../models/storage';
-import { BundleConfig } from '../../models/bundle.models';
 
 @Component({
   selector: 'app-home',
@@ -96,24 +95,18 @@ import { BundleConfig } from '../../models/bundle.models';
             />
           </div>
 
-          @if (chunks.length > 0) {
+          @if (inputFiles.length > 0) {
             <div class="bg-blue-50 p-3 rounded">
               <p class="text-sm text-blue-800">
-                {{ chunks.length }} chunk{{ chunks.length > 1 ? 's' : '' }}
+                {{ inputFiles.length }} chunk{{ inputFiles.length > 1 ? 's' : '' }}
                 selected
-                @if (sourceMaps.length > 0) {
-                  <br />{{ sourceMaps.length }} source map{{
-                    sourceMaps.length > 1 ? 's' : ''
-                  }}
-                  selected
-                }
               </p>
             </div>
           }
 
           <button
             (click)="analyzeBundle()"
-            [disabled]="chunks.length === 0 || loading()"
+            [disabled]="inputFiles.length === 0 || loading()"
             class="w-full bg-blue-600 text-white py-2 px-4 rounded-md font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
             @if (loading()) {
@@ -145,9 +138,8 @@ export class HomeComponent {
   readonly errorMessage = this.bundleService.errorMessage;
   readonly bundle = this.bundleService.bundle;
 
-  chunks: File[] = [];
-  sourceMaps: File[] = [];
-  bundleAge: string = '';
+  inputFiles: File[] = [];
+
   storedBundles = signal<
     (InputBundle & {
       displayAge: string;
@@ -162,35 +154,18 @@ export class HomeComponent {
   onFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     for (const file of input.files || []) {
-      if (file.name.endsWith('.map') || file.name.endsWith('.sourcemap')) {
-        this.sourceMaps.push(file);
-      } else {
-        this.chunks.push(file);
-      }
+      this.inputFiles.push(file);
     }
   }
 
   async analyzeBundle(): Promise<void> {
-    if (this.chunks.length === 0) return;
+    if (this.inputFiles.length === 0) return;
 
-    const config: BundleConfig = {
-      chunks: this.chunks,
-      sourceMaps: this.sourceMaps.length > 0 ? this.sourceMaps : undefined,
-    };
-
-    const bundleId = await this.bundleService.loadBundle(config);
+    const bundleId = await this.bundleService.loadBundle(this.inputFiles);
 
     if (bundleId && this.bundleService.bundle()) {
       this.router.navigate(['/bundle', bundleId]);
     }
-  }
-
-  async startNewAnalysis(): Promise<void> {
-    await this.bundleService.reset();
-    this.chunks = [];
-    this.sourceMaps = [];
-    this.bundleAge = '';
-    await this.loadStoredBundles();
   }
 
   async clearAllBundles(): Promise<void> {
