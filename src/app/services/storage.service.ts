@@ -1,12 +1,17 @@
 import { Injectable } from '@angular/core';
-import { SourceMapConsumer } from '@jridgewell/source-map';
-import {
-  BundleAnalysis,
-  SerializableBundleAnalysis,
-  ChunkInfo,
-  MappingImpact,
-} from '../models/bundle.models';
+import { InputBundle, validateInputBundle } from '../models/storage';
+import { ZodError } from 'zod';
 
+/**
+ * Storage service implementing the file system layout described in README.md
+ * 
+ * File System Layout:
+ * - Metadata: smappy/<uuid>.json (contains InputBundle)
+ * - File Contents: smappy/<uuid>/<storagePath>
+ * 
+ * This service manages the separation between metadata and file contents,
+ * using the Origin Private File System (OPFS) for persistence.
+ */
 @Injectable({
   providedIn: 'root',
 })
@@ -15,374 +20,378 @@ export class StorageService {
   private readonly MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
   private directoryHandle: FileSystemDirectoryHandle | null = null;
 
-  async saveBundleAnalysis(analysis: BundleAnalysis): Promise<string | null> {
+  /**
+   * Stores a bundle with its metadata and file contents
+   * @param bundle Bundle metadata
+   * @param fileContents Map of storage path to file content
+   * @returns Promise resolving to the bundle ID on success, null on failure
+   */
+  async storeBundleWithFiles(
+    bundle: InputBundle,
+    fileContents: Map<string, string>
+  ): Promise<string | null> {
     try {
-      const serializable: SerializableBundleAnalysis = {
-        totalSize: analysis.totalSize,
-        chunks: analysis.chunks,
-        sourceBreakdown: Array.from(analysis.sourceBreakdown.entries()),
-      };
-
-      const timestamp = Date.now();
-      const filename = `bundle-${timestamp}.json`;
-
+      // Validate bundle structure
+      validateInputBundle(bundle);
+      
       const directoryHandle = await this.getDirectoryHandle();
-      const fileHandle = await directoryHandle.getFileHandle(filename, {
+      
+      // Create bundle directory
+      const bundleDirectoryHandle = await directoryHandle.getDirectoryHandle(
+        bundle.id,
+        { create: true }
+      );
+      
+      // Store each file content
+      for (const [storagePath, content] of fileContents) {
+        // Validate that this storage path is referenced in the bundle
+        const fileExists = bundle.files.some(file => file.storagePath === storagePath);
+        if (!fileExists) {
+          throw new Error(`Storage path ${storagePath} not found in bundle file list`);
+        }
+        
+        const fileHandle = await bundleDirectoryHandle.getFileHandle(storagePath, {
+          create: true,
+        });
+        const writable = await fileHandle.createWritable();
+        await writable.write(content);
+        await writable.close();
+      }
+      
+      // Store metadata file
+      const metadataFilename = `${bundle.id}.json`;
+      const metadataHandle = await directoryHandle.getFileHandle(metadataFilename, {
         create: true,
       });
-      const writable = await fileHandle.createWritable();
-
-      await writable.write(JSON.stringify(serializable));
-      await writable.close();
-
-      return filename;
+      const metadataWritable = await metadataHandle.createWritable();
+      await metadataWritable.write(JSON.stringify(bundle, null, 2));
+      await metadataWritable.close();
+      
+      return bundle.id;
     } catch (error) {
-      console.warn('Failed to save bundle analysis to file system:', error);
-      return null;
-    }
-  }
-
-  async loadBundleAnalysis(): Promise<BundleAnalysis | null> {
-    try {
-      const files = await this.listBundleAnalyses();
-      if (files.length === 0) return null;
-
-      // Get the most recent file
-      const latestFile = files[files.length - 1];
-
-      const directoryHandle = await this.getDirectoryHandle();
-      const fileHandle = await directoryHandle.getFileHandle(
-        latestFile.filename,
-      );
-      const file = await fileHandle.getFile();
-      const dataStr = await file.text();
-
-      const serializable: SerializableBundleAnalysis = JSON.parse(dataStr);
-
-      return {
-        totalSize: serializable.totalSize,
-        chunks: serializable.chunks,
-        sourceBreakdown: new Map(serializable.sourceBreakdown),
-        mappingImpacts: this.recalculateMappingImpacts(serializable.chunks),
-      };
-    } catch (error) {
-      console.warn('Failed to load bundle analysis from file system:', error);
-      await this.clearBundleAnalysis();
-      return null;
-    }
-  }
-
-  async clearBundleAnalysis(): Promise<void> {
-    try {
-      const directoryHandle = await this.getDirectoryHandle();
-      const files = await this.listBundleAnalyses();
-
-      for (const file of files) {
-        await directoryHandle.removeEntry(file.filename);
+      console.warn('Failed to store bundle:', error);
+      
+      // Clean up on failure
+      try {
+        await this.deleteBundleById(bundle.id);
+      } catch (cleanupError) {
+        console.warn('Failed to cleanup after storage failure:', cleanupError);
       }
-    } catch (error) {
-      console.warn('Failed to clear bundle analysis from file system:', error);
-    }
-  }
-
-  async hasSavedBundleAnalysis(): Promise<boolean> {
-    try {
-      const files = await this.listBundleAnalyses();
-      return files.length !== 0;
-    } catch (error) {
-      console.warn('Failed to check for saved bundle analysis:', error);
-      return false;
-    }
-  }
-
-  async getBundleAnalysisAge(): Promise<number | null> {
-    try {
-      const files = await this.listBundleAnalyses();
-      if (files.length === 0) return null;
-
-      const latestFile = files[files.length - 1];
-      return Date.now() - latestFile.timestamp;
-    } catch (error) {
-      console.warn('Failed to get bundle analysis age:', error);
-      return null;
-    }
-  }
-
-  private async getDirectoryHandle(): Promise<FileSystemDirectoryHandle> {
-    if (!this.directoryHandle) {
-      const opfsRoot = await navigator.storage.getDirectory();
-      this.directoryHandle = await opfsRoot.getDirectoryHandle(
-        this.STORAGE_DIRECTORY,
-        { create: true },
-      );
-    }
-    return this.directoryHandle;
-  }
-
-  private async listBundleAnalyses(): Promise<
-    { filename: string; timestamp: number }[]
-  > {
-    try {
-      const directoryHandle = await this.getDirectoryHandle();
-      const files: { filename: string; timestamp: number }[] = [];
-
-      for await (const [name, handle] of directoryHandle.entries()) {
-        if (
-          handle.kind === 'file' &&
-          name.startsWith('bundle-') &&
-          name.endsWith('.json')
-        ) {
-          const timestampStr = name.replace('bundle-', '').replace('.json', '');
-          const timestamp = parseInt(timestampStr, 10);
-          if (!isNaN(timestamp)) {
-            files.push({ filename: name, timestamp });
-          }
-        }
-      }
-
-      return files.sort((a, b) => a.timestamp - b.timestamp);
-    } catch (error) {
-      console.warn('Failed to list bundle analyses:', error);
-      return [];
-    }
-  }
-
-  async getAllBundleAnalyses(): Promise<
-    { filename: string; timestamp: number; age: number }[]
-  > {
-    try {
-      const files = await this.listBundleAnalyses();
-      const now = Date.now();
-
-      return files.map((file) => ({
-        ...file,
-        age: now - file.timestamp,
-      }));
-    } catch (error) {
-      console.warn('Failed to get all bundle analyses:', error);
-      return [];
-    }
-  }
-
-  async deleteBundleAnalysis(filename: string): Promise<void> {
-    try {
-      const directoryHandle = await this.getDirectoryHandle();
-      await directoryHandle.removeEntry(filename);
-    } catch (error) {
-      console.warn('Failed to delete bundle analysis:', error);
-    }
-  }
-
-  async cleanupOldAnalyses(): Promise<void> {
-    try {
-      const files = await this.listBundleAnalyses();
-      const now = Date.now();
-
-      for (const file of files) {
-        const age = now - file.timestamp;
-        if (age > this.MAX_AGE_MS) {
-          await this.deleteBundleAnalysis(file.filename);
-        }
-      }
-    } catch (error) {
-      console.warn('Failed to cleanup old analyses:', error);
-    }
-  }
-
-  async loadBundleAnalysisByFilename(
-    filename: string,
-  ): Promise<BundleAnalysis | null> {
-    try {
-      const directoryHandle = await this.getDirectoryHandle();
-      const fileHandle = await directoryHandle.getFileHandle(filename);
-      const file = await fileHandle.getFile();
-      const dataStr = await file.text();
-
-      const serializable: SerializableBundleAnalysis = JSON.parse(dataStr);
-
-      return {
-        totalSize: serializable.totalSize,
-        chunks: serializable.chunks,
-        sourceBreakdown: new Map(serializable.sourceBreakdown),
-        mappingImpacts: this.recalculateMappingImpacts(serializable.chunks),
-      };
-    } catch (error) {
-      console.warn('Failed to load bundle analysis by filename:', error);
+      
       return null;
     }
   }
 
   /**
-   * Recalculate mapping impacts from chunk data when loading from storage
+   * Loads bundle metadata by ID
+   * @param bundleId Bundle identifier
+   * @returns Promise resolving to InputBundle or null if not found
    */
-  private recalculateMappingImpacts(
-    chunks: ChunkInfo[],
-  ): Map<string, MappingImpact[]> {
-    const mappingImpacts = new Map<string, MappingImpact[]>();
-
-    function addMappingImpact(source: string, impact: MappingImpact) {
-      const impacts = mappingImpacts.get(source) || [];
-      impacts.push(impact);
-      mappingImpacts.set(source, impacts);
+  async loadBundleMetadata(bundleId: string): Promise<InputBundle | null> {
+    try {
+      const directoryHandle = await this.getDirectoryHandle();
+      const metadataFilename = `${bundleId}.json`;
+      
+      const fileHandle = await directoryHandle.getFileHandle(metadataFilename);
+      const file = await fileHandle.getFile();
+      const content = await file.text();
+      
+      const parsedBundle = JSON.parse(content);
+      return validateInputBundle(parsedBundle);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        console.warn('Bundle metadata validation failed:', error);
+      } else {
+        console.warn('Failed to load bundle metadata:', error);
+      }
+      return null;
     }
+  }
 
-    for (const chunk of chunks) {
-      if (!chunk.sourceMap) continue;
+  /**
+   * Loads file content for a specific bundle and storage path
+   * @param bundleId Bundle identifier
+   * @param storagePath Path within the bundle storage
+   * @returns Promise resolving to file content or null if not found
+   */
+  async loadFileContent(bundleId: string, storagePath: string): Promise<string | null> {
+    try {
+      const directoryHandle = await this.getDirectoryHandle();
+      const bundleDirectoryHandle = await directoryHandle.getDirectoryHandle(bundleId);
+      
+      const fileHandle = await bundleDirectoryHandle.getFileHandle(storagePath);
+      const file = await fileHandle.getFile();
+      return await file.text();
+    } catch (error) {
+      console.warn(`Failed to load file content for ${bundleId}/${storagePath}:`, error);
+      return null;
+    }
+  }
 
-      try {
-        const consumer = new SourceMapConsumer(
-          chunk.sourceMap as any,
-          chunk.fileName,
-        );
+  /**
+   * Loads all file contents for a bundle
+   * @param bundleId Bundle identifier
+   * @returns Promise resolving to Map of storage path to content
+   */
+  async loadAllFileContents(bundleId: string): Promise<Map<string, string>> {
+    const fileContents = new Map<string, string>();
+    
+    try {
+      const bundle = await this.loadBundleMetadata(bundleId);
+      if (!bundle) {
+        return fileContents;
+      }
+      
+      const directoryHandle = await this.getDirectoryHandle();
+      const bundleDirectoryHandle = await directoryHandle.getDirectoryHandle(bundleId);
+      
+      // Load each file referenced in the bundle
+      for (const file of bundle.files) {
+        try {
+          const fileHandle = await bundleDirectoryHandle.getFileHandle(file.storagePath);
+          const fileObj = await fileHandle.getFile();
+          const content = await fileObj.text();
+          fileContents.set(file.storagePath, content);
+        } catch (error) {
+          console.warn(`Failed to load file ${file.storagePath} for bundle ${bundleId}:`, error);
+        }
+      }
+    } catch (error) {
+      console.warn(`Failed to load file contents for bundle ${bundleId}:`, error);
+    }
+    
+    return fileContents;
+  }
 
-        // Calculate the actual content size (excluding source map comment)
-        const contentWithoutSourceMap = this.getContentWithoutSourceMap(
-          chunk.content,
-        );
-        const lines = contentWithoutSourceMap.split('\n');
-        const lineLengths = lines.map((line) => line.length);
-
-        // Collect all mappings and sort by generated position
-        const mappings: any[] = [];
-        consumer.eachMapping((mapping) => {
-          mappings.push(mapping);
-        });
-
-        // Sort mappings by generated line and column
-        mappings.sort((a, b) => {
-          if (a.generatedLine !== b.generatedLine) {
-            return a.generatedLine - b.generatedLine;
-          }
-          return a.generatedColumn - b.generatedColumn;
-        });
-
-        // Calculate bytes between mappings
-        for (let i = 0; i < mappings.length; i++) {
-          const currentMapping = mappings[i];
-          const nextMapping = mappings[i + 1];
-
-          if (!currentMapping.source) continue;
-
-          let bytesToAttribute = 0;
-
-          if (nextMapping) {
-            // Calculate bytes between current and next mapping
-            bytesToAttribute = this.calculateBytesBetweenMappings(
-              currentMapping,
-              nextMapping,
-              lineLengths,
-            );
-          } else {
-            // For the last mapping, calculate bytes to end of content
-            bytesToAttribute = this.calculateBytesToEnd(
-              currentMapping,
-              lineLengths,
-            );
-          }
-
-          if (bytesToAttribute > 0) {
-            // Store mapping impact for later reuse
-            if (
-              currentMapping.originalLine &&
-              currentMapping.originalColumn !== undefined
-            ) {
-              addMappingImpact(currentMapping.source, {
-                chunkId: chunk.id,
-                originalLine: currentMapping.originalLine,
-                originalColumn: currentMapping.originalColumn,
-                sizeImpact: bytesToAttribute,
-              });
-            }
+  /**
+   * Lists all stored bundles with their metadata
+   * @returns Promise resolving to array of bundle metadata
+   */
+  async listAllBundles(): Promise<InputBundle[]> {
+    try {
+      const directoryHandle = await this.getDirectoryHandle();
+      const bundles: InputBundle[] = [];
+      
+      for await (const [name, handle] of directoryHandle.entries()) {
+        if (handle.kind === 'file' && name.endsWith('.json')) {
+          const bundleId = name.replace('.json', '');
+          const bundle = await this.loadBundleMetadata(bundleId);
+          if (bundle) {
+            bundles.push(bundle);
           }
         }
+      }
+      
+      // Sort by import time (newest first)
+      return bundles.sort((a, b) => b.importedAt - a.importedAt);
+    } catch (error) {
+      console.warn('Failed to list bundles:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Checks if a bundle exists
+   * @param bundleId Bundle identifier
+   * @returns Promise resolving to true if bundle exists
+   */
+  async bundleExists(bundleId: string): Promise<boolean> {
+    try {
+      const directoryHandle = await this.getDirectoryHandle();
+      const metadataFilename = `${bundleId}.json`;
+      await directoryHandle.getFileHandle(metadataFilename);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Deletes a bundle and all its files
+   * @param bundleId Bundle identifier
+   * @returns Promise resolving to true if deletion was successful
+   */
+  async deleteBundleById(bundleId: string): Promise<boolean> {
+    try {
+      const directoryHandle = await this.getDirectoryHandle();
+      
+      // Delete bundle directory (and all its files)
+      try {
+        await directoryHandle.removeEntry(bundleId, { recursive: true });
       } catch (error) {
-        console.warn(
-          'Error processing source map for chunk',
-          chunk.fileName,
-          error,
-        );
-        // Skip this chunk if source map processing fails
+        // Directory might not exist, which is fine
+        console.debug(`Bundle directory ${bundleId} not found during deletion`);
       }
+      
+      // Delete metadata file
+      const metadataFilename = `${bundleId}.json`;
+      try {
+        await directoryHandle.removeEntry(metadataFilename);
+      } catch (error) {
+        console.debug(`Metadata file ${metadataFilename} not found during deletion`);
+      }
+      
+      return true;
+    } catch (error) {
+      console.warn(`Failed to delete bundle ${bundleId}:`, error);
+      return false;
     }
-
-    return mappingImpacts;
   }
 
-  private getContentWithoutSourceMap(content: string): string {
-    // Find and remove the source map comment and everything after it
-    const sourceMapCommentIndex = content.lastIndexOf('//# sourceMappingURL=');
-    if (sourceMapCommentIndex !== -1) {
-      // Find the line before the source map comment
-      const beforeSourceMap = content.substring(0, sourceMapCommentIndex);
-      // Remove trailing whitespace/newlines
-      return beforeSourceMap.trimEnd();
+  /**
+   * Cleans up old bundles based on age
+   * @returns Promise resolving to number of bundles cleaned up
+   */
+  async cleanupOldBundles(): Promise<number> {
+    let cleanedUp = 0;
+    
+    try {
+      const bundles = await this.listAllBundles();
+      const now = Date.now();
+      
+      for (const bundle of bundles) {
+        const age = now - bundle.importedAt;
+        if (age > this.MAX_AGE_MS) {
+          const success = await this.deleteBundleById(bundle.id);
+          if (success) {
+            cleanedUp++;
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to cleanup old bundles:', error);
     }
-    return content;
+    
+    return cleanedUp;
   }
 
-  private calculateBytesBetweenMappings(
-    current: any,
-    next: any,
-    lineLengths: number[],
-  ): number {
-    let bytes = 0;
-
-    const currentLine = current.generatedLine - 1; // Convert to 0-based
-    const currentColumn = current.generatedColumn;
-    const nextLine = next.generatedLine - 1; // Convert to 0-based
-    const nextColumn = next.generatedColumn;
-
-    if (currentLine === nextLine) {
-      // Same line - just count columns
-      bytes = Math.max(0, nextColumn - currentColumn);
-    } else {
-      // Different lines
-      // Add remaining characters on current line
-      if (currentLine < lineLengths.length) {
-        bytes += Math.max(0, lineLengths[currentLine] - currentColumn);
-        bytes += 1; // Add newline character
+  /**
+   * Gets the age of a bundle in milliseconds
+   * @param bundleId Bundle identifier
+   * @returns Promise resolving to age in ms, or null if bundle not found
+   */
+  async getBundleAge(bundleId: string): Promise<number | null> {
+    try {
+      const bundle = await this.loadBundleMetadata(bundleId);
+      if (!bundle) {
+        return null;
       }
-
-      // Add complete lines in between
-      for (
-        let line = currentLine + 1;
-        line < nextLine && line < lineLengths.length;
-        line++
-      ) {
-        bytes += lineLengths[line] + 1; // +1 for newline
-      }
-
-      // Add characters on next line up to next column
-      if (nextLine < lineLengths.length) {
-        bytes += Math.max(0, nextColumn);
-      }
+      
+      return Date.now() - bundle.importedAt;
+    } catch (error) {
+      console.warn(`Failed to get bundle age for ${bundleId}:`, error);
+      return null;
     }
-
-    return bytes;
   }
 
-  private calculateBytesToEnd(mapping: any, lineLengths: number[]): number {
-    let bytes = 0;
-
-    const line = mapping.generatedLine - 1; // Convert to 0-based
-    const column = mapping.generatedColumn;
-
-    // Add remaining characters on current line
-    if (line < lineLengths.length) {
-      bytes += Math.max(0, lineLengths[line] - column);
-      bytes += 1; // Add newline character
+  /**
+   * Gets storage statistics
+   * @returns Promise resolving to storage statistics
+   */
+  async getStorageStats(): Promise<{
+    totalBundles: number;
+    totalFiles: number;
+    oldestBundle: number | null;
+    newestBundle: number | null;
+  }> {
+    try {
+      const bundles = await this.listAllBundles();
+      const totalBundles = bundles.length;
+      
+      if (totalBundles === 0) {
+        return {
+          totalBundles: 0,
+          totalFiles: 0,
+          oldestBundle: null,
+          newestBundle: null,
+        };
+      }
+      
+      const totalFiles = bundles.reduce((sum, bundle) => sum + bundle.files.length, 0);
+      const timestamps = bundles.map(bundle => bundle.importedAt);
+      const oldestBundle = Math.min(...timestamps);
+      const newestBundle = Math.max(...timestamps);
+      
+      return {
+        totalBundles,
+        totalFiles,
+        oldestBundle,
+        newestBundle,
+      };
+    } catch (error) {
+      console.warn('Failed to get storage stats:', error);
+      return {
+        totalBundles: 0,
+        totalFiles: 0,
+        oldestBundle: null,
+        newestBundle: null,
+      };
     }
+  }
 
-    // Add all remaining complete lines
-    for (let i = line + 1; i < lineLengths.length; i++) {
-      bytes += lineLengths[i] + 1; // +1 for newline
+  /**
+   * Clears all stored data
+   * @returns Promise resolving to true if successful
+   */
+  async clearAllData(): Promise<boolean> {
+    try {
+      const directoryHandle = await this.getDirectoryHandle();
+      
+      // Remove all entries
+      for await (const [name] of directoryHandle.entries()) {
+        await directoryHandle.removeEntry(name, { recursive: true });
+      }
+      
+      return true;
+    } catch (error) {
+      console.warn('Failed to clear all data:', error);
+      return false;
     }
+  }
 
-    // Remove the last newline if we added one
-    if (bytes > 0) {
-      bytes -= 1;
+  /**
+   * Gets or creates the main storage directory handle
+   * @returns Promise resolving to directory handle
+   */
+  private async getDirectoryHandle(): Promise<FileSystemDirectoryHandle> {
+    if (!this.directoryHandle) {
+      const opfsRoot = await navigator.storage.getDirectory();
+      this.directoryHandle = await opfsRoot.getDirectoryHandle(
+        this.STORAGE_DIRECTORY,
+        { create: true }
+      );
     }
+    return this.directoryHandle;
+  }
 
-    return Math.max(0, bytes);
+  generateBundleId(): string {
+    return crypto.randomUUID();
+  }
+
+  /**
+   * Creates a storage path for a file, ensuring uniqueness
+   * @param originalFilename Original filename
+   * @param existingPaths Set of already used storage paths
+   * @returns Unique storage path
+   */
+  createStoragePath(originalFilename: string, existingPaths: Set<string>): string {
+    // Start with the original filename
+    let storagePath = originalFilename;
+    let counter = 1;
+    
+    // If path already exists, add a counter
+    while (existingPaths.has(storagePath)) {
+      const lastDotIndex = originalFilename.lastIndexOf('.');
+      if (lastDotIndex === -1) {
+        storagePath = `${originalFilename}-${counter}`;
+      } else {
+        const name = originalFilename.substring(0, lastDotIndex);
+        const extension = originalFilename.substring(lastDotIndex);
+        storagePath = `${name}-${counter}${extension}`;
+      }
+      counter++;
+    }
+    
+    return storagePath;
   }
 }
