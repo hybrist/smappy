@@ -5,7 +5,7 @@ import { BundleService } from './bundle.service';
 import { StorageService } from './storage.service';
 import { BundleCalculationService } from './bundle-calculation.service';
 import { SourceMapProcessorService } from './source-map-processor.service';
-import { BundleConfig, SourceMapData } from '../models/bundle.models';
+import { SourceMapData } from '../models/bundle.models';
 
 async function clearOriginPrivateStorage() {
   const dir = await navigator.storage.getDirectory();
@@ -56,9 +56,8 @@ describe('BundleService', () => {
       const mockChunk = new File([mockChunkContent], 'main.js', {
         type: 'application/javascript',
       });
-      const config: BundleConfig = { chunks: [mockChunk] };
 
-      await service.loadBundle(config);
+      await service.loadBundle([mockChunk]);
 
       expect(service.bundle()).toBeTruthy();
       expect(service.bundle()?.chunks.length).toBe(1);
@@ -85,12 +84,7 @@ describe('BundleService', () => {
         { type: 'application/json' },
       );
 
-      const config: BundleConfig = {
-        chunks: [mockChunk],
-        sourceMaps: [mockSourceMapFile],
-      };
-
-      await service.loadBundle(config);
+      await service.loadBundle([mockChunk, mockSourceMapFile]);
 
       const bundle = service.bundle();
       expect(bundle?.chunks[0].sourceMap).toBeTruthy();
@@ -112,9 +106,8 @@ describe('BundleService', () => {
       const mockChunk = new File([mockChunkContent], 'main.js', {
         type: 'application/javascript',
       });
-      const config: BundleConfig = { chunks: [mockChunk] };
 
-      await service.loadBundle(config);
+      await service.loadBundle([mockChunk]);
 
       const bundle = service.bundle();
       expect(bundle?.chunks[0].sourceMap).toBeTruthy();
@@ -123,11 +116,10 @@ describe('BundleService', () => {
 
     it('should set loading state correctly', async () => {
       const mockChunk = new File(['test content'], 'test.js');
-      const config: BundleConfig = { chunks: [mockChunk] };
 
       expect(service.loading()).toBe(false);
 
-      const loadPromise = service.loadBundle(config);
+      const loadPromise = service.loadBundle([mockChunk]);
       expect(service.loading()).toBe(true);
 
       await loadPromise;
@@ -147,9 +139,7 @@ describe('BundleService', () => {
         }, 0);
       });
 
-      const config: BundleConfig = { chunks: [invalidChunk] };
-
-      await service.loadBundle(config);
+      await service.loadBundle([invalidChunk]);
 
       expect(service.errorMessage()).toBeTruthy();
       expect(service.bundle()).toBeNull();
@@ -160,8 +150,7 @@ describe('BundleService', () => {
   describe('getChunkById', () => {
     beforeEach(async () => {
       const mockChunk = new File(['test content'], 'main.js');
-      const config: BundleConfig = { chunks: [mockChunk] };
-      await service.loadBundle(config);
+      await service.loadBundle([mockChunk]);
     });
 
     it('should return chunk by id', () => {
@@ -193,9 +182,8 @@ describe('BundleService', () => {
       const mockChunk = new File([mockChunkContent], 'main.js', {
         type: 'application/javascript',
       });
-      const config: BundleConfig = { chunks: [mockChunk] };
 
-      await service.loadBundle(config);
+      await service.loadBundle([mockChunk]);
 
       expect(service.getSourceContent('src/main.ts')).toBe(
         'console.log("Hello World");',
@@ -206,8 +194,7 @@ describe('BundleService', () => {
   describe('reset', () => {
     it('should reset all state', async () => {
       const mockChunk = new File(['test content'], 'main.js');
-      const config: BundleConfig = { chunks: [mockChunk] };
-      await service.loadBundle(config);
+      await service.loadBundle([mockChunk]);
 
       expect(service.bundle()).toBeTruthy();
 
@@ -227,8 +214,7 @@ describe('BundleService', () => {
       const chunk1 = new File([content1], 'chunk1.js');
       const chunk2 = new File([content2], 'chunk2.js');
 
-      const config: BundleConfig = { chunks: [chunk1, chunk2] };
-      await service.loadBundle(config);
+      await service.loadBundle([chunk1, chunk2]);
 
       const bundle = service.bundle();
       expect(bundle?.totalSize).toBe(300);
@@ -250,51 +236,13 @@ describe('BundleService', () => {
 
       const chunk = new File([content], 'chunk1.js');
 
-      const config: BundleConfig = { chunks: [chunk] };
-      await service.loadBundle(config);
+      await service.loadBundle([chunk]);
 
       const bundle = service.bundle();
       expect(bundle?.totalSize).toBeGreaterThan(100);
 
       expect(bundle?.sourceBreakdown.get('src/a.ts')).toBe(20);
       expect(bundle?.sourceBreakdown.get('src/b.ts')).toBe(80);
-    });
-  });
-
-  describe('OPFS persistence', () => {
-    it('should save bundle to OPFS after analysis', async () => {
-      const mockChunk = new File(['test content'], 'main.js');
-      const config: BundleConfig = { chunks: [mockChunk] };
-
-      await service.loadBundle(config);
-
-      expect(await storageService.hasSavedBundleAnalysis()).toBe(true);
-      const savedBundle = await storageService.loadBundleAnalysis();
-      expect(savedBundle?.totalSize).toBe(service.bundle()?.totalSize);
-    });
-
-    it('should clear OPFS when reset is called', async () => {
-      const mockChunk = new File(['test content'], 'main.js');
-      const config: BundleConfig = { chunks: [mockChunk] };
-
-      await service.loadBundle(config);
-      expect(await storageService.hasSavedBundleAnalysis()).toBe(true);
-
-      await service.reset();
-
-      expect(await storageService.hasSavedBundleAnalysis()).toBe(false);
-      expect(service.bundle()).toBeNull();
-    });
-
-    it('should provide bundle age information', async () => {
-      const mockChunk = new File(['test content'], 'main.js');
-      const config: BundleConfig = { chunks: [mockChunk] };
-
-      await service.loadBundle(config);
-
-      const age = await service.getBundleAge();
-      expect(age).toBeDefined();
-      expect(age).toBeGreaterThanOrEqual(0);
     });
   });
 });

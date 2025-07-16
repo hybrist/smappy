@@ -209,10 +209,6 @@ export class BundleService {
     return bundles.length > 0;
   }
 
-  async getBundleAge(bundleId: string): Promise<number | null> {
-    return await this.storageService.getBundleAge(bundleId);
-  }
-
   async loadStoredBundle(bundleId: string): Promise<void> {
     try {
       this.isLoading.set(true);
