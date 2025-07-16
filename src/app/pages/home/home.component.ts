@@ -1,12 +1,13 @@
-import { Component, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { Component, inject, resource, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { InputBundle } from '../../models/storage';
+import { FormatAgePipe } from '../../pipes';
 import { BundleService } from '../../services/bundle.service';
 import { StorageService } from '../../services/storage.service';
 
 @Component({
   selector: 'app-home',
-  imports: [],
+  imports: [DatePipe, FormatAgePipe],
   template: `
     <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
@@ -15,7 +16,7 @@ import { StorageService } from '../../services/storage.service';
           Analyze your JavaScript bundles and source maps
         </p>
 
-        @if (storedBundles().length > 0) {
+        @if (bundles.value().length > 0) {
           <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
             <div class="flex items-center justify-between mb-3">
               <div class="flex items-center">
@@ -31,8 +32,8 @@ import { StorageService } from '../../services/storage.service';
                   ></path>
                 </svg>
                 <p class="text-sm font-medium text-green-800">
-                  {{ storedBundles().length }} Stored Bundle{{
-                    storedBundles().length > 1 ? 's' : ''
+                  {{ bundles.value().length }} Stored Bundle{{
+                    bundles.value().length > 1 ? 's' : ''
                   }}
                 </p>
               </div>
@@ -45,7 +46,7 @@ import { StorageService } from '../../services/storage.service';
             </div>
 
             <div class="space-y-2 max-h-48 overflow-y-auto">
-              @for (bundle of storedBundles(); track bundle.id) {
+              @for (bundle of bundles.value(); track bundle.id) {
                 <div
                   class="bg-white border border-green-200 rounded p-3 hover:bg-green-25 cursor-pointer"
                   (click)="loadBundle(bundle.id)"
@@ -61,8 +62,8 @@ import { StorageService } from '../../services/storage.service';
                         }
                       </p>
                       <p class="text-xs text-gray-600">
-                        {{ bundle.displayDateTime }} •
-                        {{ bundle.displayAge }}
+                        {{ bundle.importedAt | date:'short' }} •
+                        {{ (currentTime() - bundle.importedAt) | formatAge }}
                       </p>
                     </div>
                     <button
@@ -139,15 +140,18 @@ export class HomeComponent {
 
   inputFiles: File[] = [];
 
-  storedBundles = signal<
-    (InputBundle & {
-      displayAge: string;
-      displayDateTime: string;
-    })[]
-  >([]);
+  bundles = resource({
+    loader: () => this.storageService.listAllBundles(),
+    defaultValue: [],
+  });
+
+  currentTime = signal(Date.now());
 
   constructor() {
-    this.loadStoredBundles();
+    // Update current time every 30 seconds to refresh age display
+    setInterval(() => {
+      this.currentTime.set(Date.now());
+    }, 30000);
   }
 
   onFilesSelected(event: Event): void {
@@ -169,27 +173,7 @@ export class HomeComponent {
 
   async clearAllBundles(): Promise<void> {
     await this.storageService.clearAllData();
-    await this.loadStoredBundles();
-  }
-
-  private async loadStoredBundles(): Promise<void> {
-    try {
-      const bundles = await this.storageService.listAllBundles();
-
-      const bundlesWithDetails = bundles.map((bundle) => {
-        const age = Date.now() - bundle.importedAt;
-        return {
-          ...bundle,
-          displayAge: this.formatAge(age),
-          displayDateTime: this.formatTimestamp(bundle.importedAt),
-        };
-      });
-
-      this.storedBundles.set(bundlesWithDetails);
-    } catch (error) {
-      console.warn('Failed to load stored bundles:', error);
-      this.storedBundles.set([]);
-    }
+    this.bundles.reload();
   }
 
   async loadBundle(bundleId: string): Promise<void> {
@@ -201,31 +185,6 @@ export class HomeComponent {
     } catch (error) {
       console.warn('Failed to load bundle:', error);
     }
-  }
-
-  private formatAge(ageMs: number): string {
-    const hours = Math.floor(ageMs / (1000 * 60 * 60));
-    const minutes = Math.floor((ageMs % (1000 * 60 * 60)) / (1000 * 60));
-    const days = Math.floor(hours / 24);
-
-    if (days > 0) {
-      return `${days}d ago`;
-    } else if (hours > 0) {
-      return `${hours}h ago`;
-    } else if (minutes > 0) {
-      return `${minutes}m ago`;
-    } else {
-      return 'just now';
-    }
-  }
-
-  private formatTimestamp(timestamp: number): string {
-    const date = new Date(timestamp);
-    return (
-      date.toLocaleDateString() +
-      ' ' +
-      date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    );
   }
 
   formatSize(bytes: number): string {
