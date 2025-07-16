@@ -1,7 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import {
   BundleAnalysis,
-  BundleConfig,
   ChunkInfo,
   SourceMapData,
   SourceMapMapping,
@@ -38,10 +37,8 @@ export class BundleService {
     this.isLoading.set(true);
     this.error.set(null);
 
-    const config: BundleConfig = {
-      chunks: files.filter((file) => !isSourceMapFile(file)),
-      sourceMaps: files.filter(isSourceMapFile),
-    };
+    const chunkFiles = files.filter((file) => !isSourceMapFile(file));
+    const sourceMapFiles = files.filter(isSourceMapFile);
 
     try {
       const chunks: ChunkInfo[] = [];
@@ -50,9 +47,9 @@ export class BundleService {
       const existingPaths = new Set<string>();
 
       // Process each chunk file
-      for (let i = 0; i < config.chunks.length; i++) {
-        const chunkFile = config.chunks[i];
-        const sourceMapFile = config.sourceMaps?.[i];
+      for (let i = 0; i < chunkFiles.length; i++) {
+        const chunkFile = chunkFiles[i];
+        const sourceMapFile = sourceMapFiles[i];
 
         // Read chunk content
         const chunkContent = await this.readFileAsText(chunkFile);

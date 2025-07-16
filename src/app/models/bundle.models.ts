@@ -51,10 +51,6 @@ export interface BundleAnalysis {
   mappingImpacts: Map<string, MappingImpact[]>; // source path -> mapping impacts
 }
 
-export interface BundleConfig {
-  chunks: File[];
-  sourceMaps?: File[];
-}
 
 // Serializable version for localStorage
 export interface SerializableBundleAnalysis {

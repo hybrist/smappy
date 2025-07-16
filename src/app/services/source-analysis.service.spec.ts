@@ -10,7 +10,7 @@ import {
   setSourceContent,
   toEncodedMap,
 } from '@jridgewell/gen-mapping';
-import { BundleConfig, SourceMapData } from '../models/bundle.models';
+import { SourceMapData } from '../models/bundle.models';
 import { map } from 'rxjs';
 
 describe('SourceAnalysisService', () => {
@@ -84,9 +84,8 @@ interface MyInterface {
 //# sourceMappingURL=data:application/json;base64,${encodedSourceMap}`;
 
       const mockChunk = new File([mockChunkContent], 'test.js');
-      const config: BundleConfig = { chunks: [mockChunk] };
 
-      await bundleService.loadBundle(config);
+      await bundleService.loadBundle([mockChunk]);
     });
 
     it('should return null for non-existent file', () => {
@@ -197,9 +196,8 @@ function unused() { return 'unused'; }`;
       const mockChunkContent = `//# sourceMappingURL=data:application/json;base64,${encodedSourceMap}`;
 
       const mockChunk = new File([mockChunkContent], 'test.js');
-      const config: BundleConfig = { chunks: [mockChunk] };
 
-      await bundleService.loadBundle(config);
+      await bundleService.loadBundle([mockChunk]);
 
       const result = service.analyzeSourceFile('src/test.ts');
       expect(result).toBeTruthy();
@@ -239,9 +237,8 @@ function unused() { return 'unused'; }`;
       const mockChunkContent = `//# sourceMappingURL=data:application/json;base64,${encodedSourceMap}`;
 
       const mockChunk = new File([mockChunkContent], 'styles.js');
-      const config: BundleConfig = { chunks: [mockChunk] };
 
-      await bundleService.loadBundle(config);
+      await bundleService.loadBundle([mockChunk]);
 
       const result = service.analyzeSourceFile('src/styles.css');
       expect(result).toBeTruthy();
