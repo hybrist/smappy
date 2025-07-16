@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
-import { SourceFragment, ASTNodeInfo } from '../models/source-analysis.models';
+import { ASTNodeInfo, SourceFragment } from '../models/source-analysis.models';
 
 @Injectable({
   providedIn: 'root',

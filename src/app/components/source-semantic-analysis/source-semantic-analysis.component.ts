@@ -1,27 +1,27 @@
 import {
   Component,
-  ElementRef,
-  input,
   computed,
+  ElementRef,
+  inject,
+  input,
   signal,
   viewChild,
-  inject,
 } from '@angular/core';
-import { SourceAnalysisService } from '../../services/source-analysis.service';
-import { BundleService } from '../../services/bundle.service';
 import {
+  ASTNodeInfo,
   SourceAnalysisResult,
   SourceFragment,
-  ASTNodeInfo,
 } from '../../models/source-analysis.models';
 import {
   GeneratedLocation,
   HoveredMappingInfo,
   TooltipPosition,
 } from '../../models/ui.models';
-import { SyntaxHighlightingUtils } from '../../utils/syntax-highlighting.utils';
+import { BundleService } from '../../services/bundle.service';
+import { SourceAnalysisService } from '../../services/source-analysis.service';
 import { BundleSizeUtils } from '../../utils/bundle-size.utils';
 import { FragmentIconUtils } from '../../utils/fragment-icon.utils';
+import { SyntaxHighlightingUtils } from '../../utils/syntax-highlighting.utils';
 
 @Component({
   selector: 'section[appSourceSemanticAnalysis]',

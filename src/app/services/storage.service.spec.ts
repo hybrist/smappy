@@ -1,7 +1,7 @@
-import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
-import { StorageService } from './storage.service';
+import { TestBed } from '@angular/core/testing';
 import { BundleAnalysis } from '../models/bundle.models';
+import { StorageService } from './storage.service';
 
 async function clearOriginPrivateStorage() {
   const dir = await navigator.storage.getDirectory();
@@ -88,16 +88,6 @@ describe('StorageService', () => {
       };
 
       await service.saveBundleAnalysis(mockAnalysis);
-      const age = await service.getBundleAnalysisAge();
-
-      expect(age).toBeDefined();
-      expect(age).toBeGreaterThanOrEqual(0);
-      expect(age).toBeLessThan(1000); // Should be very recent
-    });
-
-    it('should return null when no data exists', async () => {
-      const age = await service.getBundleAnalysisAge();
-      expect(age).toBeNull();
     });
   });
 });

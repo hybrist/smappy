@@ -1,11 +1,11 @@
-import { Component, inject, computed, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { BundleService } from '../../services/bundle.service';
+import { RouterLink } from '@angular/router';
 import {
-  SourceFileListComponent,
   SourceFileItem,
+  SourceFileListComponent,
 } from '../../components/source-file-list/source-file-list.component';
+import { BundleService } from '../../services/bundle.service';
 
 interface TreeNode {
   name: string;

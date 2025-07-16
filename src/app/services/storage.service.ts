@@ -1,6 +1,75 @@
 import { Injectable } from '@angular/core';
-import { InputBundle, validateInputBundle } from '../models/storage';
 import { ZodError } from 'zod';
+import {
+  InputBundle,
+  InputBundleFile,
+  validateInputBundle,
+} from '../models/storage';
+
+async function readFileAsText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () =>
+      reject(new Error(`Failed to read file: ${file.name}`));
+    reader.readAsText(file);
+  });
+}
+
+function findMapKeyForFile<T>(
+  originalFilename: string,
+  contents: Map<string, T>,
+): string {
+  // Start with the original filename
+  let storagePath = originalFilename;
+  let counter = 1;
+
+  // If path already exists, add a counter
+  while (contents.has(storagePath)) {
+    const lastDotIndex = originalFilename.lastIndexOf('.');
+    if (lastDotIndex === -1) {
+      storagePath = `${originalFilename}-${counter}`;
+    } else {
+      const name = originalFilename.substring(0, lastDotIndex);
+      const extension = originalFilename.substring(lastDotIndex);
+      storagePath = `${name}-${counter}${extension}`;
+    }
+    counter++;
+  }
+
+  return storagePath;
+}
+
+export async function inputBundleFromUpload(
+  uploadFiles: File[],
+): Promise<[InputBundle, Map<string, string>]> {
+  const contents = new Map<string, string>();
+  const files: InputBundleFile[] = [];
+
+  for (const file of uploadFiles) {
+    const chunkContent = await readFileAsText(file);
+    const chunkStoragePath = findMapKeyForFile(file.name, contents);
+    contents.set(chunkStoragePath, chunkContent);
+    files.push({
+      name: file.name,
+      storagePath: chunkStoragePath,
+    });
+  }
+
+  const importedAt = new Date();
+  const bundleId = crypto.randomUUID();
+  const bundleName = `Bundle ${importedAt.toLocaleString()}`;
+
+  return [
+    {
+      id: bundleId,
+      name: bundleName,
+      importedAt: importedAt.getTime(),
+      files,
+    },
+    contents,
+  ];
+}
 
 /**
  * Storage service implementing the file system layout described in README.md
@@ -119,33 +188,6 @@ export class StorageService {
   }
 
   /**
-   * Loads file content for a specific bundle and storage path
-   * @param bundleId Bundle identifier
-   * @param storagePath Path within the bundle storage
-   * @returns Promise resolving to file content or null if not found
-   */
-  async loadFileContent(
-    bundleId: string,
-    storagePath: string,
-  ): Promise<string | null> {
-    try {
-      const directoryHandle = await this.getDirectoryHandle();
-      const bundleDirectoryHandle =
-        await directoryHandle.getDirectoryHandle(bundleId);
-
-      const fileHandle = await bundleDirectoryHandle.getFileHandle(storagePath);
-      const file = await fileHandle.getFile();
-      return await file.text();
-    } catch (error) {
-      console.warn(
-        `Failed to load file content for ${bundleId}/${storagePath}:`,
-        error,
-      );
-      return null;
-    }
-  }
-
-  /**
    * Loads all file contents for a bundle
    * @param bundleId Bundle identifier
    * @returns Promise resolving to Map of storage path to content
@@ -217,22 +259,6 @@ export class StorageService {
   }
 
   /**
-   * Checks if a bundle exists
-   * @param bundleId Bundle identifier
-   * @returns Promise resolving to true if bundle exists
-   */
-  async bundleExists(bundleId: string): Promise<boolean> {
-    try {
-      const directoryHandle = await this.getDirectoryHandle();
-      const metadataFilename = `${bundleId}.json`;
-      await directoryHandle.getFileHandle(metadataFilename);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
    * Deletes a bundle and all its files
    * @param bundleId Bundle identifier
    * @returns Promise resolving to true if deletion was successful
@@ -263,52 +289,6 @@ export class StorageService {
     } catch (error) {
       console.warn(`Failed to delete bundle ${bundleId}:`, error);
       return false;
-    }
-  }
-
-  /**
-   * Cleans up old bundles based on age
-   * @returns Promise resolving to number of bundles cleaned up
-   */
-  async cleanupOldBundles(): Promise<number> {
-    let cleanedUp = 0;
-
-    try {
-      const bundles = await this.listAllBundles();
-      const now = Date.now();
-
-      for (const bundle of bundles) {
-        const age = now - bundle.importedAt;
-        if (age > this.MAX_AGE_MS) {
-          const success = await this.deleteBundleById(bundle.id);
-          if (success) {
-            cleanedUp++;
-          }
-        }
-      }
-    } catch (error) {
-      console.warn('Failed to cleanup old bundles:', error);
-    }
-
-    return cleanedUp;
-  }
-
-  /**
-   * Gets the age of a bundle in milliseconds
-   * @param bundleId Bundle identifier
-   * @returns Promise resolving to age in ms, or null if bundle not found
-   */
-  async getBundleAge(bundleId: string): Promise<number | null> {
-    try {
-      const bundle = await this.loadBundleMetadata(bundleId);
-      if (!bundle) {
-        return null;
-      }
-
-      return Date.now() - bundle.importedAt;
-    } catch (error) {
-      console.warn(`Failed to get bundle age for ${bundleId}:`, error);
-      return null;
     }
   }
 
@@ -345,39 +325,5 @@ export class StorageService {
       );
     }
     return this.directoryHandle;
-  }
-
-  generateBundleId(): string {
-    return crypto.randomUUID();
-  }
-
-  /**
-   * Creates a storage path for a file, ensuring uniqueness
-   * @param originalFilename Original filename
-   * @param existingPaths Set of already used storage paths
-   * @returns Unique storage path
-   */
-  createStoragePath(
-    originalFilename: string,
-    existingPaths: Set<string>,
-  ): string {
-    // Start with the original filename
-    let storagePath = originalFilename;
-    let counter = 1;
-
-    // If path already exists, add a counter
-    while (existingPaths.has(storagePath)) {
-      const lastDotIndex = originalFilename.lastIndexOf('.');
-      if (lastDotIndex === -1) {
-        storagePath = `${originalFilename}-${counter}`;
-      } else {
-        const name = originalFilename.substring(0, lastDotIndex);
-        const extension = originalFilename.substring(lastDotIndex);
-        storagePath = `${name}-${counter}${extension}`;
-      }
-      counter++;
-    }
-
-    return storagePath;
   }
 }

@@ -1,9 +1,5 @@
-import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
-import { SourceAnalysisService } from './source-analysis.service';
-import { BundleService } from './bundle.service';
-import { AstParserService } from '../parsers/ast-parser.service';
-import { FileParsersService } from '../parsers/file-parsers.service';
+import { TestBed } from '@angular/core/testing';
 import {
   GenMapping,
   addMapping,
@@ -11,7 +7,10 @@ import {
   toEncodedMap,
 } from '@jridgewell/gen-mapping';
 import { SourceMapData } from '../models/bundle.models';
-import { map } from 'rxjs';
+import { AstParserService } from '../parsers/ast-parser.service';
+import { FileParsersService } from '../parsers/file-parsers.service';
+import { BundleService } from './bundle.service';
+import { SourceAnalysisService } from './source-analysis.service';
 
 describe('SourceAnalysisService', () => {
   let service: SourceAnalysisService;

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SourceMapConsumer } from '@jridgewell/source-map';
-import { ChunkInfo, MappingImpact } from '../models/bundle.models';
+import { ChunkInfo } from '../models/bundle.models';
 
 @Injectable({
   providedIn: 'root',

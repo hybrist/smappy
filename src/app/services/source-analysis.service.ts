@@ -1,13 +1,13 @@
 import { Injectable, inject } from '@angular/core';
-import { BundleService } from './bundle.service';
 import {
-  SourceFragment,
-  SourceAnalysisResult,
-  FragmentUsage,
   ASTNodeInfo,
+  FragmentUsage,
+  SourceAnalysisResult,
+  SourceFragment,
 } from '../models/source-analysis.models';
 import { AstParserService } from '../parsers/ast-parser.service';
 import { FileParsersService } from '../parsers/file-parsers.service';
+import { BundleService } from './bundle.service';
 
 @Injectable({
   providedIn: 'root',

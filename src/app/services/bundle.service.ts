@@ -1,19 +1,14 @@
-import { Injectable, signal, inject } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import {
   BundleAnalysis,
   ChunkInfo,
+  MappingImpact,
   SourceMapData,
   SourceMapMapping,
-  MappingImpact,
 } from '../models/bundle.models';
-import { InputBundle, InputBundleFile } from '../models/storage';
-import { StorageService } from './storage.service';
 import { BundleCalculationService } from './bundle-calculation.service';
 import { SourceMapProcessorService } from './source-map-processor.service';
-
-function isSourceMapFile(file: File): boolean {
-  return file.name.endsWith('.map') || file.name.endsWith('.sourcemap');
-}
+import { inputBundleFromUpload, StorageService } from './storage.service';
 
 @Injectable({
   providedIn: 'root',
@@ -37,52 +32,36 @@ export class BundleService {
     this.isLoading.set(true);
     this.error.set(null);
 
-    const chunkFiles = files.filter((file) => !isSourceMapFile(file));
-    const sourceMapFiles = files.filter(isSourceMapFile);
-
     try {
+      const [inputBundle, fileContents] = await inputBundleFromUpload(files);
+
+      // Save to storage
+      const savedBundleId = await this.storageService.storeBundleWithFiles(
+        inputBundle,
+        fileContents,
+      );
+
       const chunks: ChunkInfo[] = [];
-      const fileContents = new Map<string, string>();
-      const bundleFiles: InputBundleFile[] = [];
-      const existingPaths = new Set<string>();
 
       // Process each chunk file
-      for (let i = 0; i < chunkFiles.length; i++) {
-        const chunkFile = chunkFiles[i];
-        const sourceMapFile = sourceMapFiles[i];
+      for (const file of inputBundle.files) {
+        // Only look at JavaScript and CSS files for chunks.
+        if (!/\.[mc]?js$/.test(file.name) && !file.name.endsWith('.css')) {
+          continue;
+        }
 
-        // Read chunk content
-        const chunkContent = await this.readFileAsText(chunkFile);
-        const chunkStoragePath = this.storageService.createStoragePath(
-          chunkFile.name,
-          existingPaths,
-        );
-        existingPaths.add(chunkStoragePath);
-
-        // Store chunk content
-        fileContents.set(chunkStoragePath, chunkContent);
-        bundleFiles.push({
-          name: chunkFile.name,
-          storagePath: chunkStoragePath,
-        });
+        const chunkFile = file;
+        const chunkContent = fileContents.get(chunkFile.storagePath)!;
 
         // Process source map if provided
         let sourceMap: SourceMapData | undefined;
+
+        // TODO: Properly handle source map URL comments.
+        const sourceMapFile = inputBundle.files.find(
+          (f) => f.name === `${chunkFile.name}.map`,
+        );
         if (sourceMapFile) {
-          const sourceMapContent = await this.readFileAsText(sourceMapFile);
-          const sourceMapStoragePath = this.storageService.createStoragePath(
-            sourceMapFile.name,
-            existingPaths,
-          );
-          existingPaths.add(sourceMapStoragePath);
-
-          // Store source map content
-          fileContents.set(sourceMapStoragePath, sourceMapContent);
-          bundleFiles.push({
-            name: sourceMapFile.name,
-            storagePath: sourceMapStoragePath,
-          });
-
+          const sourceMapContent = fileContents.get(sourceMapFile.storagePath)!;
           sourceMap = JSON.parse(sourceMapContent) as SourceMapData;
         } else {
           sourceMap =
@@ -104,22 +83,6 @@ export class BundleService {
       const analysis = await this.bundleCalculation.analyzeBundle(chunks);
       this.currentBundle.set(analysis);
 
-      // Create bundle metadata
-      const bundleId = this.storageService.generateBundleId();
-      const bundleName = `Bundle ${new Date().toLocaleString()}`;
-      const inputBundle: InputBundle = {
-        id: bundleId,
-        name: bundleName,
-        importedAt: Date.now(),
-        files: bundleFiles,
-      };
-
-      // Save to storage
-      const savedBundleId = await this.storageService.storeBundleWithFiles(
-        inputBundle,
-        fileContents,
-      );
-
       if (savedBundleId) {
         this.currentBundleId.set(savedBundleId);
         return savedBundleId;
@@ -134,16 +97,6 @@ export class BundleService {
     } finally {
       this.isLoading.set(false);
     }
-  }
-
-  private async readFileAsText(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () =>
-        reject(new Error(`Failed to read file: ${file.name}`));
-      reader.readAsText(file);
-    });
   }
 
   getChunkById(id: string): ChunkInfo | undefined {

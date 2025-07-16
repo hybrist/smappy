@@ -1,16 +1,16 @@
-import { TestBed } from '@angular/core/testing';
 import {
   inputBinding,
   provideZonelessChangeDetection,
   signal,
 } from '@angular/core';
-import { SourceSemanticAnalysisComponent } from './source-semantic-analysis.component';
-import { SourceAnalysisService } from '../../services/source-analysis.service';
-import { BundleService } from '../../services/bundle.service';
+import { TestBed } from '@angular/core/testing';
 import {
   SourceAnalysisResult,
   SourceFragment,
 } from '../../models/source-analysis.models';
+import { BundleService } from '../../services/bundle.service';
+import { SourceAnalysisService } from '../../services/source-analysis.service';
+import { SourceSemanticAnalysisComponent } from './source-semantic-analysis.component';
 
 describe('SourceSemanticAnalysisComponent', () => {
   let component: SourceSemanticAnalysisComponent;

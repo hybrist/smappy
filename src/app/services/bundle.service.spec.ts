@@ -1,11 +1,11 @@
+import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { GenMapping, addMapping, toEncodedMap } from '@jridgewell/gen-mapping';
-import { provideZonelessChangeDetection } from '@angular/core';
-import { BundleService } from './bundle.service';
-import { StorageService } from './storage.service';
-import { BundleCalculationService } from './bundle-calculation.service';
-import { SourceMapProcessorService } from './source-map-processor.service';
 import { SourceMapData } from '../models/bundle.models';
+import { BundleCalculationService } from './bundle-calculation.service';
+import { BundleService } from './bundle.service';
+import { SourceMapProcessorService } from './source-map-processor.service';
+import { StorageService } from './storage.service';
 
 async function clearOriginPrivateStorage() {
   const dir = await navigator.storage.getDirectory();

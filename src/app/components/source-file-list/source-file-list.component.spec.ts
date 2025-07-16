@@ -1,15 +1,15 @@
-import { TestBed } from '@angular/core/testing';
 import {
   inputBinding,
   provideZonelessChangeDetection,
   signal,
 } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import {
-  SourceFileListComponent,
-  SourceFileItem,
-} from './source-file-list.component';
 import { BundleService } from '../../services/bundle.service';
+import {
+  SourceFileItem,
+  SourceFileListComponent,
+} from './source-file-list.component';
 
 describe('SourceFileListComponent', () => {
   let component: SourceFileListComponent;

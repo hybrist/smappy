@@ -1,10 +1,10 @@
 import { Component, inject, OnInit } from '@angular/core';
 import {
-  RouterOutlet,
+  ActivatedRoute,
+  Router,
   RouterLink,
   RouterLinkActive,
-  Router,
-  ActivatedRoute,
+  RouterOutlet,
 } from '@angular/router';
 import { BundleService } from '../../services/bundle.service';
 

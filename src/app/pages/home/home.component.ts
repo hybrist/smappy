@@ -1,8 +1,8 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { InputBundle } from '../../models/storage';
 import { BundleService } from '../../services/bundle.service';
 import { StorageService } from '../../services/storage.service';
-import { InputBundle } from '../../models/storage';
 
 @Component({
   selector: 'app-home',

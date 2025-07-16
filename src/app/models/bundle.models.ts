@@ -51,7 +51,6 @@ export interface BundleAnalysis {
   mappingImpacts: Map<string, MappingImpact[]>; // source path -> mapping impacts
 }
 
-
 // Serializable version for localStorage
 export interface SerializableBundleAnalysis {
   totalSize: number;
