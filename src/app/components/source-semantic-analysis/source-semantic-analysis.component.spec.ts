@@ -1,5 +1,9 @@
 import { TestBed } from '@angular/core/testing';
-import { inputBinding, provideZonelessChangeDetection, signal } from '@angular/core';
+import {
+  inputBinding,
+  provideZonelessChangeDetection,
+  signal,
+} from '@angular/core';
 import { SourceSemanticAnalysisComponent } from './source-semantic-analysis.component';
 import { SourceAnalysisService } from '../../services/source-analysis.service';
 import { BundleService } from '../../services/bundle.service';
@@ -35,9 +39,7 @@ describe('SourceSemanticAnalysisComponent', () => {
     });
 
     fixture = TestBed.createComponent(SourceSemanticAnalysisComponent, {
-      bindings: [
-        inputBinding('path', pathSignal),
-      ],
+      bindings: [inputBinding('path', pathSignal)],
     });
     component = fixture.componentInstance;
     sourceAnalysisServiceSpy = TestBed.inject(

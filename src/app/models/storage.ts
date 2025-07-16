@@ -21,7 +21,7 @@ export interface InputBundleFile {
  */
 export const InputBundleFileSchema = z.object({
   name: z.string().min(1),
-  storagePath: z.string().min(1)
+  storagePath: z.string().min(1),
 });
 
 /**
@@ -31,7 +31,7 @@ export const InputBundleSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
   importedAt: z.number().int().positive(),
-  files: z.array(InputBundleFileSchema)
+  files: z.array(InputBundleFileSchema),
 });
 
 // Validation Functions

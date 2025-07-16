@@ -28,11 +28,7 @@ export class BundleCalculationService {
 
     chunks.forEach(async (chunk) => {
       if (chunk.sourceMap) {
-        this.processChunkWithSourceMap(
-          chunk,
-          addSourceSize,
-          addMappingImpact,
-        );
+        this.processChunkWithSourceMap(chunk, addSourceSize, addMappingImpact);
       } else {
         addSourceSize('<unknown>', chunk.size);
       }

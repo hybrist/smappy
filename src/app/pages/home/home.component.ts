@@ -67,10 +67,7 @@ import { InputBundle } from '../../models/storage';
                     </div>
                     <button
                       class="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 flex-shrink-0 ml-2"
-                      (click)="
-                        loadBundle(bundle.id);
-                        $event.stopPropagation()
-                      "
+                      (click)="loadBundle(bundle.id); $event.stopPropagation()"
                     >
                       Open
                     </button>
@@ -98,7 +95,9 @@ import { InputBundle } from '../../models/storage';
           @if (inputFiles.length > 0) {
             <div class="bg-blue-50 p-3 rounded">
               <p class="text-sm text-blue-800">
-                {{ inputFiles.length }} chunk{{ inputFiles.length > 1 ? 's' : '' }}
+                {{ inputFiles.length }} chunk{{
+                  inputFiles.length > 1 ? 's' : ''
+                }}
                 selected
               </p>
             </div>

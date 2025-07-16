@@ -1,5 +1,9 @@
 import { TestBed } from '@angular/core/testing';
-import { inputBinding, provideZonelessChangeDetection, signal } from '@angular/core';
+import {
+  inputBinding,
+  provideZonelessChangeDetection,
+  signal,
+} from '@angular/core';
 import { provideRouter } from '@angular/router';
 import {
   SourceFileListComponent,
@@ -62,7 +66,7 @@ describe('SourceFileListComponent', () => {
   });
 
   it('should display badges when provided', () => {
-     mockFiles.set([
+    mockFiles.set([
       { path: 'src/test.ts', size: 100, badge: 'Content Available' },
     ]);
 

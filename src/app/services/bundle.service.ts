@@ -39,7 +39,7 @@ export class BundleService {
     this.error.set(null);
 
     const config: BundleConfig = {
-      chunks: files.filter(file => !isSourceMapFile(file)),
+      chunks: files.filter((file) => !isSourceMapFile(file)),
       sourceMaps: files.filter(isSourceMapFile),
     };
 
@@ -58,7 +58,7 @@ export class BundleService {
         const chunkContent = await this.readFileAsText(chunkFile);
         const chunkStoragePath = this.storageService.createStoragePath(
           chunkFile.name,
-          existingPaths
+          existingPaths,
         );
         existingPaths.add(chunkStoragePath);
 
@@ -75,7 +75,7 @@ export class BundleService {
           const sourceMapContent = await this.readFileAsText(sourceMapFile);
           const sourceMapStoragePath = this.storageService.createStoragePath(
             sourceMapFile.name,
-            existingPaths
+            existingPaths,
           );
           existingPaths.add(sourceMapStoragePath);
 
@@ -88,7 +88,8 @@ export class BundleService {
 
           sourceMap = JSON.parse(sourceMapContent) as SourceMapData;
         } else {
-          sourceMap = this.sourceMapProcessor.extractInlineSourceMap(chunkContent);
+          sourceMap =
+            this.sourceMapProcessor.extractInlineSourceMap(chunkContent);
         }
 
         // Create chunk info
@@ -119,9 +120,9 @@ export class BundleService {
       // Save to storage
       const savedBundleId = await this.storageService.storeBundleWithFiles(
         inputBundle,
-        fileContents
+        fileContents,
       );
-      
+
       if (savedBundleId) {
         this.currentBundleId.set(savedBundleId);
         return savedBundleId;
@@ -137,7 +138,6 @@ export class BundleService {
       this.isLoading.set(false);
     }
   }
-
 
   private async readFileAsText(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -219,18 +219,21 @@ export class BundleService {
       this.error.set(null);
 
       // Load bundle metadata
-      const bundleMetadata = await this.storageService.loadBundleMetadata(bundleId);
+      const bundleMetadata =
+        await this.storageService.loadBundleMetadata(bundleId);
       if (!bundleMetadata) {
         throw new Error(`Bundle ${bundleId} not found`);
       }
 
       // Load all file contents
-      const fileContents = await this.storageService.loadAllFileContents(bundleId);
+      const fileContents =
+        await this.storageService.loadAllFileContents(bundleId);
 
       // Reconstruct chunks from stored data
       const chunks: ChunkInfo[] = [];
-      const chunkFiles = bundleMetadata.files.filter(file => 
-        !file.name.endsWith('.map') && !file.name.endsWith('.sourcemap')
+      const chunkFiles = bundleMetadata.files.filter(
+        (file) =>
+          !file.name.endsWith('.map') && !file.name.endsWith('.sourcemap'),
       );
 
       for (const chunkFile of chunkFiles) {
@@ -241,10 +244,11 @@ export class BundleService {
         }
 
         // Look for corresponding source map file
-        const sourceMapFile = bundleMetadata.files.find(file => 
-          file.name === `${chunkFile.name}.map` || 
-          file.name.endsWith('.map') || 
-          file.name.endsWith('.sourcemap')
+        const sourceMapFile = bundleMetadata.files.find(
+          (file) =>
+            file.name === `${chunkFile.name}.map` ||
+            file.name.endsWith('.map') ||
+            file.name.endsWith('.sourcemap'),
         );
 
         let sourceMap: SourceMapData | undefined;
@@ -254,7 +258,8 @@ export class BundleService {
             sourceMap = JSON.parse(sourceMapContent) as SourceMapData;
           }
         } else {
-          sourceMap = this.sourceMapProcessor.extractInlineSourceMap(chunkContent);
+          sourceMap =
+            this.sourceMapProcessor.extractInlineSourceMap(chunkContent);
         }
 
         const chunk: ChunkInfo = {
@@ -273,7 +278,7 @@ export class BundleService {
       this.currentBundleId.set(bundleId);
     } catch (error) {
       this.error.set(
-        error instanceof Error ? error.message : 'Failed to load bundle'
+        error instanceof Error ? error.message : 'Failed to load bundle',
       );
       console.warn('Failed to load stored bundle:', error);
     } finally {

@@ -1,9 +1,9 @@
 /**
  * Parsed Data Model for Bundle Analysis
- * 
+ *
  * This module defines the structured, immutable representation of bundle data
  * that serves as the bridge between raw storage and computed analysis.
- * 
+ *
  * The parsed data is designed to be:
  * - Read-optimized with fast lookup structures
  * - Memory efficient with minimal duplication

@@ -1,6 +1,6 @@
 /**
  * Models Index
- * 
+ *
  * Centralized exports for all data models used in the application.
  */
 
