@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { resolveBundle } from './resolvers/bundle';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/home', pathMatch: 'full' },
@@ -9,6 +10,7 @@ export const routes: Routes = [
   },
   {
     path: 'bundle/:bundleId',
+    resolve: { bundle: resolveBundle },
     loadComponent: () =>
       import('./layouts/bundle-layout/bundle-layout.component').then(
         (m) => m.BundleLayoutComponent,

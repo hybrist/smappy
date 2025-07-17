@@ -10,7 +10,7 @@ import {
   providedIn: 'root',
 })
 export class BundleCalculationService {
-  analyzeBundle(chunks: ChunkInfo[]): BundleAnalysis {
+  analyzeBundle(bundleId: string, chunks: ChunkInfo[]): BundleAnalysis {
     const totalSize = chunks.reduce((sum, chunk) => sum + chunk.size, 0);
     const sourceBreakdown = new Map<string, number>();
     const mappingImpacts = new Map<string, MappingImpact[]>();
@@ -35,6 +35,7 @@ export class BundleCalculationService {
     });
 
     return {
+      bundleId,
       totalSize,
       chunks,
       sourceBreakdown,

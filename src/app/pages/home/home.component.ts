@@ -57,11 +57,11 @@ import { StorageService } from '../../services/storage.service';
                     <div class="flex-1">
                       <div class="text-sm font-medium text-gray-900">
                         {{ bundle.name }}
-                        @if (bundle.files.length > 0) {
+                        @if (bundle.files.length; as fileCount) {
                           •
-                          <span i18n>{bundle.files.length, plural,
-                            one {{{ bundle.files.length }} file}
-                            other {{{ bundle.files.length }} files}
+                          <span i18n>{fileCount, plural,
+                            one {{{ fileCount }} file}
+                            other {{{ fileCount }} files}
                           }</span>
                         }
                       </div>

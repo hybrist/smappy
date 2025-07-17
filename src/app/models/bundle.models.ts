@@ -45,6 +45,7 @@ export interface MappingImpact {
 }
 
 export interface BundleAnalysis {
+  bundleId: string;
   totalSize: number;
   chunks: ChunkInfo[];
   sourceBreakdown: Map<string, number>;

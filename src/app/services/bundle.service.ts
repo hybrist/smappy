@@ -41,6 +41,10 @@ export class BundleService {
         fileContents,
       );
 
+      if (!savedBundleId) {
+        throw new Error('Failed to save bundle to storage');
+      }
+
       const chunks: ChunkInfo[] = [];
 
       // Process each chunk file
@@ -79,16 +83,13 @@ export class BundleService {
         chunks.push(chunk);
       }
 
+      this.currentBundleId.set(savedBundleId);
+
       // Analyze the bundle
-      const analysis = await this.bundleCalculation.analyzeBundle(chunks);
+      const analysis = await this.bundleCalculation.analyzeBundle(savedBundleId, chunks);
       this.currentBundle.set(analysis);
 
-      if (savedBundleId) {
-        this.currentBundleId.set(savedBundleId);
-        return savedBundleId;
-      } else {
-        throw new Error('Failed to save bundle to storage');
-      }
+      return savedBundleId;
     } catch (err) {
       this.error.set(
         err instanceof Error ? err.message : 'Failed to load bundle',
@@ -159,7 +160,7 @@ export class BundleService {
     return bundles.length > 0;
   }
 
-  async loadStoredBundle(bundleId: string): Promise<void> {
+  async loadStoredBundle(bundleId: string): Promise<BundleAnalysis> {
     try {
       this.isLoading.set(true);
       this.error.set(null);
@@ -219,14 +220,16 @@ export class BundleService {
       }
 
       // Analyze the reconstructed bundle
-      const analysis = await this.bundleCalculation.analyzeBundle(chunks);
+      const analysis = await this.bundleCalculation.analyzeBundle(bundleId, chunks);
       this.currentBundle.set(analysis);
       this.currentBundleId.set(bundleId);
+
+      return analysis;
     } catch (error) {
       this.error.set(
         error instanceof Error ? error.message : 'Failed to load bundle',
       );
-      console.warn('Failed to load stored bundle:', error);
+      throw error;
     } finally {
       this.isLoading.set(false);
     }

@@ -110,7 +110,7 @@ export class ChunkDetailComponent {
     const chunkData = this.chunk();
     if (!chunkData?.sourceMap?.sources) return [];
 
-    const analysis = this.calc.analyzeBundle([chunkData]);
+    const analysis = this.calc.analyzeBundle('temp', [chunkData]);
 
     return chunkData.sourceMap.sources
       .filter((source): source is string => source !== null)
