@@ -86,7 +86,10 @@ export class BundleService {
       this.currentBundleId.set(savedBundleId);
 
       // Analyze the bundle
-      const analysis = await this.bundleCalculation.analyzeBundle(savedBundleId, chunks);
+      const analysis = await this.bundleCalculation.analyzeBundle(
+        savedBundleId,
+        chunks,
+      );
       this.currentBundle.set(analysis);
 
       return savedBundleId;
@@ -220,7 +223,10 @@ export class BundleService {
       }
 
       // Analyze the reconstructed bundle
-      const analysis = await this.bundleCalculation.analyzeBundle(bundleId, chunks);
+      const analysis = await this.bundleCalculation.analyzeBundle(
+        bundleId,
+        chunks,
+      );
       this.currentBundle.set(analysis);
       this.currentBundleId.set(bundleId);
 

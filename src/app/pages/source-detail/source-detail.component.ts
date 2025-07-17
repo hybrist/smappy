@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { SourceDetailHeaderComponent } from '../../components/source-detail-header/source-detail-header.component';
 import { SourceSemanticAnalysisComponent } from '../../components/source-semantic-analysis/source-semantic-analysis.component';
+import { currentBundle } from '../../resolvers/bundle';
 import { BundleService } from '../../services/bundle.service';
 
 @Component({
@@ -25,8 +26,9 @@ import { BundleService } from '../../services/bundle.service';
     } @else {
       <div class="text-center py-12">
         <p class="text-gray-500 mb-4">Source file not found</p>
+        @let bundleId = bundle().value()!.bundleId;
         <a
-          routerLink="/bundle/sources"
+          [routerLink]="['/bundle', bundleId, 'sources']"
           class="text-blue-600 hover:text-blue-800"
         >
           ← Back to sources
@@ -39,6 +41,8 @@ import { BundleService } from '../../services/bundle.service';
 export class SourceDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly bundleService = inject(BundleService);
+
+  protected readonly bundle = currentBundle();
 
   private readonly queryParams = toSignal(this.route.queryParams);
   private readonly sourcePath = computed<string | undefined>(() => {

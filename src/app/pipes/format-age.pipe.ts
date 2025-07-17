@@ -2,7 +2,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 
 /**
  * Pure pipe to format age in milliseconds to a human-readable string
- * 
+ *
  * @example
  * {{ 86400000 | formatAge }} // "1d ago"
  * {{ 3600000 | formatAge }}  // "1h ago"

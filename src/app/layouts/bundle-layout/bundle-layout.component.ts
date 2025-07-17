@@ -1,21 +1,13 @@
-import { Component, inject } from '@angular/core';
-import {
-  Router,
-  RouterLink,
-  RouterLinkActive,
-  RouterOutlet,
-} from '@angular/router';
+import { Component } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { FormatSizePipe } from '../../pipes/format-size.pipe';
 import { currentBundle } from '../../resolvers/bundle';
-import { BundleService } from '../../services/bundle.service';
 
 @Component({
   selector: 'app-bundle-layout',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, FormatSizePipe],
   template: `
-    @if (bundle().hasValue()) {
-      @let bundle = this.bundle().value()!;
-
+    @if (bundle().hasValue() && bundle().value(); as bundle) {
       <div class="min-h-screen bg-gray-50">
         <nav class="bg-white shadow-sm border-b">
           <div class="max-w-7xl mx-auto px-4">
@@ -54,12 +46,12 @@ import { BundleService } from '../../services/bundle.service';
                   Sources
                 </a>
 
-                <button
-                  (click)="reset()"
+                <a
                   class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm"
+                  routerLink="/home"
                 >
                   New Analysis
-                </button>
+                </a>
               </div>
             </div>
           </div>
@@ -88,13 +80,5 @@ import { BundleService } from '../../services/bundle.service';
   styles: [],
 })
 export class BundleLayoutComponent {
-  private readonly router = inject(Router);
-  private readonly bundleService = inject(BundleService);
-
   protected readonly bundle = currentBundle();
-
-  async reset(): Promise<void> {
-    await this.bundleService.reset();
-    this.router.navigate(['/home']);
-  }
 }

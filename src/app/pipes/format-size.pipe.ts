@@ -2,7 +2,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 
 /**
  * Pure pipe to format bytes into human-readable file sizes
- * 
+ *
  * @example
  * {{ 1024 | formatSize }} // "1 KB"
  * {{ 1048576 | formatSize }} // "1 MB"

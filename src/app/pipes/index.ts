@@ -1,6 +1,6 @@
 /**
  * Pipes Index
- * 
+ *
  * Centralized exports for all custom pipes used in the application.
  */
 
