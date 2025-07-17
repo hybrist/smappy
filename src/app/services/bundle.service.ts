@@ -23,8 +23,6 @@ export class BundleService {
   private readonly isLoading = signal<boolean>(false);
   private readonly error = signal<string | null>(null);
 
-  readonly bundle = this.currentBundle.asReadonly();
-  readonly bundleId = this.currentBundleId.asReadonly();
   readonly loading = this.isLoading.asReadonly();
   readonly errorMessage = this.error.asReadonly();
 

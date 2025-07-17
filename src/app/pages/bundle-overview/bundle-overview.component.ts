@@ -1,12 +1,13 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { currentBundle } from '../../resolvers/bundle';
 import { BundleService } from '../../services/bundle.service';
 
 @Component({
   selector: 'app-bundle-overview',
   imports: [RouterLink],
   template: `
-    @if (bundle(); as bundleData) {
+    @if (bundle().value(); as bundleData) {
       <div class="space-y-6">
         <div>
           <h2 class="text-2xl font-bold text-gray-900 mb-4">Bundle Overview</h2>
@@ -229,12 +230,11 @@ import { BundleService } from '../../services/bundle.service';
 export class BundleOverviewComponent {
   private readonly bundleService = inject(BundleService);
 
-  readonly bundle = this.bundleService.bundle;
-  readonly bundleId = this.bundleService.bundleId;
+  protected readonly bundle = currentBundle();
+  protected readonly bundleId = computed(() => this.bundle().value()!.bundleId);
 
   topSources() {
-    const bundle = this.bundle();
-    if (!bundle) return [];
+    const bundle = this.bundle().value()!;
 
     return Array.from(bundle.sourceBreakdown.entries())
       .sort((a, b) => b[1] - a[1])

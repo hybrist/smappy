@@ -1,5 +1,6 @@
-import { Component, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { currentBundle } from '../../resolvers/bundle';
 import { BundleService } from '../../services/bundle.service';
 
 export interface SourceFileItem {
@@ -82,7 +83,8 @@ export class SourceFileListComponent {
 
   private readonly bundleService = inject(BundleService);
 
-  protected readonly bundleId = this.bundleService.bundleId;
+  protected readonly bundle = currentBundle();
+  protected readonly bundleId = computed(() => this.bundle().value()!.bundleId);
 
   getFileName(path: string): string {
     return path.split('/').pop() || path;
@@ -97,8 +99,7 @@ export class SourceFileListComponent {
   }
 
   getPercentageOfTotal(size: number): string {
-    const bundle = this.bundleService.bundle();
-    if (!bundle) return '0';
+    const bundle = this.bundle().value()!;
     return ((size / bundle.totalSize) * 100).toFixed(1);
   }
 }

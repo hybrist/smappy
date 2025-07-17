@@ -51,7 +51,7 @@ export class SourceDetailComponent {
 
   readonly sourceInfo = computed(() => {
     const sourcePath = this.sourcePath();
-    const bundle = this.bundleService.bundle();
+    const bundle = this.bundle().value()!;
 
     if (!bundle || !sourcePath) return null;
 
@@ -69,7 +69,7 @@ export class SourceDetailComponent {
 
   readonly similarFiles = computed(() => {
     const info = this.sourceInfo();
-    const bundle = this.bundleService.bundle();
+    const bundle = this.bundle().value()!;
     if (!info || !bundle) return [];
 
     const fileType = this.getFileType(info.path);

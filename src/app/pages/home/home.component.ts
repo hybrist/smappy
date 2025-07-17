@@ -128,7 +128,6 @@ export class HomeComponent {
 
   readonly loading = this.bundleService.loading;
   readonly errorMessage = this.bundleService.errorMessage;
-  readonly bundle = this.bundleService.bundle;
 
   inputFiles = signal<File[]>([]);
 

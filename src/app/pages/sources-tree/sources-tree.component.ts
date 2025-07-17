@@ -5,6 +5,7 @@ import {
   SourceFileItem,
   SourceFileListComponent,
 } from '../../components/source-file-list/source-file-list.component';
+import { currentBundle } from '../../resolvers/bundle';
 import { BundleService } from '../../services/bundle.service';
 
 interface TreeNode {
@@ -20,7 +21,7 @@ interface TreeNode {
   selector: 'app-sources-tree',
   imports: [RouterLink, FormsModule, SourceFileListComponent],
   template: `
-    @if (bundle(); as bundleData) {
+    @if (bundle().value(); as bundleData) {
       <div class="space-y-6">
         <div class="flex items-center justify-between">
           <h2 class="text-2xl font-bold text-gray-900">Source Files</h2>
@@ -184,15 +185,12 @@ interface TreeNode {
   styles: [],
 })
 export class SourcesTreeComponent {
-  private readonly bundleService = inject(BundleService);
-
-  readonly bundle = this.bundleService.bundle;
-  readonly bundleId = this.bundleService.bundleId;
+  protected readonly bundle = currentBundle();
+  protected readonly bundleId = computed(() => this.bundle().value()!.bundleId);
   readonly filterText = signal('');
 
   readonly sourceTree = computed(() => {
-    const bundle = this.bundle();
-    if (!bundle) return [];
+    const bundle = this.bundle().value()!;
 
     const filter = this.filterText().toLowerCase();
     const tree: TreeNode[] = [];
@@ -259,8 +257,7 @@ export class SourcesTreeComponent {
   });
 
   readonly largestFileItems = computed((): SourceFileItem[] => {
-    const bundle = this.bundle();
-    if (!bundle) return [];
+    const bundle = this.bundle().value()!;
 
     return Array.from(bundle.sourceBreakdown.entries())
       .sort((a, b) => b[1] - a[1])
@@ -288,15 +285,15 @@ export class SourcesTreeComponent {
   }
 
   getLargestFileSize(): number {
-    const bundle = this.bundle();
-    if (!bundle || bundle.sourceBreakdown.size === 0) return 0;
+    const bundle = this.bundle().value()!;
+    if (bundle.sourceBreakdown.size === 0) return 0;
 
     return Math.max(...Array.from(bundle.sourceBreakdown.values()));
   }
 
   getAverageFileSize(): number {
-    const bundle = this.bundle();
-    if (!bundle || bundle.sourceBreakdown.size === 0) return 0;
+    const bundle = this.bundle().value()!;
+    if (bundle.sourceBreakdown.size === 0) return 0;
 
     const total = Array.from(bundle.sourceBreakdown.values()).reduce(
       (sum, size) => sum + size,
@@ -306,8 +303,7 @@ export class SourcesTreeComponent {
   }
 
   getNodeModulesCount(): number {
-    const bundle = this.bundle();
-    if (!bundle) return 0;
+    const bundle = this.bundle().value()!;
 
     return Array.from(bundle.sourceBreakdown.keys()).filter((path) =>
       path.includes('node_modules'),

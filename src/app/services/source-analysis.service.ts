@@ -8,6 +8,7 @@ import {
 import { AstParserService } from '../parsers/ast-parser.service';
 import { FileParsersService } from '../parsers/file-parsers.service';
 import { BundleService } from './bundle.service';
+import { BundleAnalysis } from '../models/bundle.models';
 
 @Injectable({
   providedIn: 'root',
@@ -20,14 +21,9 @@ export class SourceAnalysisService {
   /**
    * Analyze a source file and extract semantic fragments
    */
-  analyzeSourceFile(filePath: string): SourceAnalysisResult | null {
+  analyzeSourceFile(bundle: BundleAnalysis, filePath: string): SourceAnalysisResult | null {
     const sourceContent = this.bundleService.getSourceContent(filePath);
     if (!sourceContent) {
-      return null;
-    }
-
-    const bundle = this.bundleService.bundle();
-    if (!bundle) {
       return null;
     }
 

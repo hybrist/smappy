@@ -17,6 +17,7 @@ import {
   HoveredMappingInfo,
   TooltipPosition,
 } from '../../models/ui.models';
+import { currentBundle } from '../../resolvers/bundle';
 import { BundleService } from '../../services/bundle.service';
 import { SourceAnalysisService } from '../../services/source-analysis.service';
 import { BundleSizeUtils } from '../../utils/bundle-size.utils';
@@ -360,12 +361,17 @@ export class SourceSemanticAnalysisComponent {
   readonly hoveredMapping = signal<HoveredMappingInfo | null>(null);
   readonly tooltipPosition = signal<TooltipPosition>({ x: 0, y: 0 });
 
+  private readonly bundle = currentBundle();
+
   private hoverTooltip = viewChild('hoverTooltip', { read: ElementRef });
 
   readonly analysisResult = computed(() => {
     const currentPath = this.path();
     if (!currentPath) return null;
-    return this.sourceAnalysisService.analyzeSourceFile(currentPath);
+    return this.sourceAnalysisService.analyzeSourceFile(
+      this.bundle().value()!,
+      currentPath,
+    );
   });
 
   readonly filteredFragments = computed(() => {
