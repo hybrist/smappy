@@ -1,13 +1,13 @@
 import { DatePipe } from '@angular/common';
 import { Component, inject, resource, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormatAgePipe } from '../../pipes';
 import { BundleService } from '../../services/bundle.service';
 import { StorageService } from '../../services/storage.service';
 
 @Component({
   selector: 'app-home',
-  imports: [DatePipe, FormatAgePipe],
+  imports: [DatePipe, FormatAgePipe, RouterLink],
   template: `
     <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
@@ -31,10 +31,12 @@ import { StorageService } from '../../services/storage.service';
                     clip-rule="evenodd"
                   ></path>
                 </svg>
-                <p class="text-sm font-medium text-green-800">
-                  {{ bundles.value().length }} Stored Bundle{{
-                    bundles.value().length > 1 ? 's' : ''
-                  }}
+                <p class="text-sm font-medium text-green-800" i18n>
+                  @let count = bundles.value().length;
+                  {count, plural,
+                    one {{{count}} Stored Bundle}
+                    other {{{count}} Stored Bundles}
+                  }
                 </p>
               </div>
               <button
@@ -47,33 +49,34 @@ import { StorageService } from '../../services/storage.service';
 
             <div class="space-y-2 max-h-48 overflow-y-auto">
               @for (bundle of bundles.value(); track bundle.id) {
-                <div
-                  class="bg-white border border-green-200 rounded p-3 hover:bg-green-25 cursor-pointer"
-                  (click)="loadBundle(bundle.id)"
+                <a
+                  class="block bg-white border border-green-200 rounded p-3 hover:bg-green-25 cursor-pointer"
+                  [routerLink]="['/bundle', bundle.id]"
                 >
                   <div class="flex justify-between items-start">
                     <div class="flex-1">
-                      <p class="text-sm font-medium text-gray-900">
+                      <div class="text-sm font-medium text-gray-900">
                         {{ bundle.name }}
                         @if (bundle.files.length > 0) {
-                          • {{ bundle.files.length }} file{{
-                            bundle.files.length > 1 ? 's' : ''
-                          }}
+                          •
+                          <span i18n>{bundle.files.length, plural,
+                            one {{{ bundle.files.length }} file}
+                            other {{{ bundle.files.length }} files}
+                          }</span>
                         }
-                      </p>
-                      <p class="text-xs text-gray-600">
-                        {{ bundle.importedAt | date:'short' }} •
-                        {{ (currentTime() - bundle.importedAt) | formatAge }}
-                      </p>
+                      </div>
+                      <div class="text-xs text-gray-600">
+                        {{ bundle.importedAt | date: 'short' }} •
+                        {{ currentTime() - bundle.importedAt | formatAge }}
+                      </div>
                     </div>
-                    <button
+                    <span
                       class="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 flex-shrink-0 ml-2"
-                      (click)="loadBundle(bundle.id); $event.stopPropagation()"
                     >
                       Open
-                    </button>
+                    </span>
                   </div>
-                </div>
+                </a>
               }
             </div>
           </div>
@@ -93,20 +96,9 @@ import { StorageService } from '../../services/storage.service';
             />
           </div>
 
-          @if (inputFiles.length > 0) {
-            <div class="bg-blue-50 p-3 rounded">
-              <p class="text-sm text-blue-800">
-                {{ inputFiles.length }} chunk{{
-                  inputFiles.length > 1 ? 's' : ''
-                }}
-                selected
-              </p>
-            </div>
-          }
-
           <button
             (click)="analyzeBundle()"
-            [disabled]="inputFiles.length === 0 || loading()"
+            [disabled]="inputFiles().length === 0 || loading()"
             class="w-full bg-blue-600 text-white py-2 px-4 rounded-md font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
             @if (loading()) {
@@ -138,7 +130,7 @@ export class HomeComponent {
   readonly errorMessage = this.bundleService.errorMessage;
   readonly bundle = this.bundleService.bundle;
 
-  inputFiles: File[] = [];
+  inputFiles = signal<File[]>([]);
 
   bundles = resource({
     loader: () => this.storageService.listAllBundles(),
@@ -147,26 +139,17 @@ export class HomeComponent {
 
   currentTime = signal(Date.now());
 
-  constructor() {
-    // Update current time every 30 seconds to refresh age display
-    setInterval(() => {
-      this.currentTime.set(Date.now());
-    }, 30000);
-  }
-
   onFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    for (const file of input.files || []) {
-      this.inputFiles.push(file);
-    }
+    this.inputFiles.set([...(input.files || [])]);
   }
 
   async analyzeBundle(): Promise<void> {
-    if (this.inputFiles.length === 0) return;
+    if (this.inputFiles().length === 0) return;
 
-    const bundleId = await this.bundleService.loadBundle(this.inputFiles);
+    const bundleId = await this.bundleService.loadBundle(this.inputFiles());
 
-    if (bundleId && this.bundleService.bundle()) {
+    if (bundleId) {
       this.router.navigate(['/bundle', bundleId]);
     }
   }
@@ -174,24 +157,5 @@ export class HomeComponent {
   async clearAllBundles(): Promise<void> {
     await this.storageService.clearAllData();
     this.bundles.reload();
-  }
-
-  async loadBundle(bundleId: string): Promise<void> {
-    try {
-      await this.bundleService.loadStoredBundle(bundleId);
-      if (this.bundleService.bundle()) {
-        this.router.navigate(['/bundle', bundleId]);
-      }
-    } catch (error) {
-      console.warn('Failed to load bundle:', error);
-    }
-  }
-
-  formatSize(bytes: number): string {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   }
 }
