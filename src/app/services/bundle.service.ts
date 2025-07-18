@@ -61,9 +61,7 @@ export class BundleService {
       // Look for corresponding source map file
       const sourceMapFile = bundleMetadata.files.find(
         (file) =>
-          file.name === `${chunkFile.name}.map` ||
-          file.name.endsWith('.map') ||
-          file.name.endsWith('.sourcemap'),
+          file.name === `${chunkFile.name}.map`
       );
 
       let sourceMap: SourceMapData | undefined;

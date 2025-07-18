@@ -12,13 +12,14 @@ import { BundleCalculationService } from '../../services/bundle-calculation.serv
   selector: 'app-chunk-detail',
   imports: [RouterLink, SourceFileListComponent, FormatSizePipe],
   template: `
+    @let bundleId = bundle().value()?.bundleId;
     @if (chunk(); as chunkData) {
       <div class="space-y-6">
         <!-- Header -->
         <div class="flex items-center justify-between">
           <div>
             <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-2">
-              <a routerLink="/bundle/chunks" class="hover:text-blue-600"
+              <a [routerLink]="['/bundle', bundleId, 'chunks']" class="hover:text-blue-600"
                 >Chunks</a
               >
               <span>/</span>
@@ -86,7 +87,7 @@ import { BundleCalculationService } from '../../services/bundle-calculation.serv
       <div class="text-center py-12">
         <p class="text-gray-500 mb-4">Chunk not found</p>
         <a
-          routerLink="/bundle/chunks"
+          [routerLink]="['/bundle', bundleId, 'chunks']"
           class="text-blue-600 hover:text-blue-800"
         >
           ← Back to chunks
@@ -100,7 +101,7 @@ export class ChunkDetailComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly calc = inject(BundleCalculationService);
 
-  private readonly bundle = currentBundle();
+  protected readonly bundle = currentBundle();
 
   readonly chunk = computed(() => {
     const chunkId = this.route.snapshot.paramMap.get('chunkId');
