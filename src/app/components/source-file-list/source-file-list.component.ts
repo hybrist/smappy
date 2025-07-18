@@ -1,19 +1,19 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { FormatSizePipe } from '../../pipes/format-size.pipe';
 import { currentBundle } from '../../resolvers/bundle';
-import { BundleService } from '../../services/bundle.service';
 
 export interface SourceFileItem {
   path: string;
   size: number;
-  displayName?: string;
+  displayName: string;
   badge?: string;
   clickable?: boolean;
 }
 
 @Component({
   selector: 'app-source-file-list',
-  imports: [RouterLink],
+  imports: [RouterLink, FormatSizePipe],
   template: `
     <div class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
       @for (file of files(); track file.path) {
@@ -44,10 +44,10 @@ export interface SourceFileItem {
                     [queryParams]="{ p: file.path }"
                     class="hover:text-blue-600"
                   >
-                    {{ file.displayName || getFileName(file.path) }}
+                    {{ file.displayName }}
                   </a>
                 } @else {
-                  {{ file.displayName || getFileName(file.path) }}
+                  {{ file.displayName }}
                 }
               </div>
               <div class="text-sm text-gray-500 truncate">
@@ -65,7 +65,7 @@ export interface SourceFileItem {
             }
             <div>
               <div class="text-sm font-medium text-gray-900">
-                {{ formatSize(file.size) }}
+                {{ file.size | formatSize }}
               </div>
               <div class="text-sm text-gray-500">
                 {{ getPercentageOfTotal(file.size) }}%
@@ -81,22 +81,8 @@ export interface SourceFileItem {
 export class SourceFileListComponent {
   files = input<SourceFileItem[]>([]);
 
-  private readonly bundleService = inject(BundleService);
-
   protected readonly bundle = currentBundle();
   protected readonly bundleId = computed(() => this.bundle().value()!.bundleId);
-
-  getFileName(path: string): string {
-    return path.split('/').pop() || path;
-  }
-
-  formatSize(bytes: number): string {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
-  }
 
   getPercentageOfTotal(size: number): string {
     const bundle = this.bundle().value()!;

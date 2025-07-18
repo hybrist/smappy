@@ -1,11 +1,11 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { FormatSizePipe } from '../../pipes/format-size.pipe';
 import { currentBundle } from '../../resolvers/bundle';
-import { BundleService } from '../../services/bundle.service';
 
 @Component({
   selector: 'app-bundle-overview',
-  imports: [RouterLink],
+  imports: [RouterLink, FormatSizePipe],
   template: `
     @if (bundle().value(); as bundleData) {
       <div class="space-y-6">
@@ -35,7 +35,7 @@ import { BundleService } from '../../services/bundle.service';
               <div class="ml-4">
                 <div class="text-sm font-medium text-gray-500">Total Size</div>
                 <div class="text-2xl font-semibold text-gray-900">
-                  {{ formatSize(bundleData.totalSize) }}
+                  {{ bundleData.totalSize | formatSize }}
                 </div>
               </div>
             </div>
@@ -145,7 +145,7 @@ import { BundleService } from '../../services/bundle.service';
                 </div>
                 <div class="text-right">
                   <div class="text-sm font-medium text-gray-900">
-                    {{ formatSize(chunk.size) }}
+                    {{ chunk.size | formatSize }}
                   </div>
                   <div class="text-sm text-gray-500">
                     {{ getPercentage(chunk.size, bundleData.totalSize) }}%
@@ -211,7 +211,7 @@ import { BundleService } from '../../services/bundle.service';
                   </div>
                   <div class="text-right ml-4">
                     <div class="text-sm font-medium text-gray-900">
-                      {{ formatSize(source[1]) }}
+                      {{ source[1] | formatSize }}
                     </div>
                     <div class="text-sm text-gray-500">
                       {{ getPercentage(source[1], bundleData.totalSize) }}%
@@ -225,29 +225,18 @@ import { BundleService } from '../../services/bundle.service';
       </div>
     }
   `,
-  styles: [],
 })
 export class BundleOverviewComponent {
-  private readonly bundleService = inject(BundleService);
-
   protected readonly bundle = currentBundle();
   protected readonly bundleId = computed(() => this.bundle().value()!.bundleId);
 
-  topSources() {
+  protected readonly topSources = computed(() => {
     const bundle = this.bundle().value()!;
 
     return Array.from(bundle.sourceBreakdown.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5);
-  }
-
-  formatSize(bytes: number): string {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
-  }
+  });
 
   getPercentage(value: number, total: number): string {
     return ((value / total) * 100).toFixed(1);

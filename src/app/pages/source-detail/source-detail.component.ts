@@ -5,6 +5,7 @@ import { SourceDetailHeaderComponent } from '../../components/source-detail-head
 import { SourceSemanticAnalysisComponent } from '../../components/source-semantic-analysis/source-semantic-analysis.component';
 import { currentBundle } from '../../resolvers/bundle';
 import { BundleService } from '../../services/bundle.service';
+import { getChunksBySource, getSourceContent } from '../../models/bundle.models';
 
 @Component({
   selector: 'app-source-detail',
@@ -36,11 +37,9 @@ import { BundleService } from '../../services/bundle.service';
       </div>
     }
   `,
-  styles: [],
 })
 export class SourceDetailComponent {
   private readonly route = inject(ActivatedRoute);
-  private readonly bundleService = inject(BundleService);
 
   protected readonly bundle = currentBundle();
 
@@ -58,7 +57,7 @@ export class SourceDetailComponent {
     const size = bundle.sourceBreakdown.get(sourcePath);
     if (size === undefined) return null;
 
-    const chunks = this.bundleService.getChunksBySource(bundle, sourcePath);
+    const chunks = getChunksBySource(bundle, sourcePath);
 
     return {
       path: sourcePath,
@@ -66,39 +65,4 @@ export class SourceDetailComponent {
       chunks,
     };
   });
-
-  readonly similarFiles = computed(() => {
-    const info = this.sourceInfo();
-    const bundle = this.bundle().value()!;
-    if (!info || !bundle) return [];
-
-    const fileType = this.getFileType(info.path);
-
-    return Array.from(bundle.sourceBreakdown.entries())
-      .filter(
-        ([path]) => path !== info.path && this.getFileType(path) === fileType,
-      )
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 8);
-  });
-
-  readonly sourceLines = computed(() => {
-    const info = this.sourceInfo();
-    if (!info) return null;
-    const src = this.bundleService.getSourceContent(
-      this.bundle().value()!,
-      info.path,
-    );
-    if (!src) return null;
-    return src.split('\n').map((content, index) => ({
-      line: index + 1,
-      content,
-      size: 0,
-    }));
-  });
-
-  private getFileType(path: string): string {
-    const extension = path.split('.').pop()?.toLowerCase();
-    return extension || 'unknown';
-  }
 }

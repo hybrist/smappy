@@ -5,6 +5,7 @@ import {
   SourceFileItem,
   SourceFileListComponent,
 } from '../../components/source-file-list/source-file-list.component';
+import { FormatSizePipe } from '../../pipes/format-size.pipe';
 import { currentBundle } from '../../resolvers/bundle';
 
 interface TreeNode {
@@ -18,7 +19,7 @@ interface TreeNode {
 
 @Component({
   selector: 'app-sources-tree',
-  imports: [RouterLink, FormsModule, SourceFileListComponent],
+  imports: [RouterLink, FormsModule, SourceFileListComponent, FormatSizePipe],
   template: `
     @if (bundle().value(); as bundleData) {
       <div class="space-y-6">
@@ -26,38 +27,7 @@ interface TreeNode {
           <h2 class="text-2xl font-bold text-gray-900">Source Files</h2>
           <div class="text-sm text-gray-500">
             {{ bundleData.sourceBreakdown.size }} files •
-            {{ formatSize(bundleData.totalSize) }} total
-          </div>
-        </div>
-
-        <!-- Summary Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div class="bg-white p-6 rounded-lg shadow">
-            <div class="text-sm font-medium text-gray-500">Total Files</div>
-            <div class="text-2xl font-semibold text-gray-900">
-              {{ bundleData.sourceBreakdown.size }}
-            </div>
-          </div>
-
-          <div class="bg-white p-6 rounded-lg shadow">
-            <div class="text-sm font-medium text-gray-500">Largest File</div>
-            <div class="text-2xl font-semibold text-gray-900">
-              {{ formatSize(getLargestFileSize()) }}
-            </div>
-          </div>
-
-          <div class="bg-white p-6 rounded-lg shadow">
-            <div class="text-sm font-medium text-gray-500">Average Size</div>
-            <div class="text-2xl font-semibold text-gray-900">
-              {{ formatSize(getAverageFileSize()) }}
-            </div>
-          </div>
-
-          <div class="bg-white p-6 rounded-lg shadow">
-            <div class="text-sm font-medium text-gray-500">Node Modules</div>
-            <div class="text-2xl font-semibold text-gray-900">
-              {{ getNodeModulesCount() }}
-            </div>
+            {{ bundleData.totalSize | formatSize }} total
           </div>
         </div>
 
@@ -155,7 +125,7 @@ interface TreeNode {
                 <div class="text-right ml-4">
                   @if (node.isFile) {
                     <div class="text-sm font-medium text-gray-900">
-                      {{ formatSize(node.size) }}
+                      {{ node.size | formatSize }}
                     </div>
                     <div class="text-xs text-gray-500">
                       {{ getPercentage(node.size, bundleData.totalSize) }}%
@@ -264,49 +234,12 @@ export class SourcesTreeComponent {
       .map(([path, size]) => ({
         path,
         size,
+        displayName: path.split('/').pop() || path,
       }));
   });
 
-  formatSize(bytes: number): string {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
-  }
-
   getPercentage(value: number, total: number): string {
     return ((value / total) * 100).toFixed(1);
-  }
-
-  getFileName(path: string): string {
-    return path.split('/').pop() || path;
-  }
-
-  getLargestFileSize(): number {
-    const bundle = this.bundle().value()!;
-    if (bundle.sourceBreakdown.size === 0) return 0;
-
-    return Math.max(...Array.from(bundle.sourceBreakdown.values()));
-  }
-
-  getAverageFileSize(): number {
-    const bundle = this.bundle().value()!;
-    if (bundle.sourceBreakdown.size === 0) return 0;
-
-    const total = Array.from(bundle.sourceBreakdown.values()).reduce(
-      (sum, size) => sum + size,
-      0,
-    );
-    return total / bundle.sourceBreakdown.size;
-  }
-
-  getNodeModulesCount(): number {
-    const bundle = this.bundle().value()!;
-
-    return Array.from(bundle.sourceBreakdown.keys()).filter((path) =>
-      path.includes('node_modules'),
-    ).length;
   }
 
   clearFilter(): void {

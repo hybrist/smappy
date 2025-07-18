@@ -1,11 +1,12 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { FormatSizePipe } from '../../pipes/format-size.pipe';
 import { currentBundle } from '../../resolvers/bundle';
 import { BundleService } from '../../services/bundle.service';
 
 @Component({
   selector: 'app-chunks-list',
-  imports: [RouterLink],
+  imports: [RouterLink, FormatSizePipe],
   template: `
     @if (bundle().value(); as bundleData) {
       <div class="space-y-6">
@@ -13,7 +14,7 @@ import { BundleService } from '../../services/bundle.service';
           <h2 class="text-2xl font-bold text-gray-900">Chunks</h2>
           <div class="text-sm text-gray-500">
             {{ bundleData.chunks.length }} chunks •
-            {{ formatSize(bundleData.totalSize) }} total
+            {{ bundleData.totalSize | formatSize }} total
           </div>
         </div>
 
@@ -72,7 +73,7 @@ import { BundleService } from '../../services/bundle.service';
 
                   <div class="col-span-2">
                     <div class="text-sm font-medium text-gray-900">
-                      {{ formatSize(chunk.size) }}
+                      {{ chunk.size | formatSize }}
                     </div>
                     <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
                       <div
@@ -121,80 +122,22 @@ import { BundleService } from '../../services/bundle.service';
             }
           </div>
         </div>
-
-        <!-- Summary Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div class="bg-white p-6 rounded-lg shadow">
-            <div class="text-sm font-medium text-gray-500">
-              Average Chunk Size
-            </div>
-            <div class="text-2xl font-semibold text-gray-900 mt-1">
-              {{ formatSize(getAverageSize()) }}
-            </div>
-          </div>
-
-          <div class="bg-white p-6 rounded-lg shadow">
-            <div class="text-sm font-medium text-gray-500">Largest Chunk</div>
-            <div class="text-2xl font-semibold text-gray-900 mt-1">
-              {{ formatSize(getLargestChunkSize()) }}
-            </div>
-          </div>
-
-          <div class="bg-white p-6 rounded-lg shadow">
-            <div class="text-sm font-medium text-gray-500">
-              Chunks with Source Maps
-            </div>
-            <div class="text-2xl font-semibold text-gray-900 mt-1">
-              {{ getChunksWithSourceMaps() }}/{{ bundleData.chunks.length }}
-            </div>
-          </div>
-        </div>
       </div>
     }
   `,
   styles: [],
 })
 export class ChunksListComponent {
-  private readonly bundleService = inject(BundleService);
-
   protected readonly bundle = currentBundle();
   protected readonly bundleId = computed(() => this.bundle().value()!.bundleId);
 
-  sortedChunks() {
+  protected readonly sortedChunks = computed(() => {
     const bundle = this.bundle().value()!;
 
     return [...bundle.chunks].sort((a, b) => b.size - a.size);
-  }
-
-  formatSize(bytes: number): string {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
-  }
+  });
 
   getPercentage(value: number, total: number): number {
     return Math.round((value / total) * 100 * 10) / 10;
-  }
-
-  getAverageSize(): number {
-    const bundle = this.bundle().value()!;
-    if (bundle.chunks.length === 0) return 0;
-
-    return bundle.totalSize / bundle.chunks.length;
-  }
-
-  getLargestChunkSize(): number {
-    const bundle = this.bundle().value()!;
-    if (bundle.chunks.length === 0) return 0;
-
-    return Math.max(...bundle.chunks.map((chunk) => chunk.size));
-  }
-
-  getChunksWithSourceMaps(): number {
-    const bundle = this.bundle().value()!;
-
-    return bundle.chunks.filter((chunk) => chunk.sourceMap).length;
   }
 }

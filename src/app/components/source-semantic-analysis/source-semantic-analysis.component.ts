@@ -8,6 +8,10 @@ import {
   viewChild,
 } from '@angular/core';
 import {
+  getMappingImpacts,
+  getSourceContent,
+} from '../../models/bundle.models';
+import {
   ASTNodeInfo,
   SourceAnalysisResult,
   SourceFragment,
@@ -23,11 +27,11 @@ import { SourceAnalysisService } from '../../services/source-analysis.service';
 import { BundleSizeUtils } from '../../utils/bundle-size.utils';
 import { FragmentIconUtils } from '../../utils/fragment-icon.utils';
 import { SyntaxHighlightingUtils } from '../../utils/syntax-highlighting.utils';
-import { getMappingImpacts, getSourceContent } from '../../models/bundle.models';
+import { FormatSizePipe } from "../../pipes/format-size.pipe";
 
 @Component({
   selector: 'section[appSourceSemanticAnalysis]',
-  imports: [],
+  imports: [FormatSizePipe],
   template: `
     @if (analysisResult(); as analysis) {
       <div class="bg-white rounded-lg shadow">
@@ -189,21 +193,21 @@ import { getMappingImpacts, getSourceContent } from '../../models/bundle.models'
                   <div class="flex items-center space-x-3">
                     @if (fragment.isIncludedInBundle) {
                       <div class="text-sm">
-                        {{ formatSize(fragment.sourceSize) }}
+                        {{ fragment.sourceSize | formatSize }}
                         →
                         @if (fragment.bundleSize! < fragment.sourceSize) {
                           <span class="text-green-600 font-medium">{{
-                            formatSize(fragment.bundleSize || 0)
+                            fragment.bundleSize || 0 | formatSize
                           }}</span>
                         } @else {
                           <span class="font-medium">{{
-                            formatSize(fragment.bundleSize || 0)
+                            fragment.bundleSize || 0 | formatSize
                           }}</span>
                         }
                       </div>
                     } @else {
                       <div class="text-sm text-gray-500">
-                        (source) {{ formatSize(fragment.sourceSize) }}
+                        (source) {{ fragment.sourceSize | formatSize }}
                       </div>
                     }
                   </div>
@@ -299,7 +303,7 @@ import { getMappingImpacts, getSourceContent } from '../../models/bundle.models'
                                 {{ generated.chunkId }}:{{ generated.line }}:{{
                                   generated.column
                                 }}
-                                ({{ formatSize(generated.sizeImpact) }})
+                                ({{ generated.sizeImpact | formatSize }})
                               </div>
                               <pre
                                 class="bg-gray-800 p-2 rounded text-xs max-w-lg whitespace-pre-wrap"
@@ -437,10 +441,6 @@ export class SourceSemanticAnalysisComponent {
     return ((fragmentSize / totalSize) * 100).toFixed(1);
   }
 
-  formatSize(bytes: number): string {
-    return BundleSizeUtils.formatSize(bytes);
-  }
-
   toggleFragment(fragmentId: string): void {
     const expanded = this.expandedFragments();
     const newExpanded = new Set(expanded);
@@ -459,10 +459,7 @@ export class SourceSemanticAnalysisComponent {
   }
 
   getFragmentCode(fragment: SourceFragment): string {
-    const sourceContent = getSourceContent(
-      this.bundle().value()!,
-      this.path(),
-    );
+    const sourceContent = getSourceContent(this.bundle().value()!, this.path());
     if (!sourceContent) {
       return '<span class="text-gray-500 italic">Source content not available</span>';
     }

@@ -4,12 +4,13 @@ import {
   SourceFileItem,
   SourceFileListComponent,
 } from '../../components/source-file-list/source-file-list.component';
+import { FormatSizePipe } from '../../pipes/format-size.pipe';
 import { currentBundle } from '../../resolvers/bundle';
 import { BundleCalculationService } from '../../services/bundle-calculation.service';
 
 @Component({
   selector: 'app-chunk-detail',
-  imports: [RouterLink, SourceFileListComponent],
+  imports: [RouterLink, SourceFileListComponent, FormatSizePipe],
   template: `
     @if (chunk(); as chunkData) {
       <div class="space-y-6">
@@ -30,7 +31,7 @@ import { BundleCalculationService } from '../../services/bundle-calculation.serv
           <div class="text-right">
             <div class="text-sm text-gray-500">Chunk Size</div>
             <div class="text-2xl font-semibold text-gray-900">
-              {{ formatSize(chunkData.size) }}
+              {{ chunkData.size | formatSize }}
             </div>
           </div>
         </div>
@@ -125,14 +126,6 @@ export class ChunkDetailComponent {
       }))
       .sort((a, b) => b.size - a.size);
   });
-
-  formatSize(bytes: number): string {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
-  }
 
   getFileName(path: string | null): string {
     if (path === null) return '(null)';
