@@ -23,6 +23,7 @@ import { SourceAnalysisService } from '../../services/source-analysis.service';
 import { BundleSizeUtils } from '../../utils/bundle-size.utils';
 import { FragmentIconUtils } from '../../utils/fragment-icon.utils';
 import { SyntaxHighlightingUtils } from '../../utils/syntax-highlighting.utils';
+import { getMappingImpacts, getSourceContent } from '../../models/bundle.models';
 
 @Component({
   selector: 'section[appSourceSemanticAnalysis]',
@@ -458,7 +459,7 @@ export class SourceSemanticAnalysisComponent {
   }
 
   getFragmentCode(fragment: SourceFragment): string {
-    const sourceContent = this.bundleService.getSourceContent(
+    const sourceContent = getSourceContent(
       this.bundle().value()!,
       this.path(),
     );
@@ -483,7 +484,7 @@ export class SourceSemanticAnalysisComponent {
     const language = SyntaxHighlightingUtils.getLanguageFromPath(this.path());
     const highlighted = SyntaxHighlightingUtils.highlightCode(code, language);
 
-    const mappingImpacts = this.bundleService.getMappingImpacts(
+    const mappingImpacts = getMappingImpacts(
       this.bundle().value()!,
       this.path(),
     );

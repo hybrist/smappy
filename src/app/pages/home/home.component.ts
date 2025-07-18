@@ -126,8 +126,8 @@ export class HomeComponent {
   private readonly bundleService = inject(BundleService);
   private readonly storageService = inject(StorageService);
 
-  readonly loading = this.bundleService.loading;
-  readonly errorMessage = this.bundleService.errorMessage;
+  readonly loading = signal<boolean>(false);
+  readonly errorMessage = signal<string | null>(null);
 
   inputFiles = signal<File[]>([]);
 
@@ -146,10 +146,18 @@ export class HomeComponent {
   async analyzeBundle(): Promise<void> {
     if (this.inputFiles().length === 0) return;
 
-    const bundleId = await this.bundleService.analyzeBundle(this.inputFiles());
+    try {
+      this.loading.set(true);
+      this.errorMessage.set(null);
 
-    if (bundleId) {
+      const bundleId = await this.bundleService.storeUploadedBundle(this.inputFiles());
       this.router.navigate(['/bundle', bundleId]);
+    } catch (error) {
+      this.errorMessage.set(
+        error instanceof Error ? error.message : 'An unknown error occurred',
+      );
+    } finally {
+      this.loading.set(false);
     }
   }
 

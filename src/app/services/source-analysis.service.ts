@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { BundleAnalysis } from '../models/bundle.models';
+import { BundleAnalysis, getChunksBySource, getMappingImpacts, getSourceContent } from '../models/bundle.models';
 import {
   ASTNodeInfo,
   FragmentUsage,
@@ -14,7 +14,6 @@ import { BundleService } from './bundle.service';
   providedIn: 'root',
 })
 export class SourceAnalysisService {
-  private readonly bundleService = inject(BundleService);
   private readonly astParser = inject(AstParserService);
   private readonly fileParsers = inject(FileParsersService);
 
@@ -25,7 +24,7 @@ export class SourceAnalysisService {
     bundle: BundleAnalysis,
     filePath: string,
   ): SourceAnalysisResult | null {
-    const sourceContent = this.bundleService.getSourceContent(bundle, filePath);
+    const sourceContent = getSourceContent(bundle, filePath);
     if (!sourceContent) {
       return null;
     }
@@ -132,7 +131,7 @@ export class SourceAnalysisService {
     });
 
     // Get precomputed mapping impacts for this source file
-    const mappingImpacts = this.bundleService.getMappingImpacts(
+    const mappingImpacts = getMappingImpacts(
       bundle,
       filePath,
     );
@@ -140,7 +139,7 @@ export class SourceAnalysisService {
     if (mappingImpacts.length === 0) {
       // No mapping impacts found - either no chunks reference this file,
       // or source map processing failed during bundle analysis
-      const chunks = this.bundleService.getChunksBySource(bundle, filePath);
+      const chunks = getChunksBySource(bundle, filePath);
       if (chunks.length > 0) {
         // File is referenced but no mappings - estimate proportional size
         const fragmentShare = totalBundleSize / fragments.length;

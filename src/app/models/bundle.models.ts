@@ -52,6 +52,45 @@ export interface BundleAnalysis {
   mappingImpacts: Map<string, MappingImpact[]>; // source path -> mapping impacts
 }
 
+export function getMappingImpacts(
+  bundle: BundleAnalysis,
+  sourcePath: string,
+): MappingImpact[] {
+  return bundle.mappingImpacts.get(sourcePath) || [];
+}
+
+export function getChunksBySource(
+  bundle: BundleAnalysis,
+  sourcePath: string,
+): ChunkInfo[] {
+  const chunks: ChunkInfo[] = [];
+  for (const chunk of bundle.chunks) {
+    if (chunk.sourceMap?.sources.includes(sourcePath)) {
+      chunks.push(chunk);
+    }
+  }
+  return chunks;
+}
+
+export function getSourceContent(
+  bundle: BundleAnalysis,
+  sourcePath: string,
+): string | null {
+  for (const chunk of bundle.chunks) {
+    if (!chunk.sourceMap || !chunk.sourceMap.sourcesContent) continue;
+
+    let sourceIndex = chunk.sourceMap.sources.indexOf(sourcePath);
+    if (
+      sourceIndex !== undefined &&
+      chunk.sourceMap.sourcesContent[sourceIndex]
+    ) {
+      return chunk.sourceMap.sourcesContent[sourceIndex];
+    }
+  }
+
+  return null;
+}
+
 // Serializable version for localStorage
 export interface SerializableBundleAnalysis {
   totalSize: number;
