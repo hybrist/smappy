@@ -19,7 +19,9 @@ import { BundleCalculationService } from '../../services/bundle-calculation.serv
         <div class="flex items-center justify-between">
           <div>
             <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-2">
-              <a [routerLink]="['/bundle', bundleId, 'chunks']" class="hover:text-blue-600"
+              <a
+                [routerLink]="['/bundle', bundleId, 'chunks']"
+                class="hover:text-blue-600"
                 >Chunks</a
               >
               <span>/</span>

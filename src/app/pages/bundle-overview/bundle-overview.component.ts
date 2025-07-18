@@ -105,7 +105,7 @@ import { currentBundle } from '../../resolvers/bundle';
           >
             <h3 class="text-lg font-medium text-gray-900">Chunks</h3>
             <a
-              routerLink="/bundle/chunks"
+              [routerLink]="['/bundle', bundleId(), 'chunks']"
               class="text-blue-600 hover:text-blue-800 text-sm font-medium"
             >
               View all →
@@ -132,7 +132,15 @@ import { currentBundle } from '../../resolvers/bundle';
                   </div>
                   <div class="ml-4">
                     <div class="text-sm font-medium text-gray-900">
-                      {{ chunk.fileName }}
+                      <a
+                        [routerLink]="[
+                          '/bundle',
+                          bundleId(),
+                          'chunks',
+                          chunk.id,
+                        ]"
+                        >{{ chunk.fileName }}</a
+                      >
                     </div>
                     <div class="text-sm text-gray-500">
                       @if (chunk.sourceMap) {
@@ -166,7 +174,7 @@ import { currentBundle } from '../../resolvers/bundle';
                 Largest Source Files
               </h3>
               <a
-                routerLink="/bundle/sources"
+                [routerLink]="['/bundle', bundleId(), 'sources']"
                 class="text-blue-600 hover:text-blue-800 text-sm font-medium"
               >
                 View all →

@@ -21,13 +21,13 @@ import {
   HoveredMappingInfo,
   TooltipPosition,
 } from '../../models/ui.models';
+import { FormatSizePipe } from '../../pipes/format-size.pipe';
 import { currentBundle } from '../../resolvers/bundle';
 import { BundleService } from '../../services/bundle.service';
 import { SourceAnalysisService } from '../../services/source-analysis.service';
 import { BundleSizeUtils } from '../../utils/bundle-size.utils';
 import { FragmentIconUtils } from '../../utils/fragment-icon.utils';
 import { SyntaxHighlightingUtils } from '../../utils/syntax-highlighting.utils';
-import { FormatSizePipe } from "../../pipes/format-size.pipe";
 
 @Component({
   selector: 'section[appSourceSemanticAnalysis]',

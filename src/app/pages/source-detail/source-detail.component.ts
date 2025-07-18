@@ -3,9 +3,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { SourceDetailHeaderComponent } from '../../components/source-detail-header/source-detail-header.component';
 import { SourceSemanticAnalysisComponent } from '../../components/source-semantic-analysis/source-semantic-analysis.component';
+import { getChunksBySource } from '../../models/bundle.models';
 import { currentBundle } from '../../resolvers/bundle';
-import { BundleService } from '../../services/bundle.service';
-import { getChunksBySource, getSourceContent } from '../../models/bundle.models';
 
 @Component({
   selector: 'app-source-detail',

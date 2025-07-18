@@ -150,7 +150,9 @@ export class HomeComponent {
       this.loading.set(true);
       this.errorMessage.set(null);
 
-      const bundleId = await this.bundleService.storeUploadedBundle(this.inputFiles());
+      const bundleId = await this.bundleService.storeUploadedBundle(
+        this.inputFiles(),
+      );
       this.router.navigate(['/bundle', bundleId]);
     } catch (error) {
       this.errorMessage.set(

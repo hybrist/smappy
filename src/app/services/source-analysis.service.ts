@@ -1,5 +1,10 @@
 import { Injectable, inject } from '@angular/core';
-import { BundleAnalysis, getChunksBySource, getMappingImpacts, getSourceContent } from '../models/bundle.models';
+import {
+  BundleAnalysis,
+  getChunksBySource,
+  getMappingImpacts,
+  getSourceContent,
+} from '../models/bundle.models';
 import {
   ASTNodeInfo,
   FragmentUsage,
@@ -8,7 +13,6 @@ import {
 } from '../models/source-analysis.models';
 import { AstParserService } from '../parsers/ast-parser.service';
 import { FileParsersService } from '../parsers/file-parsers.service';
-import { BundleService } from './bundle.service';
 
 @Injectable({
   providedIn: 'root',
@@ -131,10 +135,7 @@ export class SourceAnalysisService {
     });
 
     // Get precomputed mapping impacts for this source file
-    const mappingImpacts = getMappingImpacts(
-      bundle,
-      filePath,
-    );
+    const mappingImpacts = getMappingImpacts(bundle, filePath);
 
     if (mappingImpacts.length === 0) {
       // No mapping impacts found - either no chunks reference this file,
