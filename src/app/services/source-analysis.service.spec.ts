@@ -84,7 +84,7 @@ interface MyInterface {
 
       const mockChunk = new File([mockChunkContent], 'test.js');
 
-      await bundleService.loadBundle([mockChunk]);
+      await bundleService.analyzeBundle([mockChunk]);
     });
 
     it('should return null for non-existent file', () => {
@@ -196,7 +196,7 @@ function unused() { return 'unused'; }`;
 
       const mockChunk = new File([mockChunkContent], 'test.js');
 
-      await bundleService.loadBundle([mockChunk]);
+      await bundleService.analyzeBundle([mockChunk]);
 
       const result = service.analyzeSourceFile('src/test.ts');
       expect(result).toBeTruthy();
@@ -237,7 +237,7 @@ function unused() { return 'unused'; }`;
 
       const mockChunk = new File([mockChunkContent], 'styles.js');
 
-      await bundleService.loadBundle([mockChunk]);
+      await bundleService.analyzeBundle([mockChunk]);
 
       const result = service.analyzeSourceFile('src/styles.css');
       expect(result).toBeTruthy();

@@ -57,7 +57,7 @@ describe('BundleService', () => {
         type: 'application/javascript',
       });
 
-      await service.loadBundle([mockChunk]);
+      await service.analyzeBundle([mockChunk]);
 
       expect(service.bundle()).toBeTruthy();
       expect(service.bundle()?.chunks.length).toBe(1);
@@ -84,7 +84,7 @@ describe('BundleService', () => {
         { type: 'application/json' },
       );
 
-      await service.loadBundle([mockChunk, mockSourceMapFile]);
+      await service.analyzeBundle([mockChunk, mockSourceMapFile]);
 
       const bundle = service.bundle();
       expect(bundle?.chunks[0].sourceMap).toBeTruthy();
@@ -107,7 +107,7 @@ describe('BundleService', () => {
         type: 'application/javascript',
       });
 
-      await service.loadBundle([mockChunk]);
+      await service.analyzeBundle([mockChunk]);
 
       const bundle = service.bundle();
       expect(bundle?.chunks[0].sourceMap).toBeTruthy();
@@ -119,7 +119,7 @@ describe('BundleService', () => {
 
       expect(service.loading()).toBe(false);
 
-      const loadPromise = service.loadBundle([mockChunk]);
+      const loadPromise = service.analyzeBundle([mockChunk]);
       expect(service.loading()).toBe(true);
 
       await loadPromise;
@@ -139,29 +139,11 @@ describe('BundleService', () => {
         }, 0);
       });
 
-      await service.loadBundle([invalidChunk]);
+      await service.analyzeBundle([invalidChunk]);
 
       expect(service.errorMessage()).toBeTruthy();
       expect(service.bundle()).toBeNull();
       expect(service.loading()).toBe(false);
-    });
-  });
-
-  describe('getChunkById', () => {
-    beforeEach(async () => {
-      const mockChunk = new File(['test content'], 'main.js');
-      await service.loadBundle([mockChunk]);
-    });
-
-    it('should return chunk by id', () => {
-      const chunk = service.getChunkById('main');
-      expect(chunk).toBeTruthy();
-      expect(chunk?.fileName).toBe('main.js');
-    });
-
-    it('should return undefined for non-existent id', () => {
-      const chunk = service.getChunkById('nonexistent');
-      expect(chunk).toBeUndefined();
     });
   });
 
@@ -183,7 +165,7 @@ describe('BundleService', () => {
         type: 'application/javascript',
       });
 
-      await service.loadBundle([mockChunk]);
+      await service.analyzeBundle([mockChunk]);
 
       expect(service.getSourceContent('src/main.ts')).toBe(
         'console.log("Hello World");',
@@ -194,7 +176,7 @@ describe('BundleService', () => {
   describe('reset', () => {
     it('should reset all state', async () => {
       const mockChunk = new File(['test content'], 'main.js');
-      await service.loadBundle([mockChunk]);
+      await service.analyzeBundle([mockChunk]);
 
       expect(service.bundle()).toBeTruthy();
 
@@ -214,7 +196,7 @@ describe('BundleService', () => {
       const chunk1 = new File([content1], 'chunk1.js');
       const chunk2 = new File([content2], 'chunk2.js');
 
-      await service.loadBundle([chunk1, chunk2]);
+      await service.analyzeBundle([chunk1, chunk2]);
 
       const bundle = service.bundle();
       expect(bundle?.totalSize).toBe(300);
@@ -236,7 +218,7 @@ describe('BundleService', () => {
 
       const chunk = new File([content], 'chunk1.js');
 
-      await service.loadBundle([chunk]);
+      await service.analyzeBundle([chunk]);
 
       const bundle = service.bundle();
       expect(bundle?.totalSize).toBeGreaterThan(100);

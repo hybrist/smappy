@@ -4,8 +4,8 @@ import {
   SourceFileItem,
   SourceFileListComponent,
 } from '../../components/source-file-list/source-file-list.component';
+import { currentBundle } from '../../resolvers/bundle';
 import { BundleCalculationService } from '../../services/bundle-calculation.service';
-import { BundleService } from '../../services/bundle.service';
 
 @Component({
   selector: 'app-chunk-detail',
@@ -97,13 +97,16 @@ import { BundleService } from '../../services/bundle.service';
 })
 export class ChunkDetailComponent {
   private readonly route = inject(ActivatedRoute);
-  private readonly bundleService = inject(BundleService);
   private readonly calc = inject(BundleCalculationService);
+
+  private readonly bundle = currentBundle();
 
   readonly chunk = computed(() => {
     const chunkId = this.route.snapshot.paramMap.get('chunkId');
     if (!chunkId) return null;
-    return this.bundleService.getChunkById(chunkId);
+    return this.bundle()
+      .value()!
+      .chunks.find((chunk) => chunk.id === chunkId);
   });
 
   readonly sourceFileItems = computed((): SourceFileItem[] => {

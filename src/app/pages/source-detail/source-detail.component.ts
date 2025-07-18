@@ -58,7 +58,7 @@ export class SourceDetailComponent {
     const size = bundle.sourceBreakdown.get(sourcePath);
     if (size === undefined) return null;
 
-    const chunks = this.bundleService.getChunksBySource(sourcePath);
+    const chunks = this.bundleService.getChunksBySource(bundle, sourcePath);
 
     return {
       path: sourcePath,
@@ -85,7 +85,10 @@ export class SourceDetailComponent {
   readonly sourceLines = computed(() => {
     const info = this.sourceInfo();
     if (!info) return null;
-    const src = this.bundleService.getSourceContent(info.path);
+    const src = this.bundleService.getSourceContent(
+      this.bundle().value()!,
+      info.path,
+    );
     if (!src) return null;
     return src.split('\n').map((content, index) => ({
       line: index + 1,

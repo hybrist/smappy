@@ -146,7 +146,7 @@ export class HomeComponent {
   async analyzeBundle(): Promise<void> {
     if (this.inputFiles().length === 0) return;
 
-    const bundleId = await this.bundleService.loadBundle(this.inputFiles());
+    const bundleId = await this.bundleService.analyzeBundle(this.inputFiles());
 
     if (bundleId) {
       this.router.navigate(['/bundle', bundleId]);

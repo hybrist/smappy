@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
@@ -6,7 +6,6 @@ import {
   SourceFileListComponent,
 } from '../../components/source-file-list/source-file-list.component';
 import { currentBundle } from '../../resolvers/bundle';
-import { BundleService } from '../../services/bundle.service';
 
 interface TreeNode {
   name: string;

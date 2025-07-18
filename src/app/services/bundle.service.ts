@@ -4,7 +4,6 @@ import {
   ChunkInfo,
   MappingImpact,
   SourceMapData,
-  SourceMapMapping,
 } from '../models/bundle.models';
 import { BundleCalculationService } from './bundle-calculation.service';
 import { SourceMapProcessorService } from './source-map-processor.service';
@@ -18,15 +17,13 @@ export class BundleService {
   private readonly bundleCalculation = inject(BundleCalculationService);
   private readonly sourceMapProcessor = inject(SourceMapProcessorService);
 
-  private readonly currentBundle = signal<BundleAnalysis | null>(null);
-  private readonly currentBundleId = signal<string | null>(null);
   private readonly isLoading = signal<boolean>(false);
   private readonly error = signal<string | null>(null);
 
   readonly loading = this.isLoading.asReadonly();
   readonly errorMessage = this.error.asReadonly();
 
-  async loadBundle(files: File[]): Promise<string | null> {
+  async analyzeBundle(files: File[]): Promise<string | null> {
     this.isLoading.set(true);
     this.error.set(null);
 
@@ -81,14 +78,8 @@ export class BundleService {
         chunks.push(chunk);
       }
 
-      this.currentBundleId.set(savedBundleId);
-
       // Analyze the bundle
-      const analysis = await this.bundleCalculation.analyzeBundle(
-        savedBundleId,
-        chunks,
-      );
-      this.currentBundle.set(analysis);
+      await this.bundleCalculation.analyzeBundle(savedBundleId, chunks);
 
       return savedBundleId;
     } catch (err) {
@@ -101,14 +92,7 @@ export class BundleService {
     }
   }
 
-  getChunkById(id: string): ChunkInfo | undefined {
-    return this.currentBundle()?.chunks.find((chunk) => chunk.id === id);
-  }
-
-  getChunksBySource(sourcePath: string): ChunkInfo[] {
-    const bundle = this.currentBundle();
-    if (!bundle) return [];
-
+  getChunksBySource(bundle: BundleAnalysis, sourcePath: string): ChunkInfo[] {
     const chunks: ChunkInfo[] = [];
     for (const chunk of bundle.chunks) {
       if (chunk.sourceMap?.sources.includes(sourcePath)) {
@@ -118,19 +102,7 @@ export class BundleService {
     return chunks;
   }
 
-  getSourceMapMappings(chunkId: string): SourceMapMapping[] {
-    const chunk = this.getChunkById(chunkId);
-    if (!chunk?.sourceMap) return [];
-
-    // This would need a full source map parsing library like 'source-map'
-    // For now, return empty array - implementation would decode the mappings string
-    return [];
-  }
-
-  getSourceContent(sourcePath: string): string | null {
-    const bundle = this.currentBundle();
-    if (!bundle) return null;
-
+  getSourceContent(bundle: BundleAnalysis, sourcePath: string): string | null {
     for (const chunk of bundle.chunks) {
       if (!chunk.sourceMap || !chunk.sourceMap.sourcesContent) continue;
 
@@ -147,8 +119,6 @@ export class BundleService {
   }
 
   async reset(): Promise<void> {
-    this.currentBundle.set(null);
-    this.currentBundleId.set(null);
     this.error.set(null);
     this.isLoading.set(false);
 
@@ -225,8 +195,6 @@ export class BundleService {
         bundleId,
         chunks,
       );
-      this.currentBundle.set(analysis);
-      this.currentBundleId.set(bundleId);
 
       return analysis;
     } catch (error) {
@@ -242,15 +210,18 @@ export class BundleService {
   /**
    * Get precomputed mapping impacts for a source file
    */
-  getMappingImpacts(sourcePath: string): MappingImpact[] {
-    const bundle = this.currentBundle();
-    return bundle?.mappingImpacts.get(sourcePath) || [];
+  getMappingImpacts(
+    bundle: BundleAnalysis,
+    sourcePath: string,
+  ): MappingImpact[] {
+    return bundle.mappingImpacts.get(sourcePath) || [];
   }
 
   /**
    * Get generated code locations for a specific source position
    */
   getGeneratedLocations(
+    bundle: BundleAnalysis,
     sourcePath: string,
     originalLine: number,
     originalColumn: number,
@@ -261,9 +232,6 @@ export class BundleService {
     sizeImpact: number;
     snippet: string;
   }> {
-    const bundle = this.currentBundle();
-    if (!bundle) return [];
-
     const results: Array<{
       chunkId: string;
       generatedLine: number;
@@ -279,7 +247,7 @@ export class BundleService {
       originalColumn,
     );
 
-    const mappingImpacts = this.getMappingImpacts(sourcePath);
+    const mappingImpacts = this.getMappingImpacts(bundle, sourcePath);
     for (const location of locations) {
       const impact = mappingImpacts.find(
         (impact) =>

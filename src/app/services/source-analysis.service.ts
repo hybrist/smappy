@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { BundleAnalysis } from '../models/bundle.models';
 import {
   ASTNodeInfo,
   FragmentUsage,
@@ -8,7 +9,6 @@ import {
 import { AstParserService } from '../parsers/ast-parser.service';
 import { FileParsersService } from '../parsers/file-parsers.service';
 import { BundleService } from './bundle.service';
-import { BundleAnalysis } from '../models/bundle.models';
 
 @Injectable({
   providedIn: 'root',
@@ -21,8 +21,11 @@ export class SourceAnalysisService {
   /**
    * Analyze a source file and extract semantic fragments
    */
-  analyzeSourceFile(bundle: BundleAnalysis, filePath: string): SourceAnalysisResult | null {
-    const sourceContent = this.bundleService.getSourceContent(filePath);
+  analyzeSourceFile(
+    bundle: BundleAnalysis,
+    filePath: string,
+  ): SourceAnalysisResult | null {
+    const sourceContent = this.bundleService.getSourceContent(bundle, filePath);
     if (!sourceContent) {
       return null;
     }
@@ -34,7 +37,13 @@ export class SourceAnalysisService {
     );
 
     // Determine which fragments are included in the bundle
-    this.markFragmentsInBundle(fragments, filePath, sourceContent, fileSize);
+    this.markFragmentsInBundle(
+      bundle,
+      fragments,
+      filePath,
+      sourceContent,
+      fileSize,
+    );
 
     return this.buildAnalysisResult(
       filePath,
@@ -110,6 +119,7 @@ export class SourceAnalysisService {
    * Mark which fragments are included in the bundle using precomputed mapping impacts
    */
   private markFragmentsInBundle(
+    bundle: BundleAnalysis,
     fragments: SourceFragment[],
     filePath: string,
     sourceContent: string,
@@ -122,12 +132,15 @@ export class SourceAnalysisService {
     });
 
     // Get precomputed mapping impacts for this source file
-    const mappingImpacts = this.bundleService.getMappingImpacts(filePath);
+    const mappingImpacts = this.bundleService.getMappingImpacts(
+      bundle,
+      filePath,
+    );
 
     if (mappingImpacts.length === 0) {
       // No mapping impacts found - either no chunks reference this file,
       // or source map processing failed during bundle analysis
-      const chunks = this.bundleService.getChunksBySource(filePath);
+      const chunks = this.bundleService.getChunksBySource(bundle, filePath);
       if (chunks.length > 0) {
         // File is referenced but no mappings - estimate proportional size
         const fragmentShare = totalBundleSize / fragments.length;

@@ -458,7 +458,10 @@ export class SourceSemanticAnalysisComponent {
   }
 
   getFragmentCode(fragment: SourceFragment): string {
-    const sourceContent = this.bundleService.getSourceContent(this.path());
+    const sourceContent = this.bundleService.getSourceContent(
+      this.bundle().value()!,
+      this.path(),
+    );
     if (!sourceContent) {
       return '<span class="text-gray-500 italic">Source content not available</span>';
     }
@@ -480,7 +483,10 @@ export class SourceSemanticAnalysisComponent {
     const language = SyntaxHighlightingUtils.getLanguageFromPath(this.path());
     const highlighted = SyntaxHighlightingUtils.highlightCode(code, language);
 
-    const mappingImpacts = this.bundleService.getMappingImpacts(this.path());
+    const mappingImpacts = this.bundleService.getMappingImpacts(
+      this.bundle().value()!,
+      this.path(),
+    );
     const lineBundleBytes =
       BundleSizeUtils.calculateLineBundleContribution(mappingImpacts);
 
@@ -631,6 +637,7 @@ export class SourceSemanticAnalysisComponent {
     originalColumn: number,
   ): HoveredMappingInfo | null {
     const generatedLocations = this.bundleService.getGeneratedLocations(
+      this.bundle().value()!,
       this.path(),
       originalLine,
       originalColumn,
@@ -703,6 +710,7 @@ export class SourceSemanticAnalysisComponent {
 
     for (const pos of positions) {
       const generatedLocations = this.bundleService.getGeneratedLocations(
+        this.bundle().value()!,
         this.path(),
         pos.line,
         pos.column,
