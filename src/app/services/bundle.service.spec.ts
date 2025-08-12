@@ -2,229 +2,233 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { GenMapping, addMapping, toEncodedMap } from '@jridgewell/gen-mapping';
 import { SourceMapData } from '../models/bundle.models';
+import { InputBundle } from '../models/storage';
 import { BundleCalculationService } from './bundle-calculation.service';
 import { BundleService } from './bundle.service';
 import { SourceMapProcessorService } from './source-map-processor.service';
 import { StorageService } from './storage.service';
 
-async function clearOriginPrivateStorage() {
-  const dir = await navigator.storage.getDirectory();
-  for await (const [name, handle] of dir) {
-    if (handle.kind === 'file') {
-      await dir.removeEntry(name);
-    } else if (handle.kind === 'directory') {
-      await dir.removeEntry(name, { recursive: true });
-    }
-  }
-}
+const THE_BUNDLE_ID = 'test-bundle-id';
 
 describe('BundleService', () => {
   let service: BundleService;
-  let storageService: StorageService;
+  let storageServiceSpy: jasmine.SpyObj<StorageService>;
 
   beforeEach(async () => {
+    const spy = jasmine.createSpyObj('StorageService', [
+      'loadBundleMetadata',
+      'loadAllFileContents',
+      'storeBundle'
+    ]);
+
     TestBed.configureTestingModule({
       providers: [
         provideZonelessChangeDetection(),
         BundleCalculationService,
         SourceMapProcessorService,
+        {
+          provide: StorageService,
+          useValue: spy,
+        },
       ],
     });
     service = TestBed.inject(BundleService);
-    storageService = TestBed.inject(StorageService);
-
-    // Clear storage before each test
-    await clearOriginPrivateStorage();
-  });
-
-  afterEach(async () => {
-    await clearOriginPrivateStorage();
+    storageServiceSpy = TestBed.inject(StorageService) as jasmine.SpyObj<StorageService>;
   });
 
   it('should be created', () => {
     expect(service).toBeTruthy();
   });
 
-  describe('loadBundle', () => {
-    it('should load bundle with single chunk', async () => {
-      const mockChunkContent = `
-        /***/ (function(module, exports) {
-          console.log('test module');
-        /***/ }),
-      `;
-
-      const mockChunk = new File([mockChunkContent], 'main.js', {
-        type: 'application/javascript',
-      });
-
-      await service.storeUploadedBundle([mockChunk]);
-
-      expect(service.bundle()).toBeTruthy();
-      expect(service.bundle()?.chunks.length).toBe(1);
-      expect(service.bundle()?.chunks[0].fileName).toBe('main.js');
-      expect(service.loading()).toBe(false);
-    });
-
-    it('should load bundle with source map', async () => {
-      const mockSourceMap: SourceMapData = {
-        version: 3,
-        sources: ['src/main.ts'],
-        names: ['console', 'log'],
-        mappings: 'AAAA,OAAO,CAAC,GAAG',
-        sourcesContent: ['console.log("Hello World");'],
-      };
-
-      const mockChunkContent = 'console.log("Hello World");';
-      const mockChunk = new File([mockChunkContent], 'main.js', {
-        type: 'application/javascript',
-      });
-      const mockSourceMapFile = new File(
-        [JSON.stringify(mockSourceMap)],
-        'main.js.map',
-        { type: 'application/json' },
-      );
-
-      await service.storeUploadedBundle([mockChunk, mockSourceMapFile]);
-
-      const bundle = service.bundle();
-      expect(bundle?.chunks[0].sourceMap).toBeTruthy();
-      expect(bundle?.chunks[0].sourceMap?.sources).toContain('src/main.ts');
-    });
-
-    it('should handle inline source maps', async () => {
-      const mockSourceMap: SourceMapData = {
-        version: 3,
-        sources: ['src/main.ts'],
-        names: [],
-        mappings: 'AAAA',
-      };
-
-      const encodedSourceMap = btoa(JSON.stringify(mockSourceMap));
-      const mockChunkContent = `console.log("test");
-//# sourceMappingURL=data:application/json;base64,${encodedSourceMap}`;
-
-      const mockChunk = new File([mockChunkContent], 'main.js', {
-        type: 'application/javascript',
-      });
-
-      await service.storeUploadedBundle([mockChunk]);
-
-      const bundle = service.bundle();
-      expect(bundle?.chunks[0].sourceMap).toBeTruthy();
-      expect(bundle?.chunks[0].sourceMap?.sources).toContain('src/main.ts');
-    });
-
-    it('should set loading state correctly', async () => {
-      const mockChunk = new File(['test content'], 'test.js');
-
-      expect(service.loading()).toBe(false);
-
-      const loadPromise = service.storeUploadedBundle([mockChunk]);
-      expect(service.loading()).toBe(true);
-
-      await loadPromise;
-      expect(service.loading()).toBe(false);
-    });
-
-    it('should handle errors gracefully', async () => {
-      const invalidChunk = new File([''], 'test.js');
-      // Mock FileReader to throw error
-      spyOn(FileReader.prototype, 'readAsText').and.callFake(function (
-        this: FileReader,
-      ) {
-        setTimeout(() => {
-          if (this.onerror) {
-            this.onerror.call(this, {} as ProgressEvent<FileReader>);
-          }
-        }, 0);
-      });
-
-      await service.storeUploadedBundle([invalidChunk]);
-
-      expect(service.errorMessage()).toBeTruthy();
-      expect(service.bundle()).toBeNull();
-      expect(service.loading()).toBe(false);
-    });
-  });
-
-  describe('getSourceContent', () => {
-    it('return contents from source map', async () => {
-      const mockSourceMap: SourceMapData = {
-        version: 3,
-        sources: ['src/main.ts'],
-        sourcesContent: ['console.log("Hello World");'],
-        names: [],
-        mappings: 'AAAA',
-      };
-
-      const encodedSourceMap = btoa(JSON.stringify(mockSourceMap));
-      const mockChunkContent = `console.log("test");
-//# sourceMappingURL=data:application/json;base64,${encodedSourceMap}`;
-
-      const mockChunk = new File([mockChunkContent], 'main.js', {
-        type: 'application/javascript',
-      });
-
-      await service.storeUploadedBundle([mockChunk]);
-
-      expect(service.getSourceContent('src/main.ts')).toBe(
-        'console.log("Hello World");',
-      );
-    });
-  });
-
-  describe('reset', () => {
-    it('should reset all state', async () => {
-      const mockChunk = new File(['test content'], 'main.js');
-      await service.storeUploadedBundle([mockChunk]);
-
-      expect(service.bundle()).toBeTruthy();
-
-      service.reset();
-
-      expect(service.bundle()).toBeNull();
-      expect(service.errorMessage()).toBeNull();
-      expect(service.loading()).toBe(false);
-    });
-  });
-
-  describe('bundle analysis', () => {
-    it('should calculate total size correctly', async () => {
-      const content1 = 'a'.repeat(100);
-      const content2 = 'b'.repeat(200);
-
-      const chunk1 = new File([content1], 'chunk1.js');
-      const chunk2 = new File([content2], 'chunk2.js');
-
-      await service.storeUploadedBundle([chunk1, chunk2]);
-
-      const bundle = service.bundle();
-      expect(bundle?.totalSize).toBe(300);
-    });
-
-    it('should attribute size to source files', async () => {
-      const mapGen = new GenMapping();
-      addMapping(mapGen, {
-        source: 'src/a.ts',
+  describe('loadParsedBundle', () => {
+    it('should load and parse a bundle with source maps', async () => {
+      // Create a test source map using GenMapping
+      const map = new GenMapping();
+      addMapping(map, {
+        source: 'src/app.ts',
         original: { line: 1, column: 0 },
         generated: { line: 1, column: 0 },
       });
-      addMapping(mapGen, {
-        source: 'src/b.ts',
-        original: { line: 1, column: 0 },
+      addMapping(map, {
+        source: 'src/app.ts',
+        original: { line: 2, column: 0 },
         generated: { line: 1, column: 20 },
       });
-      const content = `${'a'.repeat(100)}\n\n//# sourceMappingURL=data:application/json;base64,${btoa(JSON.stringify(toEncodedMap(mapGen)))}`;
+      addMapping(map, {
+        source: 'src/utils.ts',
+        original: { line: 1, column: 0 },
+        generated: { line: 2, column: 0 },
+      });
 
-      const chunk = new File([content], 'chunk1.js');
+      const sourceMapData = toEncodedMap(map) as SourceMapData;
+      // Create a new object with sourcesContent added
+      const sourceMapWithContent = {
+        ...sourceMapData,
+        sourcesContent: [
+          'console.log("hello");\nexport default app;',
+          'export function helper() {}'
+        ]
+      };
 
-      await service.storeUploadedBundle([chunk]);
+      // Mock bundle metadata
+      const mockBundleMetadata: InputBundle = {
+        id: THE_BUNDLE_ID,
+        name: 'Test Bundle',
+        importedAt: Date.now(),
+        files: [
+          { name: 'main.js', storagePath: 'bundles/test/main.js' },
+          { name: 'main.js.map', storagePath: 'bundles/test/main.js.map' }
+        ]
+      };
 
-      const bundle = service.bundle();
-      expect(bundle?.totalSize).toBeGreaterThan(100);
+      // Mock file contents
+      const mockFileContents = new Map<string, string>([
+        ['bundles/test/main.js', 'console.log("bundled");\nfunction helper(){}'],
+        ['bundles/test/main.js.map', JSON.stringify(sourceMapWithContent)]
+      ]);
 
-      expect(bundle?.sourceBreakdown.get('src/a.ts')).toBe(20);
-      expect(bundle?.sourceBreakdown.get('src/b.ts')).toBe(80);
+      // Setup spies
+      storageServiceSpy.loadBundleMetadata.and.returnValue(Promise.resolve(mockBundleMetadata));
+      storageServiceSpy.loadAllFileContents.and.returnValue(Promise.resolve(mockFileContents));
+
+      // Execute
+      const result = await service.loadParsedBundle(THE_BUNDLE_ID);
+
+      // Verify basic structure
+      expect(result.id).toBe(THE_BUNDLE_ID);
+      expect(result.name).toBe('Test Bundle');
+      expect(result.chunks).toHaveSize(1);
+      expect(result.sources).toHaveSize(2);
+
+      // Verify chunk structure
+      const chunk = result.chunks[0];
+      expect(chunk.id).toBe('main');
+      expect(chunk.name).toBe('main.js');
+      expect(chunk.size).toBe(41); // Length of mock content
+      expect(chunk.fragments).toHaveSize(3); // 3 mappings = 3 fragments
+
+      // Verify sources structure
+      const sources = Array.from(result.sourcesByPath.values());
+      expect(sources).toHaveSize(2);
+      
+      const appSource = result.sourcesByPath.get('src/app.ts');
+      expect(appSource).toBeDefined();
+      expect(appSource!.path).toBe('src/app.ts');
+      expect(appSource!.content).toBe('console.log("hello");\nexport default app;');
+      expect(appSource!.referencingChunks.has('main')).toBeTrue();
+
+      const utilsSource = result.sourcesByPath.get('src/utils.ts');
+      expect(utilsSource).toBeDefined();
+      expect(utilsSource!.path).toBe('src/utils.ts');
+      expect(utilsSource!.content).toBe('export function helper() {}');
+      expect(utilsSource!.referencingChunks.has('main')).toBeTrue();
+
+      // Verify fragments
+      const fragments = chunk.fragments;
+      expect(fragments[0].sourceId).toBe(0); // Points to src/app.ts
+      expect(fragments[0].sourcePosition).toEqual({ line: 1, column: 0 });
+      expect(fragments[1].sourceId).toBe(0); // Points to src/app.ts
+      expect(fragments[1].sourcePosition).toEqual({ line: 2, column: 0 });
+      expect(fragments[2].sourceId).toBe(1); // Points to src/utils.ts
+      expect(fragments[2].sourcePosition).toEqual({ line: 1, column: 0 });
+
+      // Verify lookup maps
+      expect(result.chunksByName.get('main.js')).toBe(chunk);
+      expect(result.sourcesByPath.get('src/app.ts')).toBe(appSource);
+      expect(result.sourcesByPath.get('src/utils.ts')).toBe(utilsSource);
+    });
+
+    it('should handle chunks without source maps', async () => {
+      // Mock bundle metadata with no source map file
+      const mockBundleMetadata: InputBundle = {
+        id: THE_BUNDLE_ID,
+        name: 'Test Bundle No Maps',
+        importedAt: Date.now(),
+        files: [
+          { name: 'vendor.js', storagePath: 'bundles/test/vendor.js' }
+        ]
+      };
+
+      const mockFileContents = new Map<string, string>([
+        ['bundles/test/vendor.js', 'var lib = {};\nlib.version = "1.0";']
+      ]);
+
+      storageServiceSpy.loadBundleMetadata.and.returnValue(Promise.resolve(mockBundleMetadata));
+      storageServiceSpy.loadAllFileContents.and.returnValue(Promise.resolve(mockFileContents));
+
+      const result = await service.loadParsedBundle(THE_BUNDLE_ID);
+
+      expect(result.chunks).toHaveSize(1);
+      expect(result.sources).toHaveSize(0); // No sources without source map
+
+      const chunk = result.chunks[0];
+      expect(chunk.id).toBe('vendor');
+      expect(chunk.fragments).toHaveSize(1); // Single fragment for entire chunk
+      
+      const fragment = chunk.fragments[0];
+      expect(fragment.sourceId).toBeUndefined();
+      expect(fragment.sourcePosition).toBeUndefined();
+      expect(fragment.size).toBe(chunk.size);
+    });
+
+    it('should throw error when bundle not found', async () => {
+      storageServiceSpy.loadBundleMetadata.and.returnValue(Promise.resolve(null));
+
+      await expectAsync(service.loadParsedBundle('non-existent-bundle'))
+        .toBeRejectedWithError('Bundle non-existent-bundle not found');
+    });
+
+    it('should handle multiple chunks with shared sources', async () => {
+      // Create source maps for two chunks that reference the same source
+      const map1 = new GenMapping();
+      addMapping(map1, {
+        source: 'src/shared.ts',
+        original: { line: 1, column: 0 },
+        generated: { line: 1, column: 0 },
+      });
+
+      const map2 = new GenMapping();
+      addMapping(map2, {
+        source: 'src/shared.ts',
+        original: { line: 10, column: 0 },
+        generated: { line: 1, column: 0 },
+      });
+
+      const sourceMapData1 = toEncodedMap(map1) as SourceMapData;
+      const sourceMapData2 = toEncodedMap(map2) as SourceMapData;
+
+      const mockBundleMetadata: InputBundle = {
+        id: THE_BUNDLE_ID,
+        name: 'Multi Chunk Bundle',
+        importedAt: Date.now(),
+        files: [
+          { name: 'chunk1.js', storagePath: 'bundles/test/chunk1.js' },
+          { name: 'chunk1.js.map', storagePath: 'bundles/test/chunk1.js.map' },
+          { name: 'chunk2.js', storagePath: 'bundles/test/chunk2.js' },
+          { name: 'chunk2.js.map', storagePath: 'bundles/test/chunk2.js.map' }
+        ]
+      };
+
+      const mockFileContents = new Map<string, string>([
+        ['bundles/test/chunk1.js', 'console.log("chunk1");'],
+        ['bundles/test/chunk1.js.map', JSON.stringify(sourceMapData1)],
+        ['bundles/test/chunk2.js', 'console.log("chunk2");'],
+        ['bundles/test/chunk2.js.map', JSON.stringify(sourceMapData2)]
+      ]);
+
+      storageServiceSpy.loadBundleMetadata.and.returnValue(Promise.resolve(mockBundleMetadata));
+      storageServiceSpy.loadAllFileContents.and.returnValue(Promise.resolve(mockFileContents));
+
+      const result = await service.loadParsedBundle(THE_BUNDLE_ID);
+
+      expect(result.chunks).toHaveSize(2);
+      expect(result.sources).toHaveSize(1); // Only one shared source
+
+      const sharedSource = result.sourcesByPath.get('src/shared.ts');
+      expect(sharedSource).toBeDefined();
+      expect(sharedSource!.referencingChunks).toHaveSize(2);
+      expect(sharedSource!.referencingChunks.has('chunk1')).toBeTrue();
+      expect(sharedSource!.referencingChunks.has('chunk2')).toBeTrue();
     });
   });
 });

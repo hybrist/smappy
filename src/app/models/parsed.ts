@@ -32,8 +32,8 @@ export interface ChunkFragment {
   generatedEnd: CodePosition;
   /** Size in bytes of this fragment */
   size: number;
-  /** Path to the original source file */
-  sourcePath?: string;
+  /** Id of the original source file */
+  sourceId?: number;
   /** Position in original source code */
   sourcePosition?: CodePosition;
   /** Optional symbol name from source map */
