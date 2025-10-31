@@ -9,6 +9,7 @@ import { join } from 'node:path';
  * - bundles: Stores bundle metadata (id, name, importedAt)
  * - bundle_files: Stores file references (bundleId, name, storagePath)
  * - file_contents: Stores actual file content (bundleId, storagePath, content)
+ * - source_analysis: Stores pre-parsed source file analysis (bundleId, filePath, fragments)
  */
 
 let dbInstance: Database.Database | null = null;
@@ -67,6 +68,18 @@ function initializeSchema(db: Database.Database): void {
     );
   `);
 
+  // Create source_analysis table for storing pre-parsed AST data
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS source_analysis (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      bundle_id TEXT NOT NULL,
+      file_path TEXT NOT NULL,
+      fragments TEXT NOT NULL,
+      FOREIGN KEY (bundle_id) REFERENCES bundles(id) ON DELETE CASCADE,
+      UNIQUE(bundle_id, file_path)
+    );
+  `);
+
   // Create indexes for better query performance
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_bundle_files_bundle_id
@@ -81,6 +94,11 @@ function initializeSchema(db: Database.Database): void {
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_bundles_imported_at
     ON bundles(imported_at DESC);
+  `);
+
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_source_analysis_bundle_id
+    ON source_analysis(bundle_id);
   `);
 }
 

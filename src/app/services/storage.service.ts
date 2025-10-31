@@ -204,4 +204,31 @@ export class StorageService {
       return false;
     }
   }
+
+  /**
+   * Loads pre-parsed source analysis fragments for a file
+   * @param bundleId Bundle identifier
+   * @param filePath Source file path
+   * @returns Promise resolving to fragments array or null if not found
+   */
+  async loadSourceAnalysis(
+    bundleId: string,
+    filePath: string,
+  ): Promise<any[] | null> {
+    try {
+      const fragments = await firstValueFrom(
+        this.http.get<any[]>(
+          `${this.apiUrl}/${bundleId}/source-analysis/${encodeURIComponent(filePath)}`,
+        ),
+      );
+      return fragments;
+    } catch (error: any) {
+      // 404 means no pre-parsed analysis available, which is fine
+      if (error.status === 404) {
+        return null;
+      }
+      console.warn('Failed to load source analysis:', error);
+      return null;
+    }
+  }
 }

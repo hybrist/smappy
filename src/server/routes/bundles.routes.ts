@@ -2,6 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import { randomUUID } from 'node:crypto';
 import { serverStorageService } from '../database/storage.service.js';
+import { serverSourceAnalysisService } from '../database/source-analysis.service.js';
 
 const router = Router();
 
@@ -85,27 +86,6 @@ router.get('/', (_req, res) => {
 });
 
 /**
- * GET /api/bundles/:id
- * Get bundle metadata by ID
- */
-router.get('/:id', (req, res) => {
-  try {
-    const bundleId = req.params.id;
-    const bundle = serverStorageService.loadBundleMetadata(bundleId);
-
-    if (!bundle) {
-      res.status(404).json({ error: 'Bundle not found' });
-      return;
-    }
-
-    res.json(bundle);
-  } catch (error) {
-    console.error('Error loading bundle:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-/**
  * GET /api/bundles/:id/files
  * Get all file contents for a bundle
  */
@@ -130,6 +110,53 @@ router.get('/:id/files', (req, res) => {
     res.json(filesObject);
   } catch (error) {
     console.error('Error loading file contents:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * GET /api/bundles/:id/source-analysis/:filePath
+ * Get source analysis for a specific file
+ */
+router.get('/:id/source-analysis/*filePath', (req, res) => {
+  try {
+    const bundleId = req.params.id;
+    const filePath = (req.params as any).filePath;
+
+    const fragments = serverSourceAnalysisService.loadSourceAnalysis(
+      bundleId,
+      filePath,
+    );
+
+    if (fragments === null) {
+      res.status(404).json({ error: 'Source analysis not found' });
+      return;
+    }
+
+    res.json(fragments);
+  } catch (error) {
+    console.error('Error loading source analysis:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * GET /api/bundles/:id
+ * Get bundle metadata by ID
+ */
+router.get('/:id', (req, res) => {
+  try {
+    const bundleId = req.params.id;
+    const bundle = serverStorageService.loadBundleMetadata(bundleId);
+
+    if (!bundle) {
+      res.status(404).json({ error: 'Bundle not found' });
+      return;
+    }
+
+    res.json(bundle);
+  } catch (error) {
+    console.error('Error loading bundle:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

@@ -13,6 +13,7 @@ import {
 } from '../models/source-analysis.models';
 import { AstParserService } from '../parsers/ast-parser.service';
 import { FileParsersService } from '../parsers/file-parsers.service';
+import { StorageService } from './storage.service';
 
 @Injectable({
   providedIn: 'root',
@@ -20,11 +21,72 @@ import { FileParsersService } from '../parsers/file-parsers.service';
 export class SourceAnalysisService {
   private readonly astParser = inject(AstParserService);
   private readonly fileParsers = inject(FileParsersService);
+  private readonly storageService = inject(StorageService);
+
+  // Cache for source analysis results keyed by bundleId:filePath
+  private readonly analysisCache = new Map<
+    string,
+    SourceAnalysisResult | null
+  >();
 
   /**
-   * Analyze a source file and extract semantic fragments
+   * Analyze a source file using pre-parsed fragments from server
+   */
+  async analyzeSourceFileAsync(
+    bundle: BundleAnalysis,
+    filePath: string,
+  ): Promise<SourceAnalysisResult | null> {
+    // Create cache key from bundleId and file path
+    const cacheKey = `${bundle.bundleId}:${filePath}`;
+
+    // Return cached result if available
+    if (this.analysisCache.has(cacheKey)) {
+      return this.analysisCache.get(cacheKey)!;
+    }
+
+    // Load pre-parsed fragments from server
+    const preParsedFragments = await this.storageService.loadSourceAnalysis(
+      bundle.bundleId,
+      filePath,
+    );
+
+    // Perform analysis and cache the result
+    const result = this.performAnalysisWithFragments(
+      bundle,
+      filePath,
+      preParsedFragments,
+    );
+    this.analysisCache.set(cacheKey, result);
+
+    return result;
+  }
+
+  /**
+   * Analyze a source file and extract semantic fragments (synchronous, for computed)
    */
   analyzeSourceFile(
+    bundle: BundleAnalysis,
+    filePath: string,
+  ): SourceAnalysisResult | null {
+    // Create cache key from bundleId and file path
+    const cacheKey = `${bundle.bundleId}:${filePath}`;
+
+    // Return cached result if available
+    if (this.analysisCache.has(cacheKey)) {
+      return this.analysisCache.get(cacheKey)!;
+    }
+
+    // Perform analysis and cache the result
+    const result = this.performAnalysis(bundle, filePath);
+    this.analysisCache.set(cacheKey, result);
+
+    return result;
+  }
+
+  /**
+   * Actually perform the analysis (extracted from analyzeSourceFile)
+   */
+  private performAnalysis(
     bundle: BundleAnalysis,
     filePath: string,
   ): SourceAnalysisResult | null {
@@ -52,6 +114,47 @@ export class SourceAnalysisService {
       filePath,
       ast,
       astNodeLookup,
+      fragments,
+      sourceContent,
+      fileSize,
+    );
+  }
+
+  /**
+   * Perform analysis using pre-parsed fragments from server
+   */
+  private performAnalysisWithFragments(
+    bundle: BundleAnalysis,
+    filePath: string,
+    preParsedFragments: any[] | null,
+  ): SourceAnalysisResult | null {
+    if (!preParsedFragments) {
+      return null;
+    }
+
+    const sourceContent = getSourceContent(bundle, filePath);
+    if (!sourceContent) {
+      return null;
+    }
+
+    const fileSize = bundle.sourceBreakdown.get(filePath) || 0;
+    const fragments: SourceFragment[] = preParsedFragments;
+
+    // We still need to mark which fragments are in the bundle
+    this.markFragmentsInBundle(
+      bundle,
+      fragments,
+      filePath,
+      sourceContent,
+      fileSize,
+    );
+
+    // For pre-parsed fragments, we don't have AST or astNodeLookup,
+    // but we can still build a basic analysis result
+    return this.buildAnalysisResult(
+      filePath,
+      null,
+      new Map(),
       fragments,
       sourceContent,
       fileSize,

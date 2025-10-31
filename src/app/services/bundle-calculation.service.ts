@@ -26,7 +26,7 @@ export class BundleCalculationService {
       mappingImpacts.set(source, impacts);
     }
 
-    chunks.forEach(async (chunk) => {
+    chunks.forEach((chunk) => {
       if (chunk.sourceMap) {
         this.processChunkWithSourceMap(chunk, addSourceSize, addMappingImpact);
       } else {

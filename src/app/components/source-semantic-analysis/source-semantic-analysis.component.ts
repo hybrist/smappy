@@ -4,6 +4,7 @@ import {
   ElementRef,
   inject,
   input,
+  resource,
   signal,
   viewChild,
 } from '@angular/core';
@@ -33,7 +34,7 @@ import { SyntaxHighlightingUtils } from '../../utils/syntax-highlighting.utils';
   selector: 'section[appSourceSemanticAnalysis]',
   imports: [FormatSizePipe],
   template: `
-    @if (analysisResult(); as analysis) {
+    @if (analysisResult.hasValue() && analysisResult.value(); as analysis) {
       <div class="bg-white rounded-lg shadow">
         <div class="px-6 py-4 border-b border-gray-200">
           <h3 class="text-lg font-medium text-gray-900">Symbols</h3>
@@ -370,17 +371,25 @@ export class SourceSemanticAnalysisComponent {
 
   private hoverTooltip = viewChild('hoverTooltip', { read: ElementRef });
 
-  readonly analysisResult = computed(() => {
-    const currentPath = this.path();
-    if (!currentPath) return null;
-    return this.sourceAnalysisService.analyzeSourceFile(
-      this.bundle().value()!,
-      currentPath,
-    );
+  readonly analysisResult = resource({
+    params: () => ({
+      path: this.path(),
+      bundleId: this.bundle()?.value()?.bundleId,
+    }),
+    loader: async ({ params }) => {
+      const currentPath = params.path;
+      const bundle = this.bundle().value();
+      if (!currentPath || !bundle) return null;
+      return this.sourceAnalysisService.analyzeSourceFileAsync(
+        bundle,
+        currentPath,
+      );
+    },
   });
 
   readonly filteredFragments = computed(() => {
-    const analysis = this.analysisResult();
+    if (!this.analysisResult.hasValue()) return [];
+    const analysis = this.analysisResult.value();
     if (!analysis) return [];
 
     const filter = this.activeFilter();
@@ -575,7 +584,7 @@ export class SourceSemanticAnalysisComponent {
     }
 
     // Check if we have an AST and can find a node at this position
-    const analysisResult = this.analysisResult();
+    const analysisResult = this.analysisResult.value();
     let mappingInfo: HoveredMappingInfo | null = null;
 
     if (analysisResult?.astNodeLookup) {

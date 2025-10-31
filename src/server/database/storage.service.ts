@@ -1,4 +1,5 @@
 import { getDatabase } from './db.js';
+import { serverSourceAnalysisService } from './source-analysis.service.js';
 
 /**
  * Server-side storage service using SQLite
@@ -56,6 +57,11 @@ export class ServerStorageService {
       });
 
       transaction();
+
+      // Parse and store source analysis from source maps
+      // This is done outside the transaction to avoid blocking on parsing
+      this.parseSourcesFromMaps(bundle.id, bundle.files, fileContents);
+
       return bundle.id;
     } catch (error) {
       console.error('Failed to store bundle:', error);
@@ -201,6 +207,7 @@ export class ServerStorageService {
         db.prepare('DELETE FROM file_contents').run();
         db.prepare('DELETE FROM bundle_files').run();
         db.prepare('DELETE FROM bundles').run();
+        db.prepare('DELETE FROM source_analysis').run();
       });
 
       transaction();
@@ -208,6 +215,92 @@ export class ServerStorageService {
     } catch (error) {
       console.error('Failed to clear all data:', error);
       return false;
+    }
+  }
+
+  /**
+   * Parse and store source analysis from source maps
+   */
+  private parseSourcesFromMaps(
+    bundleId: string,
+    files: InputBundleFile[],
+    fileContents: Map<string, string>,
+  ): void {
+    // Find all chunk files (non-map files)
+    const chunkFiles = files.filter(
+      (file) => !file.name.endsWith('.map') && !file.name.endsWith('.sourcemap'),
+    );
+
+    for (const chunkFile of chunkFiles) {
+      const chunkContent = fileContents.get(chunkFile.storagePath);
+      if (!chunkContent) continue;
+
+      // Look for source map
+      const sourceMapFile = files.find(
+        (file) => file.name === `${chunkFile.name}.map`,
+      );
+
+      let sourceMap: any;
+      if (sourceMapFile) {
+        const sourceMapContent = fileContents.get(sourceMapFile.storagePath);
+        if (sourceMapContent) {
+          try {
+            sourceMap = JSON.parse(sourceMapContent);
+          } catch (error) {
+            console.warn(`Failed to parse source map for ${chunkFile.name}`);
+            continue;
+          }
+        }
+      } else {
+        // Try to extract inline source map
+        const sourceMapMatch = chunkContent.match(
+          /\/\/# sourceMappingURL=data:application\/json;.*?base64,(.+)/,
+        );
+        if (sourceMapMatch) {
+          try {
+            const decoded = Buffer.from(sourceMapMatch[1]!, 'base64').toString(
+              'utf-8',
+            );
+            sourceMap = JSON.parse(decoded);
+          } catch (error) {
+            console.warn(
+              `Failed to extract inline source map from ${chunkFile.name}`,
+            );
+            continue;
+          }
+        }
+      }
+
+      if (!sourceMap || !sourceMap.sources || !sourceMap.sourcesContent) {
+        continue;
+      }
+
+      // Parse each source file from the source map
+      for (let i = 0; i < sourceMap.sources.length; i++) {
+        const sourcePath = sourceMap.sources[i];
+        const sourceContent = sourceMap.sourcesContent[i];
+
+        if (!sourcePath || !sourceContent) {
+          continue;
+        }
+
+        try {
+          const fragments = serverSourceAnalysisService.parseSourceFragments(
+            sourceContent,
+            sourcePath,
+          );
+
+          if (fragments.length > 0) {
+            serverSourceAnalysisService.storeSourceAnalysis(
+              bundleId,
+              sourcePath,
+              fragments,
+            );
+          }
+        } catch (error) {
+          // Silently skip files that can't be parsed
+        }
+      }
     }
   }
 }
