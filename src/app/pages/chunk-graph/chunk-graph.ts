@@ -278,31 +278,6 @@ export class ChunkGraph {
       : withoutExt;
   }
 
-  // Statistics helpers
-  getMostImportsNode() {
-    const graph = this.chunkGraph();
-    if (!graph || graph.nodes.length === 0) return null;
-    return graph.nodes.reduce((max, node) =>
-      node.importCount > max.importCount ? node : max,
-    );
-  }
-
-  getMostDependentsNode() {
-    const graph = this.chunkGraph();
-    if (!graph || graph.nodes.length === 0) return null;
-    return graph.nodes.reduce((max, node) =>
-      node.dependentCount > max.dependentCount ? node : max,
-    );
-  }
-
-  getIsolatedChunksCount(): number {
-    const graph = this.chunkGraph();
-    if (!graph) return 0;
-    return graph.nodes.filter(
-      (node) => node.importCount === 0 && node.dependentCount === 0,
-    ).length;
-  }
-
   getChunkDependencies(nodeId: string): string[] {
     const graph = this.chunkGraph();
     if (!graph) return [];
