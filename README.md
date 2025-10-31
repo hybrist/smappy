@@ -3,15 +3,28 @@
 A tool to explore a set of bundled chunks based on their source maps.
 It can show both high level size breakdowns and usage down to specific functions.
 
-## Development server
+## Architecture
 
-To start a local development server, run:
+Smappy uses Angular 20 with Server-Side Rendering (SSR) and stores bundle data in a SQLite database on the server. The application consists of:
+
+- **Frontend**: Angular standalone components with Tailwind CSS
+- **Backend**: Express server with SQLite database (`better-sqlite3`)
+- **Storage**: Server-side SQLite database (previously used client-side OPFS)
+- **API**: REST endpoints at `/api/bundles/*` for bundle management
+
+## Development
+
+### Development Server
+
+To start the development server, run:
 
 ```bash
-ng serve
+pnpm start
 ```
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+
+**Note**: In development mode, the SSR server runs with hot-reload support. API endpoints are available and database changes persist in `./data/smappy.db`.
 
 ## Code scaffolding
 
@@ -27,15 +40,34 @@ For a complete list of available schematics (such as `components`, `directives`,
 ng generate --help
 ```
 
-## Building
+## Production Build & Deployment
 
-To build the project run:
+To build the project for production:
 
 ```bash
-ng build
+pnpm run build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+This will compile your project and store the build artifacts in the `dist/` directory, including:
+- Browser bundles in `dist/smappy/browser/`
+- Server bundles in `dist/smappy/server/`
+
+To start the production server:
+
+```bash
+node dist/smappy/server/server.mjs
+```
+
+The server listens on port 4000 by default (configurable via `PORT` environment variable).
+
+### Database
+
+The SQLite database is stored in `./data/smappy.db` and contains:
+- **bundles** table: Bundle metadata (id, name, importedAt)
+- **bundle_files** table: File references (bundleId, name, storagePath)
+- **file_contents** table: Actual file content (bundleId, storagePath, content)
+
+The database is automatically created on first run.
 
 ## Running unit tests
 
