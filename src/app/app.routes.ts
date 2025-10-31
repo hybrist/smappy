@@ -38,6 +38,11 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'graph',
+        loadComponent: () =>
+          import('./pages/chunk-graph/chunk-graph').then((m) => m.ChunkGraph),
+      },
+      {
         path: 'sources',
         loadComponent: () =>
           import('./pages/sources-tree/sources-tree.component').then(

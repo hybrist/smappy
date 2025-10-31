@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { serverStorageService } from '../database/storage.service.js';
 import { randomUUID } from 'node:crypto';
+import { serverStorageService } from '../database/storage.service.js';
 
 const router = Router();
 
@@ -53,7 +53,10 @@ router.post('/', upload.array('files'), (req, res) => {
     };
 
     // Store in database
-    const savedBundleId = serverStorageService.storeBundleWithFiles(bundle, contents);
+    const savedBundleId = serverStorageService.storeBundleWithFiles(
+      bundle,
+      contents,
+    );
 
     if (!savedBundleId) {
       res.status(500).json({ error: 'Failed to store bundle' });
@@ -177,7 +180,7 @@ router.delete('/', (_req, res) => {
  */
 function findUniqueStoragePath(
   originalFilename: string,
-  existingPaths: Map<string, string>
+  existingPaths: Map<string, string>,
 ): string {
   let storagePath = originalFilename;
   let counter = 1;

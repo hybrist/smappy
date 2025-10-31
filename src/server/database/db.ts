@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3';
-import { join } from 'node:path';
 import { existsSync, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
 
 /**
  * SQLite Database module for storing bundle data

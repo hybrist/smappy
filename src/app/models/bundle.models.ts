@@ -105,3 +105,41 @@ export interface SerializableChunkInfo {
   content: string;
   sourceMap?: SourceMapData;
 }
+
+/**
+ * Chunk graph data model for visualizing import relationships
+ */
+export interface ChunkGraph {
+  /** List of chunk nodes with metadata */
+  nodes: ChunkGraphNode[];
+  /** List of edges representing import relationships */
+  edges: ChunkGraphEdge[];
+}
+
+/**
+ * Node in the chunk import graph
+ */
+export interface ChunkGraphNode {
+  /** Chunk ID */
+  id: string;
+  /** Chunk file name */
+  fileName: string;
+  /** Chunk size in bytes */
+  size: number;
+  /** Number of chunks this chunk imports */
+  importCount: number;
+  /** Number of chunks that import this chunk */
+  dependentCount: number;
+}
+
+/**
+ * Edge in the chunk import graph representing an import relationship
+ */
+export interface ChunkGraphEdge {
+  /** Source chunk ID (the chunk that imports) */
+  source: string;
+  /** Target chunk ID (the chunk being imported) */
+  target: string;
+  /** Type of import (static or dynamic) */
+  type: 'static' | 'dynamic';
+}

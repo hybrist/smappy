@@ -22,7 +22,7 @@ export class ServerStorageService {
    */
   storeBundleWithFiles(
     bundle: InputBundle,
-    fileContents: Map<string, string>
+    fileContents: Map<string, string>,
   ): string | null {
     const db = getDatabase();
 
@@ -73,7 +73,9 @@ export class ServerStorageService {
       // Get bundle metadata
       const bundleRow = db
         .prepare('SELECT * FROM bundles WHERE id = ?')
-        .get(bundleId) as { id: string; name: string; imported_at: number } | undefined;
+        .get(bundleId) as
+        | { id: string; name: string; imported_at: number }
+        | undefined;
 
       if (!bundleRow) {
         return null;
@@ -81,7 +83,9 @@ export class ServerStorageService {
 
       // Get bundle files
       const fileRows = db
-        .prepare('SELECT name, storage_path FROM bundle_files WHERE bundle_id = ?')
+        .prepare(
+          'SELECT name, storage_path FROM bundle_files WHERE bundle_id = ?',
+        )
         .all(bundleId) as { name: string; storage_path: string }[];
 
       return {
@@ -108,7 +112,9 @@ export class ServerStorageService {
 
     try {
       const contentRows = db
-        .prepare('SELECT storage_path, content FROM file_contents WHERE bundle_id = ?')
+        .prepare(
+          'SELECT storage_path, content FROM file_contents WHERE bundle_id = ?',
+        )
         .all(bundleId) as { storage_path: string; content: string }[];
 
       for (const row of contentRows) {
@@ -130,12 +136,16 @@ export class ServerStorageService {
 
     try {
       const bundleRows = db
-        .prepare('SELECT id, name, imported_at FROM bundles ORDER BY imported_at DESC')
+        .prepare(
+          'SELECT id, name, imported_at FROM bundles ORDER BY imported_at DESC',
+        )
         .all() as { id: string; name: string; imported_at: number }[];
 
       for (const bundleRow of bundleRows) {
         const fileRows = db
-          .prepare('SELECT name, storage_path FROM bundle_files WHERE bundle_id = ?')
+          .prepare(
+            'SELECT name, storage_path FROM bundle_files WHERE bundle_id = ?',
+          )
           .all(bundleRow.id) as { name: string; storage_path: string }[];
 
         bundles.push({
@@ -163,8 +173,12 @@ export class ServerStorageService {
 
     try {
       const transaction = db.transaction(() => {
-        db.prepare('DELETE FROM file_contents WHERE bundle_id = ?').run(bundleId);
-        db.prepare('DELETE FROM bundle_files WHERE bundle_id = ?').run(bundleId);
+        db.prepare('DELETE FROM file_contents WHERE bundle_id = ?').run(
+          bundleId,
+        );
+        db.prepare('DELETE FROM bundle_files WHERE bundle_id = ?').run(
+          bundleId,
+        );
         db.prepare('DELETE FROM bundles WHERE id = ?').run(bundleId);
       });
 

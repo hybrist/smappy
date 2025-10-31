@@ -144,7 +144,9 @@ export class StorageService {
 
     try {
       const filesObject = await firstValueFrom(
-        this.http.get<Record<string, string>>(`${this.apiUrl}/${bundleId}/files`),
+        this.http.get<Record<string, string>>(
+          `${this.apiUrl}/${bundleId}/files`,
+        ),
       );
 
       // Convert object back to Map
