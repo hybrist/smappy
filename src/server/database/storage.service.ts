@@ -2,7 +2,6 @@ import { getDatabase } from './db.js';
 
 /**
  * Server-side storage service using SQLite
- * Implements the same interface as the client-side OPFS storage service
  */
 
 export interface InputBundle {

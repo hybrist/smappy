@@ -9,7 +9,7 @@ Smappy uses Angular 20 with Server-Side Rendering (SSR) and stores bundle data i
 
 - **Frontend**: Angular standalone components with Tailwind CSS
 - **Backend**: Express server with SQLite database (`better-sqlite3`)
-- **Storage**: Server-side SQLite database (previously used client-side OPFS)
+- **Storage**: Server-side SQLite database
 - **API**: REST endpoints at `/api/bundles/*` for bundle management
 
 ## Development

@@ -13,11 +13,11 @@ Each stored bundle consists of two pieces:
 1. A metadata file.
 2. Contents of the bundle files (including source maps).
 
-The metadata file name in OPFS is `smappy/<uuid>.json` where `<uuid>`
+The metadata file is stored in the database with the bundle ID `<uuid>` where `<uuid>`
 is the unique ID of the bundle. It contains an `InputBundle` as JSON.
 
 Each chunk and/or source map file that belongs to the bundle is stored
-under `smappy/<uuid>/<storagePath>`. Where possible, the `<storagePath>`
+in the database with the bundle ID and `<storagePath>` as identifiers. Where possible, the `<storagePath>`
 will match the original (base) filename of the chunk or source map file.
 
 ## Parsed Data Model (`parsed.ts`)
