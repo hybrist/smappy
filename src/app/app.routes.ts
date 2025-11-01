@@ -9,6 +9,11 @@ export const routes: Routes = [
       import('./pages/home/home.component').then((m) => m.HomeComponent),
   },
   {
+    path: 'chat',
+    loadComponent: () =>
+      import('./pages/chat/chat.component').then((m) => m.ChatComponent),
+  },
+  {
     path: 'bundle/:bundleId',
     resolve: { bundle: resolveBundle },
     loadComponent: () =>

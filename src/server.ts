@@ -7,6 +7,7 @@ import {
 import express from 'express';
 import { join } from 'node:path';
 import bundlesRouter from './server/routes/bundles.routes.js';
+import chatRouter from './server/routes/chat.routes.js';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -22,6 +23,7 @@ app.use(express.json());
  * API Routes
  */
 app.use('/api/bundles', bundlesRouter);
+app.use('/api/chat', chatRouter);
 
 /**
  * Serve static files from /browser
