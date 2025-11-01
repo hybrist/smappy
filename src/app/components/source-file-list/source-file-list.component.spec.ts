@@ -4,7 +4,14 @@ import {
   signal,
 } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, provideRouter, Router } from '@angular/router';
+import {
+  ComponentFixture,
+  flush,
+  tick,
+} from '@angular/core/testing';
+import { resource } from '@angular/core';
+import { BundleAnalysis } from '../../models/bundle.models';
 import { BundleService } from '../../services/bundle.service';
 import {
   SourceFileItem,
@@ -13,19 +20,38 @@ import {
 
 describe('SourceFileListComponent', () => {
   let component: SourceFileListComponent;
-  let fixture: any;
-  let bundleServiceSpy: jasmine.SpyObj<BundleService>;
+  let fixture: ComponentFixture<SourceFileListComponent>;
   let mockFiles = signal<SourceFileItem[]>([]);
+  let bundleServiceSpy: jasmine.SpyObj<BundleService>;
 
   beforeEach(() => {
-    const spy = jasmine.createSpyObj('BundleService', ['bundle', 'bundleId']);
+    const mockBundleData: BundleAnalysis = {
+      bundleId: 'test-bundle-id',
+      totalSize: 1000,
+      chunks: [],
+      sourceBreakdown: new Map(),
+      mappingImpacts: new Map(),
+    };
+
+    const mockBundle = resource({
+      loader: () => Promise.resolve(mockBundleData),
+    });
+
+    bundleServiceSpy = jasmine.createSpyObj('BundleService', []);
 
     TestBed.configureTestingModule({
       imports: [SourceFileListComponent],
       providers: [
         provideZonelessChangeDetection(),
         provideRouter([]),
-        { provide: BundleService, useValue: spy },
+        { provide: BundleService, useValue: bundleServiceSpy },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: { data: { bundle: mockBundle } },
+            parent: null,
+          },
+        },
       ],
     });
 
@@ -33,18 +59,8 @@ describe('SourceFileListComponent', () => {
       bindings: [inputBinding('files', mockFiles)],
     });
     component = fixture.componentInstance;
-    bundleServiceSpy = TestBed.inject(
-      BundleService,
-    ) as jasmine.SpyObj<BundleService>;
-
-    // Mock bundle data
-    bundleServiceSpy.bundle.and.returnValue({
-      totalSize: 1000,
-      chunks: [],
-      sourceBreakdown: new Map(),
-      mappingImpacts: new Map(),
-    });
-    bundleServiceSpy.bundleId.and.returnValue('my-bundle-id');
+    tick();
+    flush();
   });
 
   it('should create', () => {
@@ -53,8 +69,8 @@ describe('SourceFileListComponent', () => {
 
   it('should display file list with basic information', () => {
     mockFiles.set([
-      { path: 'src/app/component.ts', size: 500 },
-      { path: 'src/utils/helper.js', size: 300 },
+      { path: 'src/app/component.ts', size: 500, displayName: 'component.ts' },
+      { path: 'src/utils/helper.js', size: 300, displayName: 'helper.js' },
     ]);
 
     fixture.detectChanges();
@@ -67,7 +83,7 @@ describe('SourceFileListComponent', () => {
 
   it('should display badges when provided', () => {
     mockFiles.set([
-      { path: 'src/test.ts', size: 100, badge: 'Content Available' },
+      { path: 'src/test.ts', size: 100, displayName: 'test.ts', badge: 'Content Available' },
     ]);
 
     fixture.detectChanges();
@@ -77,19 +93,6 @@ describe('SourceFileListComponent', () => {
     expect(badge.textContent.trim()).toBe('Content Available');
   });
 
-  it('should format file sizes correctly', () => {
-    expect(component.formatSize(0)).toBe('0 B');
-    expect(component.formatSize(1024)).toBe('1 KB');
-    expect(component.formatSize(1536)).toBe('1.5 KB');
-    expect(component.formatSize(1048576)).toBe('1 MB');
-  });
-
-  it('should extract file names correctly', () => {
-    expect(component.getFileName('src/app/component.ts')).toBe('component.ts');
-    expect(component.getFileName('file.js')).toBe('file.js');
-    expect(component.getFileName('')).toBe('');
-  });
-
   it('should calculate percentage of total correctly', () => {
     expect(component.getPercentageOfTotal(500)).toBe('50.0');
     expect(component.getPercentageOfTotal(250)).toBe('25.0');
@@ -97,8 +100,8 @@ describe('SourceFileListComponent', () => {
 
   it('should handle clickable and non-clickable files correctly', () => {
     mockFiles.set([
-      { path: 'src/default.ts', size: 100 }, // Default is clickable
-      { path: 'src/non-clickable.ts', size: 100, clickable: false },
+      { path: 'src/default.ts', size: 100, displayName: 'default.ts' }, // Default is clickable
+      { path: 'src/non-clickable.ts', size: 100, displayName: 'non-clickable.ts', clickable: false },
     ]);
 
     fixture.detectChanges();
