@@ -2,7 +2,14 @@ import { stepCountIs, streamText } from 'ai';
 import { Router } from 'express';
 import { ollama } from 'ollama-ai-provider-v2';
 import { z } from 'zod';
-import { getBundleOverview } from '../services/chat-tools.service.js';
+import {
+  getBundleOverview,
+  listBundleChunks,
+  getChunkDetails,
+  listSourceFiles,
+  getSourceFileAnalysis,
+  findFragment,
+} from '../services/chat-tools.service.js';
 
 const router = Router();
 
@@ -32,7 +39,7 @@ router.post('/', async (req, res) => {
       system: `You are an expert in web development and web performance.
               You are given a message from a user about a JavaScript bundle.
               It consists of a set of chunks that are loaded together.`,
-      stopWhen: stepCountIs(4),
+      stopWhen: stepCountIs(10),
       tools: {
         get_bundle_overview: {
           description:
@@ -41,6 +48,77 @@ router.post('/', async (req, res) => {
           type: 'function',
           execute: async () => {
             return await getBundleOverview(bundleId);
+          },
+        },
+        list_bundle_chunks: {
+          description:
+            'List all chunks in the bundle with their sizes. Useful when the user wants to see what chunks exist or which chunks are largest. Can sort by size (default) or name.',
+          inputSchema: z.object({
+            sortBy: z
+              .enum(['size', 'name'])
+              .optional()
+              .describe('Sort order: "size" (default) or "name"'),
+          }),
+          type: 'function',
+          execute: async ({ sortBy }) => {
+            return await listBundleChunks(bundleId, sortBy);
+          },
+        },
+        get_chunk_details: {
+          description:
+            'Get detailed information about a specific chunk including its size and source files it contains. Use this when the user asks about a particular chunk file.',
+          inputSchema: z.object({
+            chunkName: z
+              .string()
+              .describe('The name of the chunk file (e.g., "main.js")'),
+          }),
+          type: 'function',
+          execute: async ({ chunkName }) => {
+            return await getChunkDetails(bundleId, chunkName);
+          },
+        },
+        list_source_files: {
+          description:
+            'List all source files in the bundle with their estimated sizes. Use this when the user wants to see what source files are in the bundle or which source files are largest.',
+          inputSchema: z.object({
+            sortBy: z
+              .enum(['size', 'name'])
+              .optional()
+              .describe('Sort order: "size" (default) or "name"'),
+          }),
+          type: 'function',
+          execute: async ({ sortBy }) => {
+            return await listSourceFiles(bundleId, sortBy);
+          },
+        },
+        get_source_file_analysis: {
+          description:
+            'Get detailed analysis of a specific source file showing all classes, functions, methods, and other code fragments. Use this when the user asks about what is in a specific source file.',
+          inputSchema: z.object({
+            filePath: z
+              .string()
+              .describe(
+                'The path to the source file (e.g., "src/components/App.tsx")',
+              ),
+          }),
+          type: 'function',
+          execute: async ({ filePath }) => {
+            return await getSourceFileAnalysis(bundleId, filePath);
+          },
+        },
+        find_fragment: {
+          description:
+            'Search for functions, classes, methods, or other code fragments by name across all source files. Use this when the user is looking for a specific function or class.',
+          inputSchema: z.object({
+            searchTerm: z
+              .string()
+              .describe(
+                'The search term to find in fragment names (case-insensitive)',
+              ),
+          }),
+          type: 'function',
+          execute: async ({ searchTerm }) => {
+            return await findFragment(bundleId, searchTerm);
           },
         },
       },
