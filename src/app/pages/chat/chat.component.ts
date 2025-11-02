@@ -2,10 +2,11 @@ import { Component, inject, signal, effect, viewChild, ElementRef } from '@angul
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { ChatService } from '../../services/chat.service';
+import { MarkdownPipe } from '../../pipes/markdown-pipe';
 
 @Component({
   selector: 'app-chat',
-  imports: [FormsModule],
+  imports: [FormsModule, MarkdownPipe],
   template: `
     <div class="flex flex-col h-[calc(100vh-7rem)] bg-white rounded-lg border border-gray-200 shadow-sm">
       <!-- Header -->
@@ -71,8 +72,7 @@ import { ChatService } from '../../services/chat.service';
                         d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"
                       ></path>
                     </svg>
-                    <div class="flex-1 whitespace-pre-wrap">
-                      {{ message.content || '...' }}
+                    <div class="flex-1 prose prose-sm max-w-none" [innerHTML]="message.content | markdown">
                     </div>
                   </div>
                 </div>

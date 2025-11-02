@@ -36,6 +36,7 @@
     "ai": "^5.0.86",
     "better-sqlite3": "^12.4.1",
     "express": "^5.1.0",
+    "marked": "^16.4.1",
     "multer": "^2.0.2",
     "ollama-ai-provider-v2": "^1.5.2",
     "oxc-parser": "^0.73.2",
