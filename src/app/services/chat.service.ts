@@ -1,5 +1,5 @@
-import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { inject, Injectable, signal } from '@angular/core';
 
 export interface Message {
   role: 'user' | 'assistant';
@@ -118,6 +118,19 @@ export class ChatService {
                 }
                 return updated;
               });
+            } else if (data.type === 'tool-call') {
+              // Tool is being called - optionally show this to user
+              this.messages.update((messages) => {
+                const updated = [...messages];
+                const lastMessage = updated[updated.length - 1];
+                if (lastMessage && lastMessage.role === 'assistant') {
+                  lastMessage.content += `\n\n_[Analyzing bundle...]_\n\n`;
+                }
+                return updated;
+              });
+            } else if (data.type === 'tool-result') {
+              // Tool result received - LLM will use this to generate response
+              console.debug(`Tool result: ${data.toolName}`, data.output);
             } else if (data.type === 'error') {
               this.error.set(data.error || 'An error occurred');
             }
