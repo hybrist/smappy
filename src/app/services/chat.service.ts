@@ -25,8 +25,9 @@ export class ChatService {
   /**
    * Send a message and stream the response
    * @param content User message content
+   * @param bundleId Optional bundle ID for context
    */
-  async sendMessage(content: string): Promise<void> {
+  async sendMessage(content: string, bundleId?: string): Promise<void> {
     if (this.isStreaming()) {
       console.warn('Already streaming a response');
       return;
@@ -44,7 +45,7 @@ export class ChatService {
     this.error.set(null);
 
     try {
-      await this.streamResponse();
+      await this.streamResponse(bundleId);
     } catch (err) {
       console.error('Error sending message:', err);
       this.error.set('Failed to send message. Please try again.');
@@ -57,8 +58,9 @@ export class ChatService {
 
   /**
    * Stream the response from the server using fetch and SSE
+   * @param bundleId Optional bundle ID for context
    */
-  private async streamResponse(): Promise<void> {
+  private async streamResponse(bundleId?: string): Promise<void> {
     const currentMessages = this.messages();
 
     const response = await fetch(this.apiUrl, {
@@ -71,6 +73,7 @@ export class ChatService {
           role: m.role,
           content: m.content,
         })),
+        bundleId,
       }),
     });
 

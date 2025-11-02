@@ -1,12 +1,13 @@
 import { Component, inject, signal, effect, viewChild, ElementRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { ChatService } from '../../services/chat.service';
 
 @Component({
   selector: 'app-chat',
   imports: [FormsModule],
   template: `
-    <div class="flex flex-col h-screen bg-gray-50">
+    <div class="flex flex-col h-[calc(100vh-7rem)] bg-white rounded-lg border border-gray-200 shadow-sm">
       <!-- Header -->
       <div class="bg-white shadow-sm border-b border-gray-200 p-4">
         <div class="max-w-4xl mx-auto flex items-center justify-between">
@@ -24,7 +25,7 @@ import { ChatService } from '../../services/chat.service';
       </div>
 
       <!-- Messages Container -->
-      <div class="flex-1 overflow-y-auto p-4">
+      <div class="flex-1 overflow-y-auto p-4 bg-gray-50">
         <div class="max-w-4xl mx-auto space-y-4" #messageContainer>
           @if (chatService.messages().length === 0) {
             <div class="text-center py-12 text-gray-500">
@@ -153,11 +154,21 @@ import { ChatService } from '../../services/chat.service';
 })
 export class ChatComponent {
   readonly chatService = inject(ChatService);
+  private readonly route = inject(ActivatedRoute);
 
   inputMessage = signal<string>('');
   messageContainer = viewChild<ElementRef>('messageContainer');
+  bundleId = signal<string>('');
 
   constructor() {
+    // Get bundleId from route params
+    this.route.parent?.paramMap.subscribe((params) => {
+      const id = params.get('bundleId');
+      if (id) {
+        this.bundleId.set(id);
+      }
+    });
+
     // Auto-scroll to bottom when messages change
     effect(() => {
       // Access messages to track changes
@@ -181,8 +192,8 @@ export class ChatComponent {
     // Clear input immediately
     this.inputMessage.set('');
 
-    // Send message
-    await this.chatService.sendMessage(message);
+    // Send message with bundle context
+    await this.chatService.sendMessage(message, this.bundleId());
   }
 
   clearChat(): void {

@@ -11,15 +11,7 @@ import { StorageService } from '../../services/storage.service';
   template: `
     <div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
-        <div class="flex items-center justify-between mb-2">
-          <h1 class="text-3xl font-bold text-gray-900">Smappy</h1>
-          <a
-            routerLink="/chat"
-            class="text-sm bg-purple-50 text-purple-700 border border-purple-600 px-3 py-1.5 rounded hover:bg-purple-100"
-          >
-            💬 Chat
-          </a>
-        </div>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Smappy</h1>
         <p class="text-gray-600 mb-6">
           Analyze your JavaScript bundles and source maps
         </p>
