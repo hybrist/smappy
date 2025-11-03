@@ -1,92 +1,38 @@
-# Smappy
+# sv
 
-A tool to explore a set of bundled chunks based on their source maps.
-It can show both high level size breakdowns and usage down to specific functions.
+Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
 
-## Architecture
+## Creating a project
 
-Smappy uses Angular 20 with Server-Side Rendering (SSR) and stores bundle data in a SQLite database on the server. The application consists of:
+If you're seeing this, you've probably already done this step. Congrats!
 
-- **Frontend**: Angular standalone components with Tailwind CSS
-- **Backend**: Express server with SQLite database (`better-sqlite3`)
-- **Storage**: Server-side SQLite database
-- **API**: REST endpoints at `/api/bundles/*` for bundle management
+```sh
+# create a new project in the current directory
+npx sv create
 
-## Development
-
-### Development Server
-
-To start the development server, run:
-
-```bash
-pnpm start
+# create a new project in my-app
+npx sv create my-app
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Developing
 
-**Note**: In development mode, the SSR server runs with hot-reload support. API endpoints are available and database changes persist in `./data/smappy.db`.
+Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
 
-## Code scaffolding
+```sh
+npm run dev
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
+# or start the server and open the app in a new browser tab
+npm run dev -- --open
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Building
 
-```bash
-ng generate --help
+To create a production version of your app:
+
+```sh
+npm run build
 ```
 
-## Production Build & Deployment
+You can preview the production build with `npm run preview`.
 
-To build the project for production:
-
-```bash
-pnpm run build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory, including:
-- Browser bundles in `dist/smappy/browser/`
-- Server bundles in `dist/smappy/server/`
-
-To start the production server:
-
-```bash
-node dist/smappy/server/server.mjs
-```
-
-The server listens on port 4000 by default (configurable via `PORT` environment variable).
-
-### Database
-
-The SQLite database is stored in `./data/smappy.db` and contains:
-- **bundles** table: Bundle metadata (id, name, importedAt)
-- **bundle_files** table: File references (bundleId, name, storagePath)
-- **file_contents** table: Actual file content (bundleId, storagePath, content)
-
-The database is automatically created on first run.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
