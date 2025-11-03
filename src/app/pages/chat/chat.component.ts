@@ -1,12 +1,13 @@
 import { Component, inject, signal, effect, viewChild, ElementRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { JsonPipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { ChatService } from '../../services/chat.service';
 import { MarkdownPipe } from '../../pipes/markdown-pipe';
 
 @Component({
   selector: 'app-chat',
-  imports: [FormsModule, MarkdownPipe],
+  imports: [FormsModule, JsonPipe, MarkdownPipe],
   template: `
     <div class="flex flex-col h-[calc(100vh-7rem)] bg-white rounded-lg border border-gray-200 shadow-sm">
       <!-- Header -->
@@ -47,7 +48,7 @@ import { MarkdownPipe } from '../../pipes/markdown-pipe';
             </div>
           }
 
-          @for (message of chatService.messages(); track $index) {
+          @for (message of chatService.messages(); track $index; let messageIndex = $index) {
             @if (message.role === 'user') {
               <!-- User Message -->
               <div class="flex justify-end">
@@ -72,7 +73,60 @@ import { MarkdownPipe } from '../../pipes/markdown-pipe';
                         d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"
                       ></path>
                     </svg>
-                    <div class="flex-1 prose prose-sm max-w-none" [innerHTML]="message.content | markdown">
+                    <div class="flex-1">
+                      @if (message.content) {
+                        <div class="prose prose-sm max-w-none" [innerHTML]="message.content | markdown"></div>
+                      }
+
+                      @if (message.toolCalls && message.toolCalls.length > 0) {
+                        <div class="mt-3 space-y-2">
+                          @for (toolCall of message.toolCalls; track $index; let toolIndex = $index) {
+                            <div class="border border-gray-200 rounded bg-gray-50">
+                              <button
+                                (click)="toggleToolCall(messageIndex, toolIndex)"
+                                class="w-full flex items-center justify-between p-2 text-sm hover:bg-gray-100 rounded"
+                              >
+                                <div class="flex items-center gap-2">
+                                  <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                  </svg>
+                                  <span class="font-medium text-gray-700">{{ toolCall.toolName }}</span>
+                                  @if (!toolCall.output) {
+                                    <span class="text-xs text-gray-500">(running...)</span>
+                                  }
+                                </div>
+                                <svg
+                                  class="w-4 h-4 text-gray-500 transition-transform"
+                                  [class.rotate-180]="isToolCallExpanded(messageIndex, toolIndex)"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                              </button>
+
+                              @if (isToolCallExpanded(messageIndex, toolIndex)) {
+                                <div class="px-3 pb-3 space-y-2">
+                                  @if (hasInputParams(toolCall.input)) {
+                                    <div>
+                                      <div class="text-xs font-semibold text-gray-600 mb-1">Input:</div>
+                                      <pre class="text-xs bg-white border border-gray-200 rounded p-2 overflow-x-auto">{{ toolCall.input | json }}</pre>
+                                    </div>
+                                  }
+                                  @if (toolCall.output) {
+                                    <div>
+                                      <div class="text-xs font-semibold text-gray-600 mb-1">Output:</div>
+                                      <pre class="text-xs bg-white border border-gray-200 rounded p-2 overflow-x-auto max-h-60 overflow-y-auto">{{ toolCall.output | json }}</pre>
+                                    </div>
+                                  }
+                                </div>
+                              }
+                            </div>
+                          }
+                        </div>
+                      }
                     </div>
                   </div>
                 </div>
@@ -159,6 +213,7 @@ export class ChatComponent {
   inputMessage = signal<string>('');
   messageContainer = viewChild<ElementRef>('messageContainer');
   bundleId = signal<string>('');
+  expandedToolCalls = signal<Set<string>>(new Set());
 
   constructor() {
     // Get bundleId from route params
@@ -198,6 +253,26 @@ export class ChatComponent {
 
   clearChat(): void {
     this.chatService.clearMessages();
+  }
+
+  toggleToolCall(messageIndex: number, toolCallIndex: number): void {
+    const key = `${messageIndex}-${toolCallIndex}`;
+    const expanded = this.expandedToolCalls();
+    const newExpanded = new Set(expanded);
+    if (newExpanded.has(key)) {
+      newExpanded.delete(key);
+    } else {
+      newExpanded.add(key);
+    }
+    this.expandedToolCalls.set(newExpanded);
+  }
+
+  isToolCallExpanded(messageIndex: number, toolCallIndex: number): boolean {
+    return this.expandedToolCalls().has(`${messageIndex}-${toolCallIndex}`);
+  }
+
+  hasInputParams(input: any): boolean {
+    return input && typeof input === 'object' && Object.keys(input).length > 0;
   }
 
   private scrollToBottom(): void {

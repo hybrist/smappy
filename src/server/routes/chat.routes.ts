@@ -136,13 +136,13 @@ router.post('/', async (req, res) => {
 
           case 'tool-call':
             res.write(
-              `data: ${JSON.stringify({ type: 'tool-call', toolName: part.toolName, input: part.input })}\n\n`,
+              `data: ${JSON.stringify({ type: 'tool-call', toolCallId: part.toolCallId, toolName: part.toolName, input: part.input })}\n\n`,
             );
             break;
 
           case 'tool-result':
             res.write(
-              `data: ${JSON.stringify({ type: 'tool-result', toolName: part.toolName, output: part.output })}\n\n`,
+              `data: ${JSON.stringify({ type: 'tool-result', toolCallId: part.toolCallId, toolName: part.toolName, output: part.output })}\n\n`,
             );
             break;
 

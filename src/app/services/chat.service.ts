@@ -1,9 +1,17 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 
+export interface ToolCall {
+  toolCallId: string;
+  toolName: string;
+  input: any;
+  output?: any;
+}
+
 export interface Message {
   role: 'user' | 'assistant';
   content: string;
+  toolCalls?: ToolCall[];
 }
 
 /**
@@ -119,18 +127,38 @@ export class ChatService {
                 return updated;
               });
             } else if (data.type === 'tool-call') {
-              // Tool is being called - optionally show this to user
+              // Tool is being called - add to toolCalls
               this.messages.update((messages) => {
                 const updated = [...messages];
                 const lastMessage = updated[updated.length - 1];
                 if (lastMessage && lastMessage.role === 'assistant') {
-                  lastMessage.content += `\n\n_[Analyzing bundle...]_\n\n`;
+                  if (!lastMessage.toolCalls) {
+                    lastMessage.toolCalls = [];
+                  }
+                  lastMessage.toolCalls.push({
+                    toolCallId: data.toolCallId,
+                    toolName: data.toolName,
+                    input: data.input,
+                  });
                 }
                 return updated;
               });
             } else if (data.type === 'tool-result') {
-              // Tool result received - LLM will use this to generate response
-              console.debug(`Tool result: ${data.toolName}`, data.output);
+              // Tool result received - update the corresponding tool call by ID
+              this.messages.update((messages) => {
+                const updated = [...messages];
+                const lastMessage = updated[updated.length - 1];
+                if (lastMessage && lastMessage.role === 'assistant' && lastMessage.toolCalls) {
+                  // Find the tool call with matching ID
+                  const toolCall = lastMessage.toolCalls.find(
+                    (tc) => tc.toolCallId === data.toolCallId
+                  );
+                  if (toolCall) {
+                    toolCall.output = data.output;
+                  }
+                }
+                return updated;
+              });
             } else if (data.type === 'error') {
               this.error.set(data.error || 'An error occurred');
             }
