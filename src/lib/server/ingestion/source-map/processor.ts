@@ -187,6 +187,8 @@ export function computeSymbolFragments(
 ): SymbolFragment | null {
   try {
     // Find the mapping closest to the symbol's start position
+    // Weight line differences more heavily than column differences
+    // since line proximity is typically more important for symbol matching
     let closestMapping: PositionMapping | null = null;
     let minDistance = Infinity;
 
@@ -195,8 +197,9 @@ export function computeSymbolFragments(
         continue;
       }
 
+      // Weighted distance: prioritize line proximity (10x weight)
       const distance =
-        Math.abs(mapping.originalLine - symbol.location.start.line) +
+        Math.abs(mapping.originalLine - symbol.location.start.line) * 10 +
         Math.abs(mapping.originalColumn - symbol.location.start.column);
 
       if (distance < minDistance) {
@@ -209,9 +212,8 @@ export function computeSymbolFragments(
       return null;
     }
 
-    // For now, we'll use placeholder byte calculations
-    // In a real implementation, we would need the actual bundle content
-    // to calculate accurate byte offsets
+    // For symbols without bundle content, use placeholder values
+    // Use -1 to explicitly indicate unset/invalid byte data
     const fragment: SymbolFragment = {
       name: symbol.name,
       start: {
@@ -222,9 +224,9 @@ export function computeSymbolFragments(
         line: closestMapping.generatedLine,
         column: closestMapping.generatedColumn + symbol.name.length,
       },
-      byteStart: 0, // Placeholder - would need bundle content
-      byteEnd: 0, // Placeholder - would need bundle content
-      size: 0, // Placeholder - would need bundle content
+      byteStart: -1, // Indicates invalid/unset - use computeSymbolFragmentsWithContent for accurate values
+      byteEnd: -1, // Indicates invalid/unset - use computeSymbolFragmentsWithContent for accurate values
+      size: 0, // Use computeSymbolFragmentsWithContent for accurate byte size
       source: closestMapping.source,
     };
 

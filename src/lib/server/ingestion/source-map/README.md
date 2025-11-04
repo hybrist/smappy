@@ -16,11 +16,13 @@ This module provides comprehensive source map parsing and position mapping funct
 ### `parseSourceMap(content: string): SourceMap`
 
 Parses a source map from a string. Handles:
+
 - Regular JSON source maps
 - Inline base64-encoded data URLs: `data:application/json;charset=utf-8;base64,...`
 - URL-encoded data URLs: `data:application/json;charset=utf-8,...`
 
 **Example:**
+
 ```typescript
 import { parseSourceMap } from './processor.js';
 
@@ -36,13 +38,16 @@ const inlineMap = parseSourceMap('data:application/json;charset=utf-8;base64,eyJ
 Creates position mappings from bundle content and source map.
 
 **Example:**
+
 ```typescript
 import { mapBundleToSource } from './processor.js';
 
 const mappings = mapBundleToSource(bundleContent, sourceMap);
-mappings.forEach(mapping => {
-  console.log(`Generated: ${mapping.generatedLine}:${mapping.generatedColumn} -> ` +
-              `Original: ${mapping.originalLine}:${mapping.originalColumn} in ${mapping.source}`);
+mappings.forEach((mapping) => {
+  console.log(
+    `Generated: ${mapping.generatedLine}:${mapping.generatedColumn} -> ` +
+      `Original: ${mapping.originalLine}:${mapping.originalColumn} in ${mapping.source}`,
+  );
 });
 ```
 
@@ -51,6 +56,7 @@ mappings.forEach(mapping => {
 Computes byte ranges for symbols based on position mappings.
 
 **Example:**
+
 ```typescript
 import { computeSymbolFragments } from './processor.js';
 
@@ -58,8 +64,8 @@ const symbol = {
   name: 'myFunction',
   location: {
     start: { line: 10, column: 0 },
-    end: { line: 15, column: 1 }
-  }
+    end: { line: 15, column: 1 },
+  },
 };
 
 const fragment = computeSymbolFragments(symbol, mappings);
@@ -73,6 +79,7 @@ if (fragment) {
 Enhanced version that calculates accurate byte offsets using bundle content.
 
 **Example:**
+
 ```typescript
 import { computeSymbolFragmentsWithContent } from './processor.js';
 
@@ -88,28 +95,30 @@ if (fragment) {
 Loads and parses an external .map file.
 
 **Example:**
+
 ```typescript
 import { loadExternalSourceMap } from './processor.js';
 import { readFile } from 'fs/promises';
 
-const sourceMap = await loadExternalSourceMap(
-  './dist/bundle.js.map',
-  (path) => readFile(path, 'utf-8')
+const sourceMap = await loadExternalSourceMap('./dist/bundle.js.map', (path) =>
+  readFile(path, 'utf-8'),
 );
 ```
 
 ## Performance Characteristics
 
+**Note:** The following performance benchmarks are indicative estimates based on typical usage patterns. Actual performance will vary depending on hardware, source map complexity, and system load.
+
 ### Parsing Performance
 
-| Source Map Size | Parse Time | Memory Usage |
-|----------------|------------|--------------|
-| Small (< 100 KB) | < 5ms | ~1 MB |
-| Medium (100-500 KB) | 10-30ms | ~5 MB |
-| Large (500 KB - 2 MB) | 50-150ms | ~15 MB |
-| Very Large (> 2 MB) | 200-500ms | ~30 MB |
+| Source Map Size       | Parse Time (est.) | Memory Usage (est.) |
+| --------------------- | ----------------- | ------------------- |
+| Small (< 100 KB)      | < 5ms             | ~1 MB               |
+| Medium (100-500 KB)   | 10-30ms           | ~5 MB               |
+| Large (500 KB - 2 MB) | 50-150ms          | ~15 MB              |
+| Very Large (> 2 MB)   | 200-500ms         | ~30 MB              |
 
-**Note:** Times measured on a modern CPU (2020+). Actual performance may vary.
+**Note:** Times estimated on a modern CPU (2020+). Run your own benchmarks for accurate measurements in your environment.
 
 ### Position Mapping Performance
 
@@ -160,6 +169,7 @@ try {
 ```
 
 Common errors:
+
 - `Invalid source map version`: Only version 3 is supported
 - `Source map must have a "sources" array`: Missing or invalid sources field
 - `Source map must have a "mappings" string`: Missing or invalid mappings field
@@ -169,6 +179,7 @@ Common errors:
 ## Testing
 
 The module includes comprehensive tests covering:
+
 - ✅ Valid and invalid source map parsing
 - ✅ Inline source maps (base64 and URL-encoded)
 - ✅ Source maps from webpack, vite, and rollup
@@ -180,6 +191,7 @@ The module includes comprehensive tests covering:
 - ✅ Error handling for malformed inputs
 
 Run tests with:
+
 ```bash
 npm test
 ```
@@ -191,6 +203,7 @@ While this module is designed for server-side use (Node.js), the `@jridgewell/so
 ## Contributing
 
 When adding new features:
+
 1. Add comprehensive tests
 2. Update this README with new API documentation
 3. Document performance characteristics

@@ -324,6 +324,10 @@ describe('Source Map Processor', () => {
       expect(fragment?.source).toBe('test.js');
       expect(fragment?.start.line).toBe(1);
       expect(fragment?.start.column).toBe(0);
+      // Without bundle content, byte offsets should be -1 to indicate invalid/unset
+      expect(fragment?.byteStart).toBe(-1);
+      expect(fragment?.byteEnd).toBe(-1);
+      expect(fragment?.size).toBe(0);
     });
 
     it('should return null when no matching mapping is found', () => {
