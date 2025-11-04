@@ -24,7 +24,7 @@ export function extractSymbols(code: string): Symbol[] {
   const result = extractSymbolsImpl(code);
   return result.symbols.map((s) => ({
     name: s.name,
-    type: s.type,
+    type: s.type === 'const' || s.type === 'let' ? 'variable' : s.type,
     location: s.location,
     size: s.size,
   }));
@@ -41,7 +41,7 @@ export function analyzeFunctions(code: string): Symbol[] {
   const symbols = analyzeFunctionsImpl(code);
   return symbols.map((s) => ({
     name: s.name,
-    type: s.type,
+    type: s.type === 'const' || s.type === 'let' ? 'variable' : s.type,
     location: s.location,
     size: s.size,
   }));
@@ -58,7 +58,7 @@ export function analyzeClasses(code: string): Symbol[] {
   const symbols = analyzeClassesImpl(code);
   return symbols.map((s) => ({
     name: s.name,
-    type: s.type,
+    type: s.type === 'const' || s.type === 'let' ? 'variable' : s.type,
     location: s.location,
     size: s.size,
   }));

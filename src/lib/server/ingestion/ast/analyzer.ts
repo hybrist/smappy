@@ -5,13 +5,16 @@
  */
 
 import { parse, type ParseResult } from '@babel/parser';
-import traverseModule, { type NodePath } from '@babel/traverse';
-import type * as t from '@babel/types';
+import traverseDefault, { type NodePath } from '@babel/traverse';
+import * as t from '@babel/types';
 import { createHash } from 'node:crypto';
 import type { ParsedSymbol } from '../types/index.js';
 
 // Handle both default and named exports from @babel/traverse
-const traverse = typeof traverseModule === 'function' ? traverseModule : traverseModule.default;
+const traverse =
+  typeof traverseDefault === 'function'
+    ? traverseDefault
+    : (traverseDefault as { default: typeof traverseDefault }).default;
 
 /**
  * Symbol with export information
@@ -90,12 +93,12 @@ export function extractSymbols(code: string, options: AnalyzerOptions = {}): Ana
 
     // First pass: collect export information
     traverse(ast, {
-      ExportNamedDeclaration(path) {
+      ExportNamedDeclaration(path: NodePath<t.ExportNamedDeclaration>) {
         if (path.node.declaration) {
           // export const x = 1; export function f() {}
           const declaration = path.node.declaration;
           if (declaration.type === 'VariableDeclaration') {
-            declaration.declarations.forEach((decl) => {
+            declaration.declarations.forEach((decl: t.VariableDeclarator) => {
               if (decl.id.type === 'Identifier') {
                 exportMap.set(decl.id.name, { type: 'named' });
               }
@@ -110,18 +113,20 @@ export function extractSymbols(code: string, options: AnalyzerOptions = {}): Ana
           }
         } else if (path.node.specifiers) {
           // export { x, y as z }
-          path.node.specifiers.forEach((spec) => {
-            if (spec.type === 'ExportSpecifier') {
-              exportMap.set(spec.local.name, {
-                type: 'named',
-                exportedAs: spec.exported.type === 'Identifier' ? spec.exported.name : undefined,
-              });
-            }
-          });
+          path.node.specifiers.forEach(
+            (spec: t.ExportSpecifier | t.ExportDefaultSpecifier | t.ExportNamespaceSpecifier) => {
+              if (spec.type === 'ExportSpecifier') {
+                exportMap.set(spec.local.name, {
+                  type: 'named',
+                  exportedAs: spec.exported.type === 'Identifier' ? spec.exported.name : undefined,
+                });
+              }
+            },
+          );
         }
       },
 
-      ExportDefaultDeclaration(path) {
+      ExportDefaultDeclaration(path: NodePath<t.ExportDefaultDeclaration>) {
         const declaration = path.node.declaration;
         if (
           (declaration.type === 'FunctionDeclaration' || declaration.type === 'ClassDeclaration') &&
@@ -140,7 +145,7 @@ export function extractSymbols(code: string, options: AnalyzerOptions = {}): Ana
     // Second pass: extract symbols
     traverse(ast, {
       // Function declarations: function foo() {}
-      FunctionDeclaration(path) {
+      FunctionDeclaration(path: NodePath<t.FunctionDeclaration>) {
         if (path.node.id && (!isNested(path) || includeNested)) {
           const scope = determineScope(path);
           const symbol = createFunctionSymbol(path.node, path, scope, exportMap);
@@ -149,10 +154,10 @@ export function extractSymbols(code: string, options: AnalyzerOptions = {}): Ana
       },
 
       // Variable declarations: const x = 1, let y = 2, var z = 3
-      VariableDeclaration(path) {
+      VariableDeclaration(path: NodePath<t.VariableDeclaration>) {
         // Only top-level or class-level variables
         if (!isNested(path) || includeNested) {
-          path.node.declarations.forEach((declarator) => {
+          path.node.declarations.forEach((declarator: t.VariableDeclarator) => {
             if (declarator.id.type === 'Identifier') {
               const scope = determineScope(path);
               const symbol = createVariableSymbol(
@@ -169,7 +174,7 @@ export function extractSymbols(code: string, options: AnalyzerOptions = {}): Ana
       },
 
       // Class declarations: class Foo {}
-      ClassDeclaration(path) {
+      ClassDeclaration(path: NodePath<t.ClassDeclaration>) {
         if (path.node.id) {
           const symbol = createClassSymbol(path.node, path, 'module', exportMap);
           if (symbol) symbols.push(symbol);
@@ -270,7 +275,7 @@ function createFunctionSymbol(
  */
 function createVariableSymbol(
   node: t.VariableDeclarator,
-  kind: 'const' | 'let' | 'var',
+  kind: t.VariableDeclaration['kind'],
   path: NodePath,
   scope: 'global' | 'module' | 'function' | 'block',
   exportMap: Map<string, { type: 'named' | 'default' | 'namespace'; exportedAs?: string }>,
@@ -341,40 +346,52 @@ function createClassSymbol(
 function extractClassMethods(node: t.ClassDeclaration, _path: NodePath): SymbolWithExport[] {
   const methods: SymbolWithExport[] = [];
 
-  node.body.body.forEach((member) => {
-    if (
-      (member.type === 'ClassMethod' || member.type === 'ClassPrivateMethod') &&
-      member.kind === 'method' &&
-      member.loc
-    ) {
-      const isPrivate = member.type === 'ClassPrivateMethod';
-      const isStatic = 'static' in member && member.static;
+  node.body.body.forEach(
+    (
+      member:
+        | t.ClassMethod
+        | t.ClassPrivateMethod
+        | t.ClassProperty
+        | t.ClassPrivateProperty
+        | t.ClassAccessorProperty
+        | t.TSDeclareMethod
+        | t.TSIndexSignature
+        | t.StaticBlock,
+    ) => {
+      if (
+        (member.type === 'ClassMethod' || member.type === 'ClassPrivateMethod') &&
+        member.kind === 'method' &&
+        member.loc
+      ) {
+        const isPrivate = member.type === 'ClassPrivateMethod';
+        const isStatic = 'static' in member && member.static;
 
-      let name: string;
-      if (isPrivate && member.key.type === 'PrivateName') {
-        name = `#${member.key.id.name}`;
-      } else if (member.key.type === 'Identifier') {
-        name = member.key.name;
-      } else {
-        return; // Skip computed property names
+        let name: string;
+        if (isPrivate && member.key.type === 'PrivateName') {
+          name = `#${member.key.id.name}`;
+        } else if (member.key.type === 'Identifier') {
+          name = member.key.name;
+        } else {
+          return; // Skip computed property names
+        }
+
+        // Add prefix to indicate method type
+        const prefix = isStatic ? 'static ' : isPrivate ? 'private ' : '';
+        const fullName = node.id ? `${node.id.name}.${prefix}${name}` : name;
+
+        methods.push({
+          name: fullName,
+          type: 'function',
+          location: {
+            start: { line: member.loc.start.line, column: member.loc.start.column },
+            end: { line: member.loc.end.line, column: member.loc.end.column },
+          },
+          size: estimateSize(member),
+          scope: 'function',
+        });
       }
-
-      // Add prefix to indicate method type
-      const prefix = isStatic ? 'static ' : isPrivate ? 'private ' : '';
-      const fullName = node.id ? `${node.id.name}.${prefix}${name}` : name;
-
-      methods.push({
-        name: fullName,
-        type: 'function',
-        location: {
-          start: { line: member.loc.start.line, column: member.loc.start.column },
-          end: { line: member.loc.end.line, column: member.loc.end.column },
-        },
-        size: estimateSize(member),
-        scope: 'function',
-      });
-    }
-  });
+    },
+  );
 
   return methods;
 }
