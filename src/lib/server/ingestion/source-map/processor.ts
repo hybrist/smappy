@@ -4,6 +4,7 @@
  */
 
 import { SourceMapConsumer } from '@jridgewell/source-map';
+import type { SourceMapInput } from '@jridgewell/source-map';
 import type { SourceMap } from '../types/index.js';
 
 /**
@@ -116,7 +117,9 @@ export function parseSourceMap(content: string): SourceMap {
  */
 export function mapBundleToSource(bundleContent: string, sourceMap: SourceMap): PositionMapping[] {
   try {
-    const consumer = new SourceMapConsumer(sourceMap);
+    // Cast to SourceMapInput to work around type incompatibility between our SourceMap type
+    // and the @jridgewell/source-map SourceMapInput type
+    const consumer = new SourceMapConsumer(sourceMap as SourceMapInput);
     const mappings: PositionMapping[] = [];
 
     // Use eachMapping to iterate through all mappings

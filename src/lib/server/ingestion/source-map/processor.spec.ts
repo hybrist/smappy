@@ -251,7 +251,7 @@ describe('Source Map Processor', () => {
       const sourceMap: SourceMap = {
         version: 3,
         sources: [],
-        sourcesContent: null,
+        sourcesContent: undefined,
         mappings: '',
         names: [],
       };
