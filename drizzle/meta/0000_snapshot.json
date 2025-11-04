@@ -1,0 +1,834 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "5e35c807-40c3-4e37-97aa-c22add181c6d",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "AnalysisRun": {
+      "name": "AnalysisRun",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "project_name": {
+          "name": "project_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(datetime('now'))"
+        },
+        "bundler": {
+          "name": "bundler",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "Bundle": {
+      "name": "Bundle",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "analysis_run_id": {
+          "name": "analysis_run_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "file_name": {
+          "name": "file_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "file_type": {
+          "name": "file_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "size": {
+          "name": "size",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "gzip_size": {
+          "name": "gzip_size",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_bundle_analysis_run": {
+          "name": "idx_bundle_analysis_run",
+          "columns": [
+            "analysis_run_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "Bundle_analysis_run_id_AnalysisRun_id_fk": {
+          "name": "Bundle_analysis_run_id_AnalysisRun_id_fk",
+          "tableFrom": "Bundle",
+          "tableTo": "AnalysisRun",
+          "columnsFrom": [
+            "analysis_run_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "Chunk": {
+      "name": "Chunk",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "analysis_run_id": {
+          "name": "analysis_run_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "total_size": {
+          "name": "total_size",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "is_entry": {
+          "name": "is_entry",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "is_async": {
+          "name": "is_async",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        }
+      },
+      "indexes": {
+        "idx_chunk_analysis_run": {
+          "name": "idx_chunk_analysis_run",
+          "columns": [
+            "analysis_run_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "Chunk_analysis_run_id_AnalysisRun_id_fk": {
+          "name": "Chunk_analysis_run_id_AnalysisRun_id_fk",
+          "tableFrom": "Chunk",
+          "tableTo": "AnalysisRun",
+          "columnsFrom": [
+            "analysis_run_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "Chunk_Module": {
+      "name": "Chunk_Module",
+      "columns": {
+        "chunk_id": {
+          "name": "chunk_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "module_id": {
+          "name": "module_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Chunk_Module_chunk_id_Chunk_id_fk": {
+          "name": "Chunk_Module_chunk_id_Chunk_id_fk",
+          "tableFrom": "Chunk_Module",
+          "tableTo": "Chunk",
+          "columnsFrom": [
+            "chunk_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "Chunk_Module_module_id_Module_id_fk": {
+          "name": "Chunk_Module_module_id_Module_id_fk",
+          "tableFrom": "Chunk_Module",
+          "tableTo": "Module",
+          "columnsFrom": [
+            "module_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Chunk_Module_chunk_id_module_id_pk": {
+          "columns": [
+            "chunk_id",
+            "module_id"
+          ],
+          "name": "Chunk_Module_chunk_id_module_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "Dependency": {
+      "name": "Dependency",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "analysis_run_id": {
+          "name": "analysis_run_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "importer_module_id": {
+          "name": "importer_module_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "imported_module_id": {
+          "name": "imported_module_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "import_type": {
+          "name": "import_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "imported_symbols": {
+          "name": "imported_symbols",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_dependency_analysis_run": {
+          "name": "idx_dependency_analysis_run",
+          "columns": [
+            "analysis_run_id"
+          ],
+          "isUnique": false
+        },
+        "idx_dependency_importer": {
+          "name": "idx_dependency_importer",
+          "columns": [
+            "importer_module_id"
+          ],
+          "isUnique": false
+        },
+        "idx_dependency_imported": {
+          "name": "idx_dependency_imported",
+          "columns": [
+            "imported_module_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "Dependency_analysis_run_id_AnalysisRun_id_fk": {
+          "name": "Dependency_analysis_run_id_AnalysisRun_id_fk",
+          "tableFrom": "Dependency",
+          "tableTo": "AnalysisRun",
+          "columnsFrom": [
+            "analysis_run_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "Dependency_importer_module_id_Module_id_fk": {
+          "name": "Dependency_importer_module_id_Module_id_fk",
+          "tableFrom": "Dependency",
+          "tableTo": "Module",
+          "columnsFrom": [
+            "importer_module_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "Dependency_imported_module_id_Module_id_fk": {
+          "name": "Dependency_imported_module_id_Module_id_fk",
+          "tableFrom": "Dependency",
+          "tableTo": "Module",
+          "columnsFrom": [
+            "imported_module_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "Module": {
+      "name": "Module",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "analysis_run_id": {
+          "name": "analysis_run_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "file_path": {
+          "name": "file_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "file_type": {
+          "name": "file_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "original_size": {
+          "name": "original_size",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "bundled_size": {
+          "name": "bundled_size",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "is_third_party": {
+          "name": "is_third_party",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "package_name": {
+          "name": "package_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "package_version": {
+          "name": "package_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "exports": {
+          "name": "exports",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "used_exports": {
+          "name": "used_exports",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_module_analysis_run": {
+          "name": "idx_module_analysis_run",
+          "columns": [
+            "analysis_run_id"
+          ],
+          "isUnique": false
+        },
+        "idx_module_path_run": {
+          "name": "idx_module_path_run",
+          "columns": [
+            "analysis_run_id",
+            "file_path"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "Module_analysis_run_id_AnalysisRun_id_fk": {
+          "name": "Module_analysis_run_id_AnalysisRun_id_fk",
+          "tableFrom": "Module",
+          "tableTo": "AnalysisRun",
+          "columnsFrom": [
+            "analysis_run_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "SourceMapEntry": {
+      "name": "SourceMapEntry",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "bundle_id": {
+          "name": "bundle_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "symbol_id": {
+          "name": "symbol_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "byte_length": {
+          "name": "byte_length",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_sourcemap_symbol": {
+          "name": "idx_sourcemap_symbol",
+          "columns": [
+            "symbol_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "SourceMapEntry_bundle_id_Bundle_id_fk": {
+          "name": "SourceMapEntry_bundle_id_Bundle_id_fk",
+          "tableFrom": "SourceMapEntry",
+          "tableTo": "Bundle",
+          "columnsFrom": [
+            "bundle_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "SourceMapEntry_symbol_id_Symbol_id_fk": {
+          "name": "SourceMapEntry_symbol_id_Symbol_id_fk",
+          "tableFrom": "SourceMapEntry",
+          "tableTo": "Symbol",
+          "columnsFrom": [
+            "symbol_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "Suggestion": {
+      "name": "Suggestion",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "analysis_run_id": {
+          "name": "analysis_run_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "severity": {
+          "name": "severity",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_suggestion_analysis_run": {
+          "name": "idx_suggestion_analysis_run",
+          "columns": [
+            "analysis_run_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "Suggestion_analysis_run_id_AnalysisRun_id_fk": {
+          "name": "Suggestion_analysis_run_id_AnalysisRun_id_fk",
+          "tableFrom": "Suggestion",
+          "tableTo": "AnalysisRun",
+          "columnsFrom": [
+            "analysis_run_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "Suggestion_Link": {
+      "name": "Suggestion_Link",
+      "columns": {
+        "suggestion_id": {
+          "name": "suggestion_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "entity_type": {
+          "name": "entity_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "entity_id": {
+          "name": "entity_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_suggestion_link_entity": {
+          "name": "idx_suggestion_link_entity",
+          "columns": [
+            "entity_type",
+            "entity_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "Suggestion_Link_suggestion_id_Suggestion_id_fk": {
+          "name": "Suggestion_Link_suggestion_id_Suggestion_id_fk",
+          "tableFrom": "Suggestion_Link",
+          "tableTo": "Suggestion",
+          "columnsFrom": [
+            "suggestion_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "Suggestion_Link_suggestion_id_entity_type_entity_id_pk": {
+          "columns": [
+            "suggestion_id",
+            "entity_type",
+            "entity_id"
+          ],
+          "name": "Suggestion_Link_suggestion_id_entity_type_entity_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "Symbol": {
+      "name": "Symbol",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "module_id": {
+          "name": "module_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_start_line": {
+          "name": "source_start_line",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_start_col": {
+          "name": "source_start_col",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_end_line": {
+          "name": "source_end_line",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_end_col": {
+          "name": "source_end_col",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "ast_hash": {
+          "name": "ast_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "is_exported": {
+          "name": "is_exported",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "computed_bundled_size": {
+          "name": "computed_bundled_size",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "computed_gzip_size": {
+          "name": "computed_gzip_size",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        }
+      },
+      "indexes": {
+        "idx_symbol_analysis_run": {
+          "name": "idx_symbol_analysis_run",
+          "columns": [
+            "module_id"
+          ],
+          "isUnique": false
+        },
+        "idx_symbol_ast_hash": {
+          "name": "idx_symbol_ast_hash",
+          "columns": [
+            "ast_hash"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "Symbol_module_id_Module_id_fk": {
+          "name": "Symbol_module_id_Module_id_fk",
+          "tableFrom": "Symbol",
+          "tableTo": "Module",
+          "columnsFrom": [
+            "module_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}
