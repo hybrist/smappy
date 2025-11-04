@@ -45,8 +45,8 @@ export async function ingestBundle(bundle: Bundle): Promise<AnalysisResult> {
 
 	// Check for incremental analysis
 	const previousResult = await getPreviousAnalysisResult(bundle.id);
-	if (canPerformIncrementalAnalysis(previousResult, result)) {
-		const diff = compareAnalysisResults(previousResult!, result);
+	if (previousResult !== null && canPerformIncrementalAnalysis(previousResult, result)) {
+		const diff = compareAnalysisResults(previousResult, result);
 		console.log('Incremental analysis diff:', diff);
 	}
 

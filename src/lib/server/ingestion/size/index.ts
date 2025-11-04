@@ -9,8 +9,9 @@
  * @returns Size in bytes after gzip compression
  */
 export function calculateGzipSize(content: string): number {
-	// Placeholder implementation
-	// Will use pako for gzip compression
+	// Placeholder implementation - will properly implement gzip compression using pako
+	// For now, return the raw size as a conservative estimate
+	// TODO: Implement using pako.gzip()
 	return Buffer.byteLength(content, 'utf-8');
 }
 
