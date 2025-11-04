@@ -7,7 +7,7 @@ on:
     branches: [svelte]
 
 jobs:
-  lint-and-format:
+  lint:
     name: Lint and Format Check
     runs-on: ubuntu-latest
     steps:
@@ -23,8 +23,27 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Check formatting and linting
-        run: pnpm run lint
+      - name: Check linting
+        run: pnpm run lint:eslint
+
+  format:
+    name: Lint and Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check formatting
+        run: pnpm run format:check
 
   test:
     name: Unit Tests
