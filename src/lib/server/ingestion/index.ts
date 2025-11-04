@@ -59,4 +59,33 @@ export async function ingestBundle(bundle: Bundle): Promise<AnalysisResult> {
 /**
  * Re-export types for convenience
  */
-export type { Bundle, AnalysisResult, Symbol, DependencyNode, SourceMap } from './types/index.js';
+export type {
+  // Legacy types
+  Bundle,
+  AnalysisResult,
+  Symbol,
+  DependencyNode,
+  SourceMap,
+  // Input types
+  BundleInput,
+  ChunkInput,
+  ModuleInput,
+  IngestionOptions,
+  // Internal types
+  ParsedSymbol,
+  ParsedDependency,
+  SizeInfo,
+} from './types/index.js';
+
+/**
+ * Re-export test helpers for convenience
+ */
+export {
+  createMockBundleInput,
+  createMockChunkInput,
+  createMockModuleInput,
+  createMockIngestionOptions,
+  createMockParsedSymbol,
+  createMockParsedDependency,
+  createMockSizeInfo,
+} from './types/index.js';
