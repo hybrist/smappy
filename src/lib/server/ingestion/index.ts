@@ -17,43 +17,43 @@ import { writeAnalysisResult, getPreviousAnalysisResult } from './db/index.js';
  * @returns Promise that resolves to analysis result
  */
 export async function ingestBundle(bundle: Bundle): Promise<AnalysisResult> {
-	// Parse source map if available
-	let sourceMap = null;
-	if (bundle.sourceMap) {
-		sourceMap = parseSourceMap(bundle.sourceMap);
-		if (!validateSourceMap(sourceMap)) {
-			console.warn('Invalid source map for bundle:', bundle.id);
-		}
-	}
+  // Parse source map if available
+  let sourceMap = null;
+  if (bundle.sourceMap) {
+    sourceMap = parseSourceMap(bundle.sourceMap);
+    if (!validateSourceMap(sourceMap)) {
+      console.warn('Invalid source map for bundle:', bundle.id);
+    }
+  }
 
-	// Extract symbols from code
-	const symbols = extractSymbols(bundle.content);
+  // Extract symbols from code
+  const symbols = extractSymbols(bundle.content);
 
-	// Build dependency graph
-	const dependencyGraph = buildDependencyGraph(new Map());
+  // Build dependency graph
+  const dependencyGraph = buildDependencyGraph(new Map());
 
-	// Calculate sizes
-	const sizes = calculateBundleSizes(bundle.content);
+  // Calculate sizes
+  const sizes = calculateBundleSizes(bundle.content);
 
-	// Create analysis result
-	const result: AnalysisResult = {
-		bundleId: bundle.id,
-		symbols,
-		dependencyGraph,
-		sizes
-	};
+  // Create analysis result
+  const result: AnalysisResult = {
+    bundleId: bundle.id,
+    symbols,
+    dependencyGraph,
+    sizes,
+  };
 
-	// Check for incremental analysis
-	const previousResult = await getPreviousAnalysisResult(bundle.id);
-	if (previousResult !== null && canPerformIncrementalAnalysis(previousResult, result)) {
-		const diff = compareAnalysisResults(previousResult, result);
-		console.log('Incremental analysis diff:', diff);
-	}
+  // Check for incremental analysis
+  const previousResult = await getPreviousAnalysisResult(bundle.id);
+  if (previousResult !== null && canPerformIncrementalAnalysis(previousResult, result)) {
+    const diff = compareAnalysisResults(previousResult, result);
+    console.log('Incremental analysis diff:', diff);
+  }
 
-	// Persist results
-	await writeAnalysisResult(result);
+  // Persist results
+  await writeAnalysisResult(result);
 
-	return result;
+  return result;
 }
 
 /**

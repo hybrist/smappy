@@ -11,14 +11,14 @@ import type { SourceMap } from '../types/index.js';
  * @returns Parsed source map object
  */
 export function parseSourceMap(sourceMapContent: string): SourceMap {
-	const parsed = JSON.parse(sourceMapContent);
-	return {
-		version: parsed.version,
-		sources: parsed.sources || [],
-		sourcesContent: parsed.sourcesContent,
-		mappings: parsed.mappings,
-		names: parsed.names
-	};
+  const parsed = JSON.parse(sourceMapContent);
+  return {
+    version: parsed.version,
+    sources: parsed.sources || [],
+    sourcesContent: parsed.sourcesContent,
+    mappings: parsed.mappings,
+    names: parsed.names,
+  };
 }
 
 /**
@@ -27,9 +27,9 @@ export function parseSourceMap(sourceMapContent: string): SourceMap {
  * @returns true if valid, false otherwise
  */
 export function validateSourceMap(sourceMap: SourceMap): boolean {
-	return (
-		sourceMap.version === 3 &&
-		Array.isArray(sourceMap.sources) &&
-		typeof sourceMap.mappings === 'string'
-	);
+  return (
+    sourceMap.version === 3 &&
+    Array.isArray(sourceMap.sources) &&
+    typeof sourceMap.mappings === 'string'
+  );
 }

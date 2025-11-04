@@ -11,9 +11,9 @@ import type { Symbol } from '../types/index.js';
  * @returns Array of extracted symbols
  */
 export function extractSymbols(_code: string): Symbol[] {
-	// Placeholder implementation
-	// Will use @babel/parser and @babel/traverse
-	return [];
+  // Placeholder implementation
+  // Will use @babel/parser and @babel/traverse
+  return [];
 }
 
 /**
@@ -22,8 +22,8 @@ export function extractSymbols(_code: string): Symbol[] {
  * @returns Array of function symbols
  */
 export function analyzeFunctions(_code: string): Symbol[] {
-	// Placeholder implementation
-	return [];
+  // Placeholder implementation
+  return [];
 }
 
 /**
@@ -32,6 +32,6 @@ export function analyzeFunctions(_code: string): Symbol[] {
  * @returns Array of class symbols
  */
 export function analyzeClasses(_code: string): Symbol[] {
-	// Placeholder implementation
-	return [];
+  // Placeholder implementation
+  return [];
 }

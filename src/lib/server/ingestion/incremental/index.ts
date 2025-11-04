@@ -12,21 +12,21 @@ import type { AnalysisResult } from '../types/index.js';
  * @returns Diff object describing changes
  */
 export function compareAnalysisResults(
-	previous: AnalysisResult,
-	current: AnalysisResult
+  previous: AnalysisResult,
+  current: AnalysisResult,
 ): {
-	addedSymbols: string[];
-	removedSymbols: string[];
-	modifiedSymbols: string[];
-	sizeDelta: number;
+  addedSymbols: string[];
+  removedSymbols: string[];
+  modifiedSymbols: string[];
+  sizeDelta: number;
 } {
-	// Placeholder implementation
-	return {
-		addedSymbols: [],
-		removedSymbols: [],
-		modifiedSymbols: [],
-		sizeDelta: current.sizes.total - previous.sizes.total
-	};
+  // Placeholder implementation
+  return {
+    addedSymbols: [],
+    removedSymbols: [],
+    modifiedSymbols: [],
+    sizeDelta: current.sizes.total - previous.sizes.total,
+  };
 }
 
 /**
@@ -36,8 +36,8 @@ export function compareAnalysisResults(
  * @returns true if incremental analysis can be performed
  */
 export function canPerformIncrementalAnalysis(
-	previous: AnalysisResult | null,
-	current: AnalysisResult
+  previous: AnalysisResult | null,
+  current: AnalysisResult,
 ): boolean {
-	return previous !== null && previous.bundleId === current.bundleId;
+  return previous !== null && previous.bundleId === current.bundleId;
 }

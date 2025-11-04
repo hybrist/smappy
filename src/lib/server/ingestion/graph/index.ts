@@ -11,16 +11,16 @@ import type { DependencyNode } from '../types/index.js';
  * @returns Array of dependency nodes
  */
 export function buildDependencyGraph(modules: Map<string, string[]>): DependencyNode[] {
-	// Placeholder implementation
-	const nodes: DependencyNode[] = [];
-	for (const [id, dependencies] of modules.entries()) {
-		nodes.push({
-			id,
-			dependencies,
-			size: 0
-		});
-	}
-	return nodes;
+  // Placeholder implementation
+  const nodes: DependencyNode[] = [];
+  for (const [id, dependencies] of modules.entries()) {
+    nodes.push({
+      id,
+      dependencies,
+      size: 0,
+    });
+  }
+  return nodes;
 }
 
 /**
@@ -29,6 +29,6 @@ export function buildDependencyGraph(modules: Map<string, string[]>): Dependency
  * @returns Array of circular dependency chains
  */
 export function findCircularDependencies(_graph: DependencyNode[]): string[][] {
-	// Placeholder implementation
-	return [];
+  // Placeholder implementation
+  return [];
 }
