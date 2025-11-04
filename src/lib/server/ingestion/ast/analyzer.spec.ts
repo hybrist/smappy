@@ -13,7 +13,7 @@ describe('AST Analyzer', () => {
         }
       `;
       const result = extractSymbols(code);
-      
+
       expect(result.symbols).toHaveLength(1);
       expect(result.symbols[0].name).toBe('foo');
       expect(result.symbols[0].type).toBe('function');
@@ -27,7 +27,7 @@ describe('AST Analyzer', () => {
         };
       `;
       const result = extractSymbols(code);
-      
+
       expect(result.symbols).toHaveLength(1);
       expect(result.symbols[0].name).toBe('bar');
       expect(result.symbols[0].type).toBe('function');
@@ -40,7 +40,7 @@ describe('AST Analyzer', () => {
         };
       `;
       const result = extractSymbols(code);
-      
+
       expect(result.symbols).toHaveLength(1);
       expect(result.symbols[0].name).toBe('baz');
       expect(result.symbols[0].type).toBe('function');
@@ -54,7 +54,7 @@ describe('AST Analyzer', () => {
         }
       `;
       const result = extractSymbols(code);
-      
+
       const classSymbol = result.symbols.find((s) => s.type === 'class');
       expect(classSymbol).toBeDefined();
       expect(classSymbol?.name).toBe('MyClass');
@@ -66,7 +66,7 @@ describe('AST Analyzer', () => {
         const y = 2;
       `;
       const result = extractSymbols(code);
-      
+
       expect(result.symbols).toHaveLength(2);
       expect(result.symbols[0].type).toBe('const');
       expect(result.symbols[1].type).toBe('const');
@@ -78,7 +78,7 @@ describe('AST Analyzer', () => {
         let y = 2;
       `;
       const result = extractSymbols(code);
-      
+
       expect(result.symbols).toHaveLength(2);
       expect(result.symbols[0].type).toBe('let');
       expect(result.symbols[1].type).toBe('let');
@@ -90,7 +90,7 @@ describe('AST Analyzer', () => {
         var y = 2;
       `;
       const result = extractSymbols(code);
-      
+
       expect(result.symbols).toHaveLength(2);
       expect(result.symbols[0].type).toBe('variable');
       expect(result.symbols[1].type).toBe('variable');
@@ -99,7 +99,7 @@ describe('AST Analyzer', () => {
     it('should capture accurate position information', () => {
       const code = `function test() {\n  return 42;\n}`;
       const result = extractSymbols(code);
-      
+
       expect(result.symbols).toHaveLength(1);
       expect(result.symbols[0].location.start.line).toBe(1);
       expect(result.symbols[0].location.start.column).toBe(0);
@@ -116,7 +116,7 @@ describe('AST Analyzer', () => {
         }
       `;
       const result = extractSymbols(code, { includeNested: true });
-      
+
       const methods = result.symbols.filter((s) => s.name.includes('.'));
       expect(methods.length).toBeGreaterThanOrEqual(2);
     });
@@ -128,7 +128,7 @@ describe('AST Analyzer', () => {
         }
       `;
       const result = extractSymbols(code, { includeNested: true });
-      
+
       const staticMethod = result.symbols.find((s) => s.name.includes('static'));
       expect(staticMethod).toBeDefined();
     });
@@ -140,7 +140,7 @@ describe('AST Analyzer', () => {
         }
       `;
       const result = extractSymbols(code, { includeNested: true });
-      
+
       const privateMethod = result.symbols.find((s) => s.name.includes('private'));
       expect(privateMethod).toBeDefined();
     });
@@ -152,7 +152,7 @@ describe('AST Analyzer', () => {
         }
       `;
       const result = extractSymbols(code, { includeNested: false });
-      
+
       expect(result.symbols).toHaveLength(1);
       expect(result.symbols[0].name).toBe('outer');
     });
@@ -164,7 +164,7 @@ describe('AST Analyzer', () => {
         }
       `;
       const result = extractSymbols(code, { includeNested: true });
-      
+
       // Note: nested functions need special handling - currently not implemented
       // This test documents expected behavior
       expect(result.symbols.length).toBeGreaterThanOrEqual(1);
@@ -178,10 +178,10 @@ describe('AST Analyzer', () => {
         export const bar = 1;
       `;
       const result = extractSymbols(code);
-      
+
       const fooSymbol = result.symbols.find((s) => s.name === 'foo');
       expect(fooSymbol?.exportType).toBe('named');
-      
+
       const barSymbol = result.symbols.find((s) => s.name === 'bar');
       expect(barSymbol?.exportType).toBe('named');
     });
@@ -191,7 +191,7 @@ describe('AST Analyzer', () => {
         export default function foo() {}
       `;
       const result = extractSymbols(code);
-      
+
       const fooSymbol = result.symbols.find((s) => s.name === 'foo');
       expect(fooSymbol?.exportType).toBe('default');
     });
@@ -202,7 +202,7 @@ describe('AST Analyzer', () => {
         export { foo as bar };
       `;
       const result = extractSymbols(code);
-      
+
       const fooSymbol = result.symbols.find((s) => s.name === 'foo');
       expect(fooSymbol?.exportType).toBe('named');
       expect(fooSymbol?.exportedAs).toBe('bar');
@@ -215,10 +215,10 @@ describe('AST Analyzer', () => {
         export { x, y };
       `;
       const result = extractSymbols(code);
-      
+
       const xSymbol = result.symbols.find((s) => s.name === 'x');
       const ySymbol = result.symbols.find((s) => s.name === 'y');
-      
+
       expect(xSymbol?.exportType).toBe('named');
       expect(ySymbol?.exportType).toBe('named');
     });
@@ -233,7 +233,7 @@ describe('AST Analyzer', () => {
         }
       `;
       const result = extractSymbols(code);
-      
+
       expect(result.errors).toHaveLength(0);
       const classSymbol = result.symbols.find((s) => s.type === 'class');
       expect(classSymbol).toBeDefined();
@@ -244,7 +244,7 @@ describe('AST Analyzer', () => {
         const x = obj?.property;
       `;
       const result = extractSymbols(code);
-      
+
       expect(result.errors).toHaveLength(0);
     });
 
@@ -253,7 +253,7 @@ describe('AST Analyzer', () => {
         const x = value ?? 'default';
       `;
       const result = extractSymbols(code);
-      
+
       expect(result.errors).toHaveLength(0);
     });
 
@@ -262,7 +262,7 @@ describe('AST Analyzer', () => {
         const data = await fetch('/api');
       `;
       const result = extractSymbols(code);
-      
+
       expect(result.errors).toHaveLength(0);
     });
   });
@@ -275,7 +275,7 @@ describe('AST Analyzer', () => {
         }
       `;
       const result = extractSymbols(code);
-      
+
       expect(result.errors).toHaveLength(0);
       expect(result.symbols).toHaveLength(1);
       expect(result.symbols[0].name).toBe('add');
@@ -289,7 +289,7 @@ describe('AST Analyzer', () => {
         }
       `;
       const result = extractSymbols(code);
-      
+
       // Interfaces are not extracted as symbols (they're type-only)
       expect(result.errors).toHaveLength(0);
     });
@@ -302,7 +302,7 @@ describe('AST Analyzer', () => {
         }
       `;
       const result = extractSymbols(code);
-      
+
       expect(result.errors).toHaveLength(0);
       const classSymbol = result.symbols.find((s) => s.type === 'class');
       expect(classSymbol).toBeDefined();
@@ -315,7 +315,7 @@ describe('AST Analyzer', () => {
         }
       `;
       const result = extractSymbols(code);
-      
+
       expect(result.errors).toHaveLength(0);
       expect(result.symbols[0].name).toBe('identity');
     });
@@ -329,7 +329,7 @@ describe('AST Analyzer', () => {
         }
       `;
       const result = extractSymbols(code);
-      
+
       expect(result.errors).toHaveLength(0);
       expect(result.symbols[0].name).toBe('MyComponent');
     });
@@ -341,7 +341,7 @@ describe('AST Analyzer', () => {
         }
       `;
       const result = extractSymbols(code);
-      
+
       expect(result.errors).toHaveLength(0);
       expect(result.symbols[0].name).toBe('Button');
     });
@@ -355,7 +355,7 @@ describe('AST Analyzer', () => {
         }
       `;
       const result = extractSymbols(code, { includeNested: true });
-      
+
       expect(result.errors).toHaveLength(0);
       const classSymbol = result.symbols.find((s) => s.type === 'class');
       expect(classSymbol?.name).toBe('MyComponent');
@@ -367,7 +367,7 @@ describe('AST Analyzer', () => {
       const code = `function test() { return 42; }`;
       const result1 = extractSymbols(code);
       const result2 = extractSymbols(code);
-      
+
       expect(result1.astHash).toBe(result2.astHash);
       expect(result1.astHash).toBeTruthy();
     });
@@ -377,7 +377,7 @@ describe('AST Analyzer', () => {
       const code2 = `function test() { return 43; }`;
       const result1 = extractSymbols(code1);
       const result2 = extractSymbols(code2);
-      
+
       expect(result1.astHash).not.toBe(result2.astHash);
     });
 
@@ -386,7 +386,7 @@ describe('AST Analyzer', () => {
       const code2 = `function test() {\n  return 42;\n}`;
       const result1 = extractSymbols(code1);
       const result2 = extractSymbols(code2);
-      
+
       // Hashes should be the same since AST structure is identical
       expect(result1.astHash).toBe(result2.astHash);
     });
@@ -396,7 +396,7 @@ describe('AST Analyzer', () => {
     it('should handle syntax errors gracefully', () => {
       const code = `function test() { this is invalid }`;
       const result = extractSymbols(code);
-      
+
       expect(result.errors.length).toBeGreaterThan(0);
       expect(result.symbols).toHaveLength(0);
     });
@@ -404,7 +404,7 @@ describe('AST Analyzer', () => {
     it('should handle empty code', () => {
       const code = '';
       const result = extractSymbols(code);
-      
+
       expect(result.symbols).toHaveLength(0);
       expect(result.astHash).toBeTruthy();
     });
@@ -412,7 +412,7 @@ describe('AST Analyzer', () => {
     it('should handle only comments', () => {
       const code = `// This is a comment\n/* Another comment */`;
       const result = extractSymbols(code);
-      
+
       expect(result.symbols).toHaveLength(0);
       expect(result.errors).toHaveLength(0);
     });
@@ -427,7 +427,7 @@ describe('AST Analyzer', () => {
         const x = 1;
       `;
       const functions = analyzeFunctions(code);
-      
+
       expect(functions.length).toBe(2);
       expect(functions.every((f) => f.type === 'function')).toBe(true);
     });
@@ -439,7 +439,7 @@ describe('AST Analyzer', () => {
         }
       `;
       const functions = analyzeFunctions(code);
-      
+
       expect(functions).toHaveLength(1);
       expect(functions[0].name).toBe('outer');
     });
@@ -453,7 +453,7 @@ describe('AST Analyzer', () => {
         const x = 1;
       `;
       const classes = analyzeClasses(code);
-      
+
       expect(classes).toHaveLength(1);
       expect(classes[0].type).toBe('class');
       expect(classes[0].name).toBe('Foo');
@@ -467,7 +467,7 @@ describe('AST Analyzer', () => {
         }
       `;
       const result = analyzeClasses(code);
-      
+
       // Should include class and its methods
       expect(result.length).toBeGreaterThanOrEqual(1);
     });
@@ -477,26 +477,26 @@ describe('AST Analyzer', () => {
     it('should have correct start position', () => {
       const code = `\n\nfunction test() {}\n`;
       const result = extractSymbols(code);
-      
+
       expect(result.symbols[0].location.start.line).toBe(3);
     });
 
     it('should have correct end position', () => {
       const code = `function test() {\n  const x = 1;\n  return x;\n}`;
       const result = extractSymbols(code);
-      
+
       expect(result.symbols[0].location.end.line).toBe(4);
     });
 
     it('should track multiple symbols on same line', () => {
       const code = `const x = 1; const y = 2;`;
       const result = extractSymbols(code);
-      
+
       expect(result.symbols).toHaveLength(2);
       expect(result.symbols[0].location.start.line).toBe(1);
       expect(result.symbols[1].location.start.line).toBe(1);
       expect(result.symbols[0].location.start.column).toBeLessThan(
-        result.symbols[1].location.start.column
+        result.symbols[1].location.start.column,
       );
     });
   });
@@ -505,17 +505,17 @@ describe('AST Analyzer', () => {
     it('should estimate size for single-line functions', () => {
       const code = `function test() { return 42; }`;
       const result = extractSymbols(code);
-      
+
       expect(result.symbols[0].size).toBeGreaterThan(0);
     });
 
     it('should estimate larger size for multi-line functions', () => {
       const code1 = `function small() {}`;
       const code2 = `function large() {\n  const x = 1;\n  const y = 2;\n  return x + y;\n}`;
-      
+
       const result1 = extractSymbols(code1);
       const result2 = extractSymbols(code2);
-      
+
       expect(result2.symbols[0].size).toBeGreaterThan(result1.symbols[0].size);
     });
   });
@@ -550,18 +550,18 @@ describe('AST Analyzer', () => {
           return 'main';
         }
       `;
-      
+
       const result = extractSymbols(code, { includeNested: true });
-      
+
       expect(result.errors).toHaveLength(0);
-      
+
       // Check we have all top-level symbols
       const helperFn = result.symbols.find((s) => s.name === 'helper');
       const myClass = result.symbols.find((s) => s.name === 'MyClass');
       const configVar = result.symbols.find((s) => s.name === 'config');
       const mainFn = result.symbols.find((s) => s.name === 'main');
       const privateVar = result.symbols.find((s) => s.name === 'privateVar');
-      
+
       expect(helperFn?.exportType).toBe('named');
       expect(myClass?.exportType).toBe('named');
       expect(configVar?.exportType).toBe('named');

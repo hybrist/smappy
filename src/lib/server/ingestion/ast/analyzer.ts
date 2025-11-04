@@ -5,10 +5,13 @@
  */
 
 import { parse, type ParseResult } from '@babel/parser';
-import traverse, { type NodePath } from '@babel/traverse';
+import traverseModule, { type NodePath } from '@babel/traverse';
 import type * as t from '@babel/types';
 import { createHash } from 'node:crypto';
 import type { ParsedSymbol } from '../types/index.js';
+
+// Handle both default and named exports from @babel/traverse
+const traverse = typeof traverseModule === 'function' ? traverseModule : traverseModule.default;
 
 /**
  * Symbol with export information
@@ -53,11 +56,7 @@ export interface AnalyzerOptions {
  * @returns Analysis result with extracted symbols and metadata
  */
 export function extractSymbols(code: string, options: AnalyzerOptions = {}): AnalysisResult {
-  const {
-    sourceType = 'module',
-    includeNested = true,
-    filePath = 'unknown',
-  } = options;
+  const { sourceType = 'module', includeNested = true, filePath = 'unknown' } = options;
 
   const symbols: SymbolWithExport[] = [];
   const errors: string[] = [];
@@ -84,7 +83,10 @@ export function extractSymbols(code: string, options: AnalyzerOptions = {}): Ana
     });
 
     // Track exports for later association
-    const exportMap = new Map<string, { type: 'named' | 'default' | 'namespace'; exportedAs?: string }>();
+    const exportMap = new Map<
+      string,
+      { type: 'named' | 'default' | 'namespace'; exportedAs?: string }
+    >();
 
     // First pass: collect export information
     traverse(ast, {
@@ -122,8 +124,7 @@ export function extractSymbols(code: string, options: AnalyzerOptions = {}): Ana
       ExportDefaultDeclaration(path) {
         const declaration = path.node.declaration;
         if (
-          (declaration.type === 'FunctionDeclaration' ||
-            declaration.type === 'ClassDeclaration') &&
+          (declaration.type === 'FunctionDeclaration' || declaration.type === 'ClassDeclaration') &&
           declaration.id
         ) {
           exportMap.set(declaration.id.name, { type: 'default' });
@@ -159,7 +160,7 @@ export function extractSymbols(code: string, options: AnalyzerOptions = {}): Ana
                 path.node.kind,
                 path,
                 scope,
-                exportMap
+                exportMap,
               );
               if (symbol) symbols.push(symbol);
             }
@@ -194,7 +195,9 @@ export function extractSymbols(code: string, options: AnalyzerOptions = {}): Ana
       errors,
     };
   } catch (error) {
-    errors.push(`Parse error in ${filePath}: ${error instanceof Error ? error.message : String(error)}`);
+    errors.push(
+      `Parse error in ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
+    );
     return {
       symbols,
       astHash: '',
@@ -240,7 +243,7 @@ function createFunctionSymbol(
   node: t.FunctionDeclaration,
   path: NodePath,
   scope: 'global' | 'module' | 'function' | 'block',
-  exportMap: Map<string, { type: 'named' | 'default' | 'namespace'; exportedAs?: string }>
+  exportMap: Map<string, { type: 'named' | 'default' | 'namespace'; exportedAs?: string }>,
 ): SymbolWithExport | null {
   if (!node.id || !node.loc) return null;
 
@@ -270,7 +273,7 @@ function createVariableSymbol(
   kind: 'const' | 'let' | 'var',
   path: NodePath,
   scope: 'global' | 'module' | 'function' | 'block',
-  exportMap: Map<string, { type: 'named' | 'default' | 'namespace'; exportedAs?: string }>
+  exportMap: Map<string, { type: 'named' | 'default' | 'namespace'; exportedAs?: string }>,
 ): SymbolWithExport | null {
   if (node.id.type !== 'Identifier' || !node.loc) return null;
 
@@ -279,8 +282,9 @@ function createVariableSymbol(
   const size = estimateSize(node);
 
   // Determine if this is a function expression or arrow function
-  let symbolType: ParsedSymbol['type'] = kind === 'const' ? 'const' : kind === 'let' ? 'let' : 'variable';
-  
+  let symbolType: ParsedSymbol['type'] =
+    kind === 'const' ? 'const' : kind === 'let' ? 'let' : 'variable';
+
   if (
     node.init &&
     (node.init.type === 'FunctionExpression' || node.init.type === 'ArrowFunctionExpression')
@@ -309,7 +313,7 @@ function createClassSymbol(
   node: t.ClassDeclaration,
   _path: NodePath,
   scope: 'global' | 'module' | 'function' | 'block',
-  exportMap: Map<string, { type: 'named' | 'default' | 'namespace'; exportedAs?: string }>
+  exportMap: Map<string, { type: 'named' | 'default' | 'namespace'; exportedAs?: string }>,
 ): SymbolWithExport | null {
   if (!node.id || !node.loc) return null;
 
@@ -334,10 +338,7 @@ function createClassSymbol(
 /**
  * Extract methods from a class
  */
-function extractClassMethods(
-  node: t.ClassDeclaration,
-  _path: NodePath
-): SymbolWithExport[] {
+function extractClassMethods(node: t.ClassDeclaration, _path: NodePath): SymbolWithExport[] {
   const methods: SymbolWithExport[] = [];
 
   node.body.body.forEach((member) => {
@@ -348,7 +349,7 @@ function extractClassMethods(
     ) {
       const isPrivate = member.type === 'ClassPrivateMethod';
       const isStatic = 'static' in member && member.static;
-      
+
       let name: string;
       if (isPrivate && member.key.type === 'PrivateName') {
         name = `#${member.key.id.name}`;
@@ -384,11 +385,11 @@ function extractClassMethods(
  */
 function estimateSize(node: t.Node): number {
   if (!node.loc) return 0;
-  
+
   const { start, end } = node.loc;
   const lines = end.line - start.line + 1;
   const cols = end.line === start.line ? end.column - start.column : end.column;
-  
+
   // Rough estimate: average line is ~50 chars, plus specific column info
   return lines > 1 ? lines * 50 : cols;
 }
@@ -402,7 +403,13 @@ function generateASTHash(ast: ParseResult<t.File>): string {
   // Create a simplified representation of the AST structure
   const astStructure = JSON.stringify(ast, (key, value) => {
     // Exclude location info and other metadata that doesn't affect structure
-    if (key === 'loc' || key === 'start' || key === 'end' || key === 'extra' || key === 'comments') {
+    if (
+      key === 'loc' ||
+      key === 'start' ||
+      key === 'end' ||
+      key === 'extra' ||
+      key === 'comments'
+    ) {
       return undefined;
     }
     return value;
