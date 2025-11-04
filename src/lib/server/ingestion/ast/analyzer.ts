@@ -79,7 +79,7 @@ export function extractSymbols(code: string, options: AnalyzerOptions = {}): Ana
         'optionalChaining',
         'topLevelAwait',
       ],
-      errorRecovery: false, // Changed to capture errors properly
+      errorRecovery: false,
     });
 
     // Track exports for later association
@@ -386,12 +386,17 @@ function extractClassMethods(node: t.ClassDeclaration, _path: NodePath): SymbolW
 function estimateSize(node: t.Node): number {
   if (!node.loc) return 0;
 
+  // Average characters per line in typical JavaScript code
+  // This is a rough heuristic based on common code formatting
+  const AVERAGE_CHARS_PER_LINE = 50;
+
   const { start, end } = node.loc;
   const lines = end.line - start.line + 1;
   const cols = end.line === start.line ? end.column - start.column : end.column;
 
-  // Rough estimate: average line is ~50 chars, plus specific column info
-  return lines > 1 ? lines * 50 : cols;
+  // For multi-line nodes, estimate based on line count
+  // For single-line nodes, use actual column difference
+  return lines > 1 ? lines * AVERAGE_CHARS_PER_LINE : cols;
 }
 
 /**

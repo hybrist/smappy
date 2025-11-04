@@ -18,6 +18,7 @@ import {
  * @param code - JavaScript code to analyze
  * @returns Array of extracted symbols (without export info)
  * @deprecated Use extractSymbols from analyzer.ts for full functionality
+ * @note This legacy API strips export metadata and scope information from symbols
  */
 export function extractSymbols(code: string): Symbol[] {
   const result = extractSymbolsImpl(code);
@@ -34,6 +35,7 @@ export function extractSymbols(code: string): Symbol[] {
  * @param code - JavaScript code to analyze
  * @returns Array of function symbols
  * @deprecated Use analyzeFunctions from analyzer.ts for full functionality
+ * @note This legacy API strips export metadata and scope information from symbols
  */
 export function analyzeFunctions(code: string): Symbol[] {
   const symbols = analyzeFunctionsImpl(code);
@@ -50,6 +52,7 @@ export function analyzeFunctions(code: string): Symbol[] {
  * @param code - JavaScript code to analyze
  * @returns Array of class symbols
  * @deprecated Use analyzeClasses from analyzer.ts for full functionality
+ * @note This legacy API strips export metadata and scope information from symbols
  */
 export function analyzeClasses(code: string): Symbol[] {
   const symbols = analyzeClassesImpl(code);
