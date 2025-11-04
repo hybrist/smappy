@@ -1,0 +1,11 @@
+{
+  "version": 3,
+  "file": "example-bundle.js",
+  "sources": ["../src/calculator.js", "../src/utils.js"],
+  "sourcesContent": [
+    "export class Calculator {\n  constructor() {\n    this.result = 0;\n  }\n  \n  add(value) {\n    this.result = add(this.result, value);\n    return this;\n  }\n  \n  getResult() {\n    return this.result;\n  }\n}",
+    "export function add(a, b) {\n  return a + b;\n}"
+  ],
+  "names": ["Calculator", "add", "value", "result", "getResult", "module", "exports", "define", "amd", "window"],
+  "mappings": "AAAA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA;AACA"
+}
