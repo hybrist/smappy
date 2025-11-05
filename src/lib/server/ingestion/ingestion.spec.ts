@@ -1,9 +1,9 @@
 /**
- * Integration test to verify the ingestion module is properly set up
+ * Basic integration test to verify the ingestion module exports are working
+ * Note: Comprehensive end-to-end tests are in index.spec.ts
  */
 import { describe, it, expect } from 'vitest';
 import { ingestBundle } from './index.js';
-import type { Bundle } from './types/index.js';
 
 describe('Ingestion module setup', () => {
   it('should export ingestBundle function', () => {
@@ -11,18 +11,6 @@ describe('Ingestion module setup', () => {
     expect(typeof ingestBundle).toBe('function');
   });
 
-  it('should process a simple bundle', async () => {
-    const bundle: Bundle = {
-      id: 'test-bundle',
-      path: 'test.js',
-      content: 'console.log("Hello, world!");',
-    };
-
-    const result = await ingestBundle(bundle);
-
-    expect(result).toBeDefined();
-    expect(result.bundleId).toBe('test-bundle');
-    expect(result.sizes).toBeDefined();
-    expect(result.sizes.total).toBeGreaterThan(0);
-  });
+  // Note: Full end-to-end tests with database mocking are in index.spec.ts
+  // This file just verifies basic exports
 });
