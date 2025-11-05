@@ -3,16 +3,15 @@
  * Calculates bundle and module sizes including gzip compression
  */
 
+import { computeRawSize, computeGzipSize } from './calculator.js';
+
 /**
  * Calculate the gzipped size of content
  * @param content - Content to compress
  * @returns Size in bytes after gzip compression
  */
 export function calculateGzipSize(content: string): number {
-  // Placeholder implementation - will properly implement gzip compression using pako
-  // For now, return the raw size as a conservative estimate
-  // TODO: Implement using pako.gzip()
-  return Buffer.byteLength(content, 'utf-8');
+  return computeGzipSize(content);
 }
 
 /**
@@ -21,7 +20,7 @@ export function calculateGzipSize(content: string): number {
  * @returns Size in bytes
  */
 export function calculateRawSize(content: string): number {
-  return Buffer.byteLength(content, 'utf-8');
+  return computeRawSize(content);
 }
 
 /**
