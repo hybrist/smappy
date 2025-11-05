@@ -424,4 +424,311 @@ describe('Database Writer', () => {
       expect(previousRunId).toBe(writeResult.analysisRunId);
     });
   });
+
+  describe('writeSuggestions', () => {
+    it('should write suggestions with correct data', async () => {
+      expect.assertions(4);
+
+      const data = createMockIngestionData();
+      data.suggestions = [
+        {
+          type: 'TREE_SHAKING',
+          severity: 'warning',
+          title: 'Unused export detected',
+          description: 'The export "helper" is not used in the bundle',
+        },
+      ];
+
+      await writeIngestionData(data);
+
+      const suggestions = await db.select().from(schema.suggestion).execute();
+
+      expect(suggestions).toHaveLength(1);
+      expect(suggestions[0].type).toBe('TREE_SHAKING');
+      expect(suggestions[0].severity).toBe('warning');
+      expect(suggestions[0].title).toBe('Unused export detected');
+    });
+
+    it('should write suggestion links to modules', async () => {
+      expect.assertions(3);
+
+      const data = createMockIngestionData();
+      data.suggestions = [
+        {
+          type: 'LARGE_MODULE',
+          severity: 'info',
+          title: 'Large module detected',
+          description: 'Module is larger than recommended',
+          links: [
+            {
+              entityType: 'Module',
+              entityPath: './src/index.js',
+            },
+          ],
+        },
+      ];
+
+      await writeIngestionData(data);
+
+      const suggestions = await db.select().from(schema.suggestion).execute();
+      const links = await db.select().from(schema.suggestionLink).execute();
+      const modules = await db.select().from(schema.module).execute();
+
+      expect(suggestions).toHaveLength(1);
+      expect(links).toHaveLength(1);
+      expect(links[0].entityId).toBe(modules.find((m) => m.filePath === './src/index.js')?.id);
+    });
+
+    it('should write suggestion links to symbols', async () => {
+      expect.assertions(3);
+
+      const data = createMockIngestionData();
+      data.suggestions = [
+        {
+          type: 'TREE_SHAKING',
+          severity: 'warning',
+          title: 'Unused symbol',
+          description: 'Symbol is exported but not used',
+          links: [
+            {
+              entityType: 'Symbol',
+              entityPath: './src/index.js:testFunction',
+            },
+          ],
+        },
+      ];
+
+      await writeIngestionData(data);
+
+      const suggestions = await db.select().from(schema.suggestion).execute();
+      const links = await db.select().from(schema.suggestionLink).execute();
+      const symbols = await db.select().from(schema.symbol).execute();
+
+      expect(suggestions).toHaveLength(1);
+      expect(links).toHaveLength(1);
+      expect(links[0].entityId).toBe(symbols.find((s) => s.name === 'testFunction')?.id);
+    });
+
+    it('should write suggestion links to chunks', async () => {
+      expect.assertions(3);
+
+      const data = createMockIngestionData();
+      data.suggestions = [
+        {
+          type: 'CHUNK_SIZE',
+          severity: 'info',
+          title: 'Large chunk',
+          description: 'Chunk exceeds recommended size',
+          links: [
+            {
+              entityType: 'Chunk',
+              entityPath: 'main',
+            },
+          ],
+        },
+      ];
+
+      await writeIngestionData(data);
+
+      const suggestions = await db.select().from(schema.suggestion).execute();
+      const links = await db.select().from(schema.suggestionLink).execute();
+      const chunks = await db.select().from(schema.chunk).execute();
+
+      expect(suggestions).toHaveLength(1);
+      expect(links).toHaveLength(1);
+      expect(links[0].entityId).toBe(chunks.find((c) => c.name === 'main')?.id);
+    });
+
+    it('should write suggestion links to dependencies', async () => {
+      expect.assertions(3);
+
+      const data = createMockIngestionData();
+      data.suggestions = [
+        {
+          type: 'CIRCULAR_DEPENDENCY',
+          severity: 'warning',
+          title: 'Circular dependency detected',
+          description: 'Dependency creates a circular reference',
+          links: [
+            {
+              entityType: 'Dependency',
+              entityPath: './src/index.js:./src/utils.js',
+            },
+          ],
+        },
+      ];
+
+      await writeIngestionData(data);
+
+      const suggestions = await db.select().from(schema.suggestion).execute();
+      const links = await db.select().from(schema.suggestionLink).execute();
+      const dependencies = await db.select().from(schema.dependency).execute();
+
+      expect(suggestions).toHaveLength(1);
+      expect(links).toHaveLength(1);
+      expect(links[0].entityId).toBe(dependencies[0].id);
+    });
+
+    it('should write multiple links for a single suggestion', async () => {
+      expect.assertions(4);
+
+      const data = createMockIngestionData();
+      data.suggestions = [
+        {
+          type: 'DUPLICATE_CODE',
+          severity: 'info',
+          title: 'Duplicate code detected',
+          description: 'Similar code found in multiple modules',
+          links: [
+            {
+              entityType: 'Module',
+              entityPath: './src/index.js',
+            },
+            {
+              entityType: 'Module',
+              entityPath: './src/utils.js',
+            },
+          ],
+        },
+      ];
+
+      await writeIngestionData(data);
+
+      const suggestions = await db.select().from(schema.suggestion).execute();
+      const links = await db.select().from(schema.suggestionLink).execute();
+
+      expect(suggestions).toHaveLength(1);
+      expect(links).toHaveLength(2);
+      expect(links[0].suggestionId).toBe(suggestions[0].id);
+      expect(links[1].suggestionId).toBe(suggestions[0].id);
+    });
+
+    it('should skip links with invalid entity paths', async () => {
+      const data = createMockIngestionData();
+      data.suggestions = [
+        {
+          type: 'TREE_SHAKING',
+          severity: 'warning',
+          title: 'Unused export',
+          description: 'Export not used',
+          links: [
+            {
+              entityType: 'Module',
+              entityPath: './src/nonexistent.js',
+            },
+            {
+              entityType: 'Symbol',
+              entityPath: './src/index.js:nonexistentSymbol',
+            },
+          ],
+        },
+      ];
+
+      await writeIngestionData(data);
+
+      const suggestions = await db.select().from(schema.suggestion).execute();
+      const links = await db.select().from(schema.suggestionLink).execute();
+
+      expect(suggestions).toHaveLength(1);
+      expect(links).toHaveLength(0);
+      expect(suggestions[0].title).toBe('Unused export');
+    });
+
+    it('should skip links without entity paths', async () => {
+      const data = createMockIngestionData();
+      data.suggestions = [
+        {
+          type: 'INFO',
+          severity: 'info',
+          title: 'General suggestion',
+          description: 'A suggestion without specific links',
+          links: [
+            {
+              entityType: 'Module',
+              entityPath: undefined,
+            },
+          ],
+        },
+      ];
+
+      await writeIngestionData(data);
+
+      const suggestions = await db.select().from(schema.suggestion).execute();
+      const links = await db.select().from(schema.suggestionLink).execute();
+
+      expect(suggestions).toHaveLength(1);
+      expect(links).toHaveLength(0);
+      expect(suggestions[0].title).toBe('General suggestion');
+    });
+
+    it('should handle suggestions without links', async () => {
+      expect.assertions(2);
+
+      const data = createMockIngestionData();
+      data.suggestions = [
+        {
+          type: 'INFO',
+          severity: 'info',
+          title: 'General suggestion',
+          description: 'A suggestion without links',
+        },
+      ];
+
+      await writeIngestionData(data);
+
+      const suggestions = await db.select().from(schema.suggestion).execute();
+      const links = await db.select().from(schema.suggestionLink).execute();
+
+      expect(suggestions).toHaveLength(1);
+      expect(links).toHaveLength(0);
+    });
+
+    it('should correctly link suggestions to all entity types', async () => {
+      const data = createMockIngestionData();
+      data.suggestions = [
+        {
+          type: 'COMPREHENSIVE',
+          severity: 'info',
+          title: 'Comprehensive suggestion',
+          description: 'Links to all entity types',
+          links: [
+            {
+              entityType: 'Module',
+              entityPath: './src/index.js',
+            },
+            {
+              entityType: 'Symbol',
+              entityPath: './src/index.js:testFunction',
+            },
+            {
+              entityType: 'Chunk',
+              entityPath: 'main',
+            },
+            {
+              entityType: 'Dependency',
+              entityPath: './src/index.js:./src/utils.js',
+            },
+          ],
+        },
+      ];
+
+      await writeIngestionData(data);
+
+      const suggestions = await db.select().from(schema.suggestion).execute();
+      const links = await db.select().from(schema.suggestionLink).execute();
+
+      expect(suggestions).toHaveLength(1);
+      expect(links).toHaveLength(4);
+
+      // Verify all entity types are present
+      const entityTypes = links.map((l) => l.entityType).sort();
+      expect(entityTypes).toEqual(['Chunk', 'Dependency', 'Module', 'Symbol']);
+
+      // Verify all links point to the same suggestion
+      expect(links.every((l) => l.suggestionId === suggestions[0].id)).toBe(true);
+
+      // Verify each link has a valid entity ID
+      expect(links.every((l) => l.entityId > 0)).toBe(true);
+    });
+  });
 });
