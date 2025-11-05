@@ -113,7 +113,7 @@ export async function computeSymbolSizes(
       version: 3 as const,
       sources: sourceMap.sources,
       sourcesContent: sourceMap.sourcesContent,
-      mappings: sourceMap.mappings as any,
+      mappings: sourceMap.mappings as unknown as string,
       names: sourceMap.names || [],
     });
 
