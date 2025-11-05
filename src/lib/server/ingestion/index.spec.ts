@@ -7,7 +7,7 @@ import { ingestBundle, type BundleIngestionInput } from './index.js';
 import type { IngestionOptions, BundleInput, ModuleInput, ChunkInput } from './types/index.js';
 
 // Mock the db module to use test database
-vi.mock('../db/index.js', async (importOriginal) => {
+vi.mock('../db/index.js', async () => {
   const Database = (await import('better-sqlite3')).default;
   const { drizzle } = await import('drizzle-orm/better-sqlite3');
   const schema = await import('../db/schema.js');
