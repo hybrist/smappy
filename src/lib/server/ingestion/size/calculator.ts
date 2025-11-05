@@ -108,11 +108,12 @@ export async function computeSymbolSizes(
 
   try {
     // Create source map consumer
+    // Note: SourceMapConsumer expects version to be literal 3 and mappings as string
     const consumer = await new SourceMapConsumer({
-      version: sourceMap.version,
+      version: 3 as const,
       sources: sourceMap.sources,
       sourcesContent: sourceMap.sourcesContent,
-      mappings: sourceMap.mappings,
+      mappings: sourceMap.mappings as any,
       names: sourceMap.names || [],
     });
 
