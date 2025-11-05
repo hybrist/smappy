@@ -9,6 +9,7 @@ import type { SourceMap } from '../types/index.js';
  * Parse a source map from JSON string
  * @param sourceMapContent - Source map JSON content
  * @returns Parsed source map object
+ * @deprecated Use parseSourceMap from processor.ts for enhanced functionality
  */
 export function parseSourceMap(sourceMapContent: string): SourceMap {
   const parsed = JSON.parse(sourceMapContent);
@@ -33,3 +34,15 @@ export function validateSourceMap(sourceMap: SourceMap): boolean {
     typeof sourceMap.mappings === 'string'
   );
 }
+
+// Re-export all processor functions and types
+export {
+  parseSourceMap as parseSourceMapAdvanced,
+  mapBundleToSource,
+  computeSymbolFragments,
+  computeSymbolFragmentsWithContent,
+  loadExternalSourceMap,
+  type Position,
+  type PositionMapping,
+  type SymbolFragment,
+} from './processor.js';
