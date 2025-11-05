@@ -3,83 +3,384 @@
  * Coordinates the analysis pipeline from bundle input to database persistence
  */
 
-import type { Bundle, AnalysisResult } from './types/index.js';
-import { parseSourceMap, validateSourceMap } from './source-map/index.js';
-import { extractSymbols } from './ast/index.js';
-import { buildDependencyGraph } from './graph/index.js';
-import { calculateBundleSizes } from './size/index.js';
-import { compareAnalysisResults, canPerformIncrementalAnalysis } from './incremental/index.js';
-import { writeAnalysisResult, getPreviousAnalysisResult } from './db/index.js';
+import type { BundleInput, ChunkInput, ModuleInput, IngestionOptions } from './types/index.js';
+import type {
+  IngestionData,
+  IngestionWriteResult,
+  ModuleWithAnalysis,
+  BundleWithMetadata,
+  DependencyRelationship,
+} from './db/writer.js';
+import { extractSymbols } from './ast/analyzer.js';
+import {
+  parseSourceMap,
+  mapBundleToSource,
+  computeSymbolFragmentsWithContent,
+  type SymbolFragment,
+} from './source-map/processor.js';
+import { buildDependencyGraph } from './graph/builder.js';
+import { computeRawSize, computeGzipSize } from './size/calculator.js';
+import { writeIngestionData } from './db/writer.js';
+
+// ============================================================================
+// Main Orchestrator API
+// ============================================================================
 
 /**
- * Process a bundle through the complete ingestion pipeline
- * @param bundle - Bundle to analyze
- * @returns Promise that resolves to analysis result
+ * Complete bundle ingestion input
  */
-export async function ingestBundle(bundle: Bundle): Promise<AnalysisResult> {
-  // Parse source map if available
-  let sourceMap = null;
-  if (bundle.sourceMap) {
-    sourceMap = parseSourceMap(bundle.sourceMap);
-    if (!validateSourceMap(sourceMap)) {
-      console.warn('Invalid source map for bundle:', bundle.id);
-    }
-  }
-
-  // Extract symbols from code
-  const symbols = extractSymbols(bundle.content);
-
-  // Build dependency graph
-  const dependencyGraph = buildDependencyGraph(new Map());
-
-  // Calculate sizes
-  const sizes = calculateBundleSizes(bundle.content);
-
-  // Create analysis result
-  const result: AnalysisResult = {
-    bundleId: bundle.id,
-    symbols,
-    dependencyGraph,
-    sizes,
-  };
-
-  // Check for incremental analysis
-  const previousResult = await getPreviousAnalysisResult(bundle.id);
-  if (previousResult !== null && canPerformIncrementalAnalysis(previousResult, result)) {
-    const diff = compareAnalysisResults(previousResult, result);
-    console.log('Incremental analysis diff:', diff);
-  }
-
-  // Persist results
-  await writeAnalysisResult(result);
-
-  return result;
+export interface BundleIngestionInput {
+  /** Ingestion options */
+  options: IngestionOptions;
+  /** Bundles to analyze */
+  bundles: BundleInput[];
+  /** Source modules */
+  modules: ModuleInput[];
+  /** Chunks (code-split entry points) */
+  chunks: ChunkInput[];
 }
 
 /**
- * Re-export types for convenience
+ * Result of bundle ingestion
  */
-export type {
-  // Legacy types
-  Bundle,
-  AnalysisResult,
-  Symbol,
-  DependencyNode,
-  SourceMap,
-  // Input types
-  BundleInput,
-  ChunkInput,
-  ModuleInput,
-  IngestionOptions,
-  // Internal types
-  ParsedSymbol,
-  ParsedDependency,
-  SizeInfo,
-} from './types/index.js';
+export interface BundleIngestionResult extends IngestionWriteResult {
+  /** Analysis run ID */
+  analysisRunId: number;
+  /** Statistics */
+  stats: {
+    modulesWritten: number;
+    symbolsWritten: number;
+    dependenciesWritten: number;
+    chunksWritten: number;
+    bundlesWritten: number;
+    sourceMapEntriesWritten: number;
+    suggestionsWritten: number;
+  };
+  /** Errors encountered during processing (non-fatal) */
+  errors: string[];
+}
 
 /**
- * Re-export test helpers for convenience
+ * Main entry point for bundle ingestion
+ *
+ * Coordinates all analysis modules and persists results to database:
+ * 1. AST analysis for symbol extraction
+ * 2. Source map processing for position mapping
+ * 3. Dependency graph building
+ * 4. Size calculations (raw + gzip)
+ * 5. Database writes
+ *
+ * @param input - Bundle ingestion input
+ * @returns Result with analysis run ID and statistics
+ * @throws Error if critical failure occurs
  */
+export async function ingestBundle(input: BundleIngestionInput): Promise<BundleIngestionResult> {
+  const errors: string[] = [];
+
+  try {
+    // Step 1: Analyze all modules
+    console.log(`[Ingestion] Analyzing ${input.modules.length} modules...`);
+    const analyzedModules = await analyzeModules(input.modules, input.bundles, errors);
+
+    // Step 2: Build dependency graph
+    console.log(`[Ingestion] Building dependency graph...`);
+    const dependencies = await buildDependencies(input.modules, errors);
+
+    // Step 3: Process bundles
+    console.log(`[Ingestion] Processing ${input.bundles.length} bundles...`);
+    const processedBundles = await processBundles(input.bundles, errors);
+
+    // Step 4: Prepare ingestion data
+    const ingestionData: IngestionData = {
+      options: input.options,
+      bundles: processedBundles,
+      modules: analyzedModules,
+      chunks: input.chunks,
+      dependencies,
+    };
+
+    // Step 5: Write to database
+    console.log(`[Ingestion] Writing to database...`);
+    const result = await writeIngestionData(ingestionData);
+
+    console.log(`[Ingestion] ✓ Complete! Analysis run ID: ${result.analysisRunId}`);
+    console.log(`[Ingestion] Stats:`, result.stats);
+
+    return {
+      ...result,
+      errors,
+    };
+  } catch (error) {
+    console.error('[Ingestion] ✗ Fatal error:', error);
+    throw error;
+  }
+}
+
+// ============================================================================
+// Module Analysis
+// ============================================================================
+
+/**
+ * Analyze all modules: extract symbols, compute sizes, map to bundle positions
+ */
+async function analyzeModules(
+  modules: ModuleInput[],
+  bundles: BundleInput[],
+  errors: string[],
+): Promise<ModuleWithAnalysis[]> {
+  const analyzed: ModuleWithAnalysis[] = [];
+
+  // Get first bundle for source map processing (simplified for now)
+  const mainBundle = bundles[0];
+  let sourceMap = null;
+  let mappings = null;
+
+  if (mainBundle?.sourceMapReference) {
+    try {
+      sourceMap = parseSourceMap(mainBundle.sourceMapReference);
+      mappings = mapBundleToSource(mainBundle.content, sourceMap);
+    } catch (error) {
+      errors.push(`Failed to parse source map: ${error}`);
+    }
+  }
+
+  for (const module of modules) {
+    try {
+      // Extract symbols from source code
+      const analysisResult = extractSymbols(module.sourceContent, {
+        sourceType: 'module',
+        includeNested: true,
+        filePath: module.filePath,
+      });
+
+      if (analysisResult.errors.length > 0) {
+        errors.push(`Errors analyzing ${module.filePath}: ${analysisResult.errors.join(', ')}`);
+      }
+
+      // Compute module sizes
+      const originalSize = computeRawSize(module.sourceContent);
+      const bundledSize = originalSize; // Simplified - would compute from source map
+
+      // Map symbols to bundle positions
+      const symbolFragments = new Map<string, SymbolFragment[]>();
+      if (mappings && mainBundle) {
+        for (const symbol of analysisResult.symbols) {
+          try {
+            const fragment = computeSymbolFragmentsWithContent(
+              {
+                name: symbol.name,
+                location: symbol.location,
+              },
+              mainBundle.content,
+              mappings,
+            );
+            if (fragment) {
+              symbolFragments.set(symbol.name, [fragment]);
+            }
+          } catch (error) {
+            // Non-fatal: symbol mapping failure
+            errors.push(`Failed to map symbol ${symbol.name} in ${module.filePath}: ${error}`);
+          }
+        }
+      }
+
+      // Detect third-party modules
+      const isThirdParty = module.filePath.includes('node_modules');
+      let packageName: string | undefined;
+      let packageVersion: string | undefined;
+
+      if (isThirdParty) {
+        const match = module.filePath.match(/node_modules\/(?:@([^/]+)\/)?([^/]+)/);
+        if (match) {
+          packageName = match[1] ? `@${match[1]}/${match[2]}` : match[2];
+        }
+      }
+
+      // Extract exported symbols
+      const exports = analysisResult.symbols
+        .filter((s) => s.exportType !== undefined)
+        .map((s) => s.name);
+
+      analyzed.push({
+        ...module,
+        originalSize,
+        bundledSize,
+        isThirdParty,
+        packageName,
+        packageVersion,
+        symbols: analysisResult.symbols,
+        symbolFragments,
+        exports: exports.length > 0 ? exports : undefined,
+        usedExports: undefined, // Would be computed from tree-shaking analysis
+      });
+    } catch (error) {
+      errors.push(`Fatal error analyzing ${module.filePath}: ${error}`);
+      // Add stub module to maintain data integrity
+      analyzed.push({
+        ...module,
+        originalSize: 0,
+        bundledSize: 0,
+        isThirdParty: false,
+        symbols: [],
+        symbolFragments: new Map(),
+      });
+    }
+  }
+
+  return analyzed;
+}
+
+// ============================================================================
+// Dependency Graph
+// ============================================================================
+
+/**
+ * Build dependency graph from all modules
+ */
+async function buildDependencies(
+  modules: ModuleInput[],
+  errors: string[],
+): Promise<DependencyRelationship[]> {
+  const dependencies: DependencyRelationship[] = [];
+  const moduleMap = new Map(modules.map((m) => [m.filePath, m]));
+
+  for (const module of modules) {
+    try {
+      const graph = buildDependencyGraph(module.sourceContent, module.filePath, {
+        baseDir: process.cwd(),
+        followDynamicImports: true,
+      });
+
+      // Convert graph dependencies to database format
+      for (const dep of graph.dependencies) {
+        // Resolve target path relative to importing module
+        const targetPath = resolveRelativePath(module.filePath, dep.target);
+        const targetModule = moduleMap.get(targetPath);
+
+        if (!targetModule) {
+          // Skip unresolved dependencies (external modules, etc.)
+          continue;
+        }
+
+        dependencies.push({
+          importerPath: module.filePath,
+          importedPath: targetPath,
+          type: dep.type === 'dynamic-import' ? 'dynamic' : 'static',
+          importedSymbols: dep.importedNames,
+        });
+      }
+    } catch (error) {
+      errors.push(`Failed to build dependency graph for ${module.filePath}: ${error}`);
+    }
+  }
+
+  return dependencies;
+}
+
+/**
+ * Resolve a relative import path against the importing module's path
+ */
+function resolveRelativePath(fromPath: string, importPath: string): string {
+  // If not a relative import, return as-is
+  if (!importPath.startsWith('./') && !importPath.startsWith('../')) {
+    return importPath;
+  }
+
+  // Get directory of importing file
+  const fromParts = fromPath.split('/');
+  fromParts.pop(); // Remove filename
+
+  // Process import path
+  const importParts = importPath.split('/');
+
+  for (const part of importParts) {
+    if (part === '.') {
+      continue;
+    } else if (part === '..') {
+      fromParts.pop();
+    } else {
+      fromParts.push(part);
+    }
+  }
+
+  return fromParts.join('/');
+}
+
+// ============================================================================
+// Bundle Processing
+// ============================================================================
+
+/**
+ * Process bundles: compute sizes
+ */
+async function processBundles(
+  bundles: BundleInput[],
+  errors: string[],
+): Promise<BundleWithMetadata[]> {
+  const processed: BundleWithMetadata[] = [];
+
+  for (const bundle of bundles) {
+    try {
+      const size = computeRawSize(bundle.content);
+      const gzipSize = await computeGzipSize(bundle.content);
+
+      processed.push({
+        ...bundle,
+        size,
+        gzipSize,
+      });
+    } catch (error) {
+      errors.push(`Failed to process bundle ${bundle.fileName}: ${error}`);
+      // Add stub bundle
+      processed.push({
+        ...bundle,
+        size: 0,
+        gzipSize: 0,
+      });
+    }
+  }
+
+  return processed;
+}
+
+// ============================================================================
+// Re-exports for convenience
+// ============================================================================
+
+// Re-export input types from types module
+export type { BundleInput, ChunkInput, ModuleInput, IngestionOptions } from './types/index.js';
+
+// Re-export result types from db writer
+export type {
+  IngestionData,
+  IngestionWriteResult,
+  ModuleWithAnalysis,
+  BundleWithMetadata,
+  DependencyRelationship,
+} from './db/writer.js';
+
+export type {
+  // Analysis types
+  SymbolWithExport,
+  AnalysisResult,
+} from './ast/analyzer.js';
+
+export type {
+  // Source map types
+  SymbolFragment,
+  PositionMapping,
+} from './source-map/processor.js';
+
+export type {
+  // Dependency types
+  DependencyGraph,
+  ResolvedModule,
+} from './graph/builder.js';
+
+// Re-export internal types (for backwards compatibility with old tests)
+export type { ParsedSymbol, ParsedDependency, SizeInfo } from './types/index.js';
+
+// Re-export test helpers
 export {
   createMockBundleInput,
   createMockChunkInput,
