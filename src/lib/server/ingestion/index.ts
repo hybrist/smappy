@@ -11,7 +11,7 @@ import type {
   BundleWithMetadata,
   DependencyRelationship,
 } from './db/writer.js';
-import { extractSymbols } from './ast/analyzer.js';
+import { extractSymbols, type SymbolWithExport } from './ast/analyzer.js';
 import {
   parseSourceMap,
   mapBundleToSource,
@@ -21,6 +21,11 @@ import {
 import { buildDependencyGraph } from './graph/builder.js';
 import { computeRawSize, computeGzipSize } from './size/calculator.js';
 import { writeIngestionData } from './db/writer.js';
+import {
+  computeIncrementalDiff,
+  shouldReanalyze,
+  type IncrementalDiff,
+} from './incremental/index.js';
 
 // ============================================================================
 // Main Orchestrator API
@@ -55,9 +60,12 @@ export interface BundleIngestionResult extends IngestionWriteResult {
     bundlesWritten: number;
     sourceMapEntriesWritten: number;
     suggestionsWritten: number;
+    modulesSkipped?: number;
   };
   /** Errors encountered during processing (non-fatal) */
   errors: string[];
+  /** Incremental diff information (if incremental mode enabled) */
+  diff?: IncrementalDiff;
 }
 
 /**
@@ -76,15 +84,49 @@ export interface BundleIngestionResult extends IngestionWriteResult {
  */
 export async function ingestBundle(input: BundleIngestionInput): Promise<BundleIngestionResult> {
   const errors: string[] = [];
+  let diff: IncrementalDiff | undefined;
+  let modulesToAnalyze = input.modules;
+  let modulesSkipped = 0;
 
   try {
-    // Step 1: Analyze all modules
-    console.log(`[Ingestion] Analyzing ${input.modules.length} modules...`);
-    const analyzedModules = await analyzeModules(input.modules, input.bundles, errors);
+    // Step 0: Compute incremental diff if enabled
+    if (input.options.enableIncremental && input.options.projectName) {
+      console.log(`[Ingestion] Computing incremental diff...`);
 
-    // Step 2: Build dependency graph
+      // Perform lightweight analysis to get symbol names for diff computation
+      const symbolsForDiff = new Map<string, SymbolWithExport[]>();
+      for (const module of input.modules) {
+        try {
+          const analysisResult = extractSymbols(module.sourceContent, {
+            sourceType: 'module',
+            includeNested: false, // Lightweight for diff only
+            filePath: module.filePath,
+          });
+          symbolsForDiff.set(module.filePath, analysisResult.symbols);
+        } catch {
+          // Skip if analysis fails
+          symbolsForDiff.set(module.filePath, []);
+        }
+      }
+
+      diff = await computeIncrementalDiff(input.options.projectName, input.modules, symbolsForDiff);
+
+      // Filter modules that need re-analysis
+      modulesToAnalyze = input.modules.filter((module) => shouldReanalyze(module.filePath, diff!));
+      modulesSkipped = input.modules.length - modulesToAnalyze.length;
+
+      console.log(
+        `[Ingestion] Incremental: ${modulesToAnalyze.length} to analyze, ${modulesSkipped} skipped`,
+      );
+    }
+
+    // Step 1: Analyze modules (only those that changed in incremental mode)
+    console.log(`[Ingestion] Analyzing ${modulesToAnalyze.length} modules...`);
+    const analyzedModules = await analyzeModules(modulesToAnalyze, input.bundles, errors);
+
+    // Step 2: Build dependency graph (only for changed modules)
     console.log(`[Ingestion] Building dependency graph...`);
-    const dependencies = await buildDependencies(input.modules, errors);
+    const dependencies = await buildDependencies(modulesToAnalyze, errors);
 
     // Step 3: Process bundles
     console.log(`[Ingestion] Processing ${input.bundles.length} bundles...`);
@@ -104,11 +146,16 @@ export async function ingestBundle(input: BundleIngestionInput): Promise<BundleI
     const result = await writeIngestionData(ingestionData);
 
     console.log(`[Ingestion] ✓ Complete! Analysis run ID: ${result.analysisRunId}`);
-    console.log(`[Ingestion] Stats:`, result.stats);
+    console.log(`[Ingestion] Stats:`, { ...result.stats, modulesSkipped });
 
     return {
       ...result,
+      stats: {
+        ...result.stats,
+        modulesSkipped,
+      },
       errors,
+      diff,
     };
   } catch (error) {
     console.error('[Ingestion] ✗ Fatal error:', error);
