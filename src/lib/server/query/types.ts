@@ -1,118 +1,147 @@
 /**
- * Type definitions for query API
+ * Types for query functions
+ * Type-safe definitions for query parameters and return values
  */
 
-import type { analysisRun, module, symbol, dependency } from '../db/schema';
-
-// Pagination options
-export interface PaginationOptions {
-  limit?: number;
-  offset?: number;
-}
-
-// Module filtering and sorting options
-export interface ModulesFilterOptions extends PaginationOptions {
-  fileType?: string;
-  isThirdParty?: boolean;
-  minSize?: number;
-  maxSize?: number;
-  sortBy?: 'filePath' | 'bundledSize' | 'originalSize';
-  sortOrder?: 'asc' | 'desc';
-}
-
-// Symbol filtering and sorting options
-export interface SymbolsFilterOptions extends PaginationOptions {
-  type?: 'function' | 'class' | 'variable';
-  isExported?: boolean;
-  minSize?: number;
-  maxSize?: number;
-  sortBy?: 'name' | 'computedBundledSize' | 'computedGzipSize';
-  sortOrder?: 'asc' | 'desc';
-}
-
-// Analysis run with metadata
-export type AnalysisRun = typeof analysisRun.$inferSelect;
-
-// Module with aggregated data
-export type Module = typeof module.$inferSelect;
-
-// Symbol with location data
-export type Symbol = typeof symbol.$inferSelect;
-
-// Dependency with module information
-export type Dependency = typeof dependency.$inferSelect;
-
-// Analysis summary with aggregate statistics
-export interface AnalysisSummary extends AnalysisRun {
-  totalModules: number;
-  totalSize: number;
-  totalGzipSize: number;
-  thirdPartyModules: number;
-  thirdPartySize: number;
-  chunksCount: number;
-  bundlesCount: number;
-}
-
-// Module with related data
-export interface ModuleDetail extends Module {
-  symbols: Symbol[];
-  dependencies: Dependency[];
-  dependents: Dependency[];
-  chunks: Array<{
-    id: number;
-    name: string | null;
-  }>;
-}
-
-// Comparison result
-export interface AnalysisComparison {
-  before: AnalysisSummary;
-  after: AnalysisSummary;
-  diff: {
-    totalSizeDiff: number;
-    totalGzipSizeDiff: number;
-    modulesDiff: number;
-    addedModules: Module[];
-    removedModules: Module[];
-    changedModules: Array<{
-      module: Module;
-      beforeSize: number;
-      afterSize: number;
-      sizeDiff: number;
-    }>;
-  };
-}
-
-// Dependency graph node
-export interface DependencyGraphNode {
+/**
+ * Analysis run with full details
+ */
+export interface AnalysisRun {
   id: number;
+  projectName: string | null;
+  createdAt: string;
+  bundler: string | null;
+  moduleCount?: number;
+  bundleCount?: number;
+  totalSize?: number;
+  totalGzipSize?: number;
+}
+
+/**
+ * Module query result
+ */
+export interface Module {
+  id: number;
+  analysisRunId: number;
   filePath: string;
+  fileType: string;
+  originalSize: number;
   bundledSize: number;
   isThirdParty: boolean;
   packageName: string | null;
+  packageVersion: string | null;
+  exports: string[] | null;
+  usedExports: string[] | null;
 }
 
-// Dependency graph edge
-export interface DependencyGraphEdge {
-  from: number; // moduleId
-  to: number; // moduleId
-  importType: string;
+/**
+ * Symbol query result
+ */
+export interface Symbol {
+  id: number;
+  moduleId: number;
+  name: string;
+  type: string;
+  sourceStartLine: number;
+  sourceStartCol: number;
+  sourceEndLine: number;
+  sourceEndCol: number;
+  astHash: string | null;
+  isExported: boolean;
+  computedBundledSize: number;
+  computedGzipSize: number;
+}
+
+/**
+ * Dependency query result
+ */
+export interface Dependency {
+  id: number;
+  analysisRunId: number;
+  importerModuleId: number;
+  importedModuleId: number;
+  importType: 'static' | 'dynamic';
+  importedSymbols: string[] | null;
+  importerPath: string;
+  importedPath: string;
+}
+
+/**
+ * Dependency graph node
+ */
+export interface DependencyNode {
+  moduleId: number;
+  filePath: string;
+  dependencies: DependencyEdge[];
+  dependents: DependencyEdge[];
+}
+
+/**
+ * Dependency graph edge
+ */
+export interface DependencyEdge {
+  targetModuleId: number;
+  targetPath: string;
+  importType: 'static' | 'dynamic';
   importedSymbols: string[] | null;
 }
 
-// Complete dependency graph
-export interface DependencyGraph {
-  nodes: DependencyGraphNode[];
-  edges: DependencyGraphEdge[];
+/**
+ * Comparison result between two analyses
+ */
+export interface AnalysisComparison {
+  run1: AnalysisRun;
+  run2: AnalysisRun;
+  moduleDiff: {
+    added: Module[];
+    removed: Module[];
+    modified: {
+      module: Module;
+      sizeDelta: number;
+      exportsChanged: boolean;
+    }[];
+    unchanged: Module[];
+  };
+  sizeDelta: {
+    totalSize: number;
+    totalGzipSize: number;
+  };
+  bundleDiff: {
+    added: number;
+    removed: number;
+    modified: number;
+  };
 }
 
-// Paginated result
+/**
+ * Options for querying modules
+ */
+export interface ModuleQueryOptions {
+  /** Filter by file type */
+  fileType?: string;
+  /** Filter by third-party status */
+  isThirdParty?: boolean;
+  /** Filter by package name */
+  packageName?: string;
+  /** Search in file path */
+  search?: string;
+  /** Sort field */
+  sortBy?: 'filePath' | 'originalSize' | 'bundledSize';
+  /** Sort direction */
+  sortOrder?: 'asc' | 'desc';
+  /** Page number (1-indexed) */
+  page?: number;
+  /** Page size */
+  pageSize?: number;
+}
+
+/**
+ * Paginated result
+ */
 export interface PaginatedResult<T> {
-  data: T[];
-  pagination: {
-    total: number;
-    limit: number;
-    offset: number;
-    hasMore: boolean;
-  };
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
