@@ -1,0 +1,20 @@
+{
+  "name": "vite-fixture-app",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Test fixture project for Vite 5 bundle analysis",
+  "scripts": {
+    "build": "vite build",
+    "build:dev": "vite build --mode development"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^7.1.12",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}
