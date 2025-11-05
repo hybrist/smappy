@@ -177,12 +177,8 @@ export async function writeIngestionData(data: IngestionData): Promise<Ingestion
     writeChunkModules(tx, data.chunks, chunkIdMap, moduleIdMap);
 
     // Step 8: Write dependencies
-    stats.dependenciesWritten = writeDependencies(
-      tx,
-      analysisRunId,
-      data.dependencies,
-      moduleIdMap,
-    );
+    const dependencyIdMap = writeDependencies(tx, analysisRunId, data.dependencies, moduleIdMap);
+    stats.dependenciesWritten = dependencyIdMap.size;
 
     // Step 9: Write suggestions (optional, placeholder for now)
     if (data.suggestions && data.suggestions.length > 0) {
@@ -192,6 +188,8 @@ export async function writeIngestionData(data: IngestionData): Promise<Ingestion
         data.suggestions,
         moduleIdMap,
         symbolIdMap,
+        chunkIdMap,
+        dependencyIdMap,
       );
     }
 
@@ -455,15 +453,15 @@ function writeChunkModules(
 }
 
 /**
- * Write dependencies between modules
+ * Write dependencies between modules and return dependency path->ID mapping
  */
 function writeDependencies(
   tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
   analysisRunId: number,
   dependencies: DependencyRelationship[],
   moduleIdMap: Map<string, number>,
-): number {
-  let dependenciesWritten = 0;
+): Map<string, number> {
+  const dependencyIdMap = new Map<string, number>();
 
   for (const dep of dependencies) {
     const importerId = moduleIdMap.get(dep.importerPath);
@@ -474,7 +472,8 @@ function writeDependencies(
       continue;
     }
 
-    tx.insert(schema.dependency)
+    const result = tx
+      .insert(schema.dependency)
       .values({
         analysisRunId,
         importerModuleId: importerId,
@@ -482,28 +481,35 @@ function writeDependencies(
         importType: dep.type,
         importedSymbols: dep.importedSymbols ? JSON.stringify(dep.importedSymbols) : null,
       })
-      .run();
+      .returning({ id: schema.dependency.id })
+      .get();
 
-    dependenciesWritten++;
+    // Use composite key for dependency lookup: "importerPath:importedPath"
+    const dependencyKey = `${dep.importerPath}:${dep.importedPath}`;
+    dependencyIdMap.set(dependencyKey, result.id);
   }
 
-  return dependenciesWritten;
+  return dependencyIdMap;
 }
 
 /**
- * Write AI-generated suggestions (placeholder implementation)
+ * Write AI-generated suggestions with entity links
  */
 function writeSuggestions(
   tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
   analysisRunId: number,
   suggestions: SuggestionData[],
-  _moduleIdMap: Map<string, number>,
-  _symbolIdMap: Map<string, number>,
+  moduleIdMap: Map<string, number>,
+  symbolIdMap: Map<string, number>,
+  chunkIdMap: Map<string, number>,
+  dependencyIdMap: Map<string, number>,
 ): number {
   let suggestionsWritten = 0;
 
   for (const suggestion of suggestions) {
-    tx.insert(schema.suggestion)
+    // Insert suggestion and get its ID
+    const result = tx
+      .insert(schema.suggestion)
       .values({
         analysisRunId,
         type: suggestion.type,
@@ -511,10 +517,59 @@ function writeSuggestions(
         title: suggestion.title,
         description: suggestion.description,
       })
-      .run();
+      .returning({ id: schema.suggestion.id })
+      .get();
 
-    // TODO: Write suggestion links (requires entity ID resolution)
-    // For now, we'll skip this as it requires more complex mapping
+    const suggestionId = result.id;
+
+    // Write suggestion links if present
+    if (suggestion.links && suggestion.links.length > 0) {
+      for (const link of suggestion.links) {
+        if (!link.entityPath) {
+          // Skip links without entity path
+          continue;
+        }
+
+        let entityId: number | undefined;
+
+        // Resolve entity ID based on entity type
+        switch (link.entityType) {
+          case 'Module': {
+            entityId = moduleIdMap.get(link.entityPath);
+            break;
+          }
+          case 'Symbol': {
+            // Symbol path format: "modulePath:symbolName"
+            entityId = symbolIdMap.get(link.entityPath);
+            break;
+          }
+          case 'Chunk': {
+            entityId = chunkIdMap.get(link.entityPath);
+            break;
+          }
+          case 'Dependency': {
+            // Dependency path format: "importerPath:importedPath"
+            entityId = dependencyIdMap.get(link.entityPath);
+            break;
+          }
+          default: {
+            // Unknown entity type, skip
+            continue;
+          }
+        }
+
+        // Only write link if entity ID was resolved
+        if (entityId !== undefined) {
+          tx.insert(schema.suggestionLink)
+            .values({
+              suggestionId,
+              entityType: link.entityType,
+              entityId,
+            })
+            .run();
+        }
+      }
+    }
 
     suggestionsWritten++;
   }
