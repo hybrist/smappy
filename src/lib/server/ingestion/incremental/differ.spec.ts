@@ -16,8 +16,6 @@ import {
 import type { ModuleInput } from '../types/index.js';
 import type { SymbolWithExport } from '../ast/analyzer.js';
 import * as schema from '../../db/schema.js';
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { createHash } from 'crypto';
 
 // Mock the db module to use test database

@@ -11,7 +11,7 @@ import type {
   BundleWithMetadata,
   DependencyRelationship,
 } from './db/writer.js';
-import { extractSymbols } from './ast/analyzer.js';
+import { extractSymbols, type SymbolWithExport } from './ast/analyzer.js';
 import {
   parseSourceMap,
   mapBundleToSource,
@@ -94,7 +94,7 @@ export async function ingestBundle(input: BundleIngestionInput): Promise<BundleI
       console.log(`[Ingestion] Computing incremental diff...`);
 
       // Perform lightweight analysis to get symbol names for diff computation
-      const symbolsForDiff = new Map<string, any[]>();
+      const symbolsForDiff = new Map<string, SymbolWithExport[]>();
       for (const module of input.modules) {
         try {
           const analysisResult = extractSymbols(module.sourceContent, {
@@ -109,20 +109,14 @@ export async function ingestBundle(input: BundleIngestionInput): Promise<BundleI
         }
       }
 
-      diff = await computeIncrementalDiff(
-        input.options.projectName,
-        input.modules,
-        symbolsForDiff,
-      );
+      diff = await computeIncrementalDiff(input.options.projectName, input.modules, symbolsForDiff);
 
       // Filter modules that need re-analysis
-      modulesToAnalyze = input.modules.filter((module) =>
-        shouldReanalyze(module.filePath, diff!)
-      );
+      modulesToAnalyze = input.modules.filter((module) => shouldReanalyze(module.filePath, diff!));
       modulesSkipped = input.modules.length - modulesToAnalyze.length;
 
       console.log(
-        `[Ingestion] Incremental: ${modulesToAnalyze.length} to analyze, ${modulesSkipped} skipped`
+        `[Ingestion] Incremental: ${modulesToAnalyze.length} to analyze, ${modulesSkipped} skipped`,
       );
     }
 

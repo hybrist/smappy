@@ -5,7 +5,7 @@
 
 import { db } from '../../db/index.js';
 import * as schema from '../../db/schema.js';
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { createHash } from 'crypto';
 import type { ModuleInput } from '../types/index.js';
 import type { SymbolWithExport } from '../ast/analyzer.js';
@@ -252,7 +252,7 @@ export function computeSymbolDiff(
   const previousSymbolMap = new Map(previousSymbols.map((s) => [s.name, s]));
 
   // Find added symbols
-  for (const [name, currentSymbol] of currentSymbolMap) {
+  for (const [name] of currentSymbolMap) {
     if (!previousSymbolMap.has(name)) {
       diff.added.push(name);
     }
@@ -341,10 +341,7 @@ export function shouldReanalyze(modulePath: string, diff: IncrementalDiff): bool
   }
 
   // Analyze if module was added or modified
-  if (
-    diff.moduleDiff.added.includes(modulePath) ||
-    diff.moduleDiff.modified.includes(modulePath)
-  ) {
+  if (diff.moduleDiff.added.includes(modulePath) || diff.moduleDiff.modified.includes(modulePath)) {
     return true;
   }
 
@@ -352,9 +349,7 @@ export function shouldReanalyze(modulePath: string, diff: IncrementalDiff): bool
   const symbolDiff = diff.symbolDiffs.get(modulePath);
   if (
     symbolDiff &&
-    (symbolDiff.added.length > 0 ||
-      symbolDiff.removed.length > 0 ||
-      symbolDiff.modified.length > 0)
+    (symbolDiff.added.length > 0 || symbolDiff.removed.length > 0 || symbolDiff.modified.length > 0)
   ) {
     return true;
   }
@@ -370,10 +365,7 @@ export function shouldReanalyze(modulePath: string, diff: IncrementalDiff): bool
 /**
  * Compute content hash for a module based on size and symbol hashes
  */
-function computeModuleContentHash(data: {
-  originalSize: number;
-  symbolHashes: string[];
-}): string {
+function computeModuleContentHash(data: { originalSize: number; symbolHashes: string[] }): string {
   const content = JSON.stringify({
     size: data.originalSize,
     symbols: data.symbolHashes.sort(),
