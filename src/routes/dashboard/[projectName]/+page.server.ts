@@ -5,6 +5,10 @@ import {
   getAnalysisHistory,
   getLatestAnalysis,
   getAnalysisById,
+  getBundlesByAnalysis,
+  getBundleBreakdownByFileType,
+  getChunksByAnalysis,
+  getModulesByAnalysis,
 } from '$lib/server/query/index.js';
 
 export const load: PageServerLoad = async ({ params, url }) => {
@@ -49,11 +53,44 @@ export const load: PageServerLoad = async ({ params, url }) => {
     }
   }
 
+  // Fetch bundle overview data if analysis exists
+  let bundles = [];
+  let bundleBreakdown = new Map();
+  let chunks = [];
+  let topModules = [];
+  let modulesData = null;
+
+  if (analysis) {
+    try {
+      [bundles, bundleBreakdown, chunks, modulesData] = await Promise.all([
+        getBundlesByAnalysis(analysis.id),
+        getBundleBreakdownByFileType(analysis.id),
+        getChunksByAnalysis(analysis.id),
+        getModulesByAnalysis(analysis.id, {
+          sortBy: 'bundledSize',
+          sortOrder: 'desc',
+          pageSize: 10, // Top 10 largest modules
+        }),
+      ]);
+      topModules = modulesData.items;
+    } catch (error) {
+      console.error('Error fetching bundle overview data:', error);
+      // Continue with empty data
+    }
+  }
+
   return {
     projectName,
     projects,
     analysisHistory,
     selectedAnalysisId,
     analysis,
+    bundles: bundles.map((b) => ({
+      ...b,
+      gzipSize: b.gzipSize ?? null,
+    })),
+    bundleBreakdown: Object.fromEntries(bundleBreakdown),
+    chunks,
+    topModules,
   };
 };

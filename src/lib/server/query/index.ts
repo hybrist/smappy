@@ -16,6 +16,8 @@ import type {
   AnalysisComparison,
   ModuleQueryOptions,
   PaginatedResult,
+  Bundle,
+  Chunk,
 } from './types.js';
 
 // ============================================================================
@@ -579,6 +581,92 @@ export async function getAnalysisHistory(projectName: string): Promise<AnalysisR
 }
 
 // ============================================================================
+// Bundle Queries
+// ============================================================================
+
+/**
+ * Get bundles for an analysis run
+ *
+ * @param analysisId - Analysis run ID
+ * @returns Array of bundles
+ */
+export async function getBundlesByAnalysis(analysisId: number): Promise<Bundle[]> {
+  const bundles = await db
+    .select({
+      id: schema.bundle.id,
+      analysisRunId: schema.bundle.analysisRunId,
+      fileName: schema.bundle.fileName,
+      fileType: schema.bundle.fileType,
+      size: schema.bundle.size,
+      gzipSize: schema.bundle.gzipSize,
+    })
+    .from(schema.bundle)
+    .where(eq(schema.bundle.analysisRunId, analysisId))
+    .orderBy(desc(schema.bundle.size));
+
+  return bundles;
+}
+
+/**
+ * Get bundle breakdown by file type for an analysis run
+ *
+ * @param analysisId - Analysis run ID
+ * @returns Map of file type to aggregate statistics
+ */
+export async function getBundleBreakdownByFileType(
+  analysisId: number,
+): Promise<Map<string, { count: number; totalSize: number; totalGzipSize: number }>> {
+  const bundles = await db
+    .select({
+      fileType: schema.bundle.fileType,
+      size: schema.bundle.size,
+      gzipSize: schema.bundle.gzipSize,
+    })
+    .from(schema.bundle)
+    .where(eq(schema.bundle.analysisRunId, analysisId));
+
+  const breakdown = new Map<string, { count: number; totalSize: number; totalGzipSize: number }>();
+
+  for (const bundle of bundles) {
+    const existing = breakdown.get(bundle.fileType) || { count: 0, totalSize: 0, totalGzipSize: 0 };
+    breakdown.set(bundle.fileType, {
+      count: existing.count + 1,
+      totalSize: existing.totalSize + bundle.size,
+      totalGzipSize: existing.totalGzipSize + (bundle.gzipSize ?? 0),
+    });
+  }
+
+  return breakdown;
+}
+
+// ============================================================================
+// Chunk Queries
+// ============================================================================
+
+/**
+ * Get chunks for an analysis run
+ *
+ * @param analysisId - Analysis run ID
+ * @returns Array of chunks
+ */
+export async function getChunksByAnalysis(analysisId: number): Promise<Chunk[]> {
+  const chunks = await db
+    .select({
+      id: schema.chunk.id,
+      analysisRunId: schema.chunk.analysisRunId,
+      name: schema.chunk.name,
+      totalSize: schema.chunk.totalSize,
+      isEntry: schema.chunk.isEntry,
+      isAsync: schema.chunk.isAsync,
+    })
+    .from(schema.chunk)
+    .where(eq(schema.chunk.analysisRunId, analysisId))
+    .orderBy(desc(schema.chunk.totalSize));
+
+  return chunks;
+}
+
+// ============================================================================
 // Re-exports
 // ============================================================================
 
@@ -592,4 +680,6 @@ export type {
   AnalysisComparison,
   ModuleQueryOptions,
   PaginatedResult,
+  Bundle,
+  Chunk,
 };
