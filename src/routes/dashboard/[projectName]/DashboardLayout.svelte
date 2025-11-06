@@ -66,6 +66,22 @@
           Compare
         </a>
       </li>
+      <li>
+        <a
+          href="/dashboard/{$page.params.projectName}/suggestions"
+          class="nav-link"
+          class:active={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/suggestions`,
+          )}
+          aria-current={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/suggestions`,
+          )
+            ? 'page'
+            : undefined}
+        >
+          Suggestions
+        </a>
+      </li>
     </ul>
   </nav>
   <main class="dashboard-main">

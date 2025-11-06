@@ -7,7 +7,16 @@ import * as v from 'valibot';
 import { query } from '$app/server';
 import { error } from '@sveltejs/kit';
 import { db } from '../db';
-import { analysisRun, module, symbol, dependency, chunk, bundle } from '../db/schema';
+import {
+  analysisRun,
+  module,
+  symbol,
+  dependency,
+  chunk,
+  bundle,
+  suggestion,
+  suggestionLink,
+} from '../db/schema';
 import { eq, desc, asc, and, gte, lte, sql, count } from 'drizzle-orm';
 import type {
   AnalysisSummary,
@@ -16,6 +25,7 @@ import type {
   LegacyPaginatedResult as PaginatedResult,
   Module,
   Symbol,
+  SuggestionWithLinks,
 } from './types';
 
 // Validation schemas
@@ -458,3 +468,120 @@ async function getAnalysisSummary(analysisId: number): Promise<AnalysisSummary> 
 
   return summary;
 }
+
+/**
+ * Get suggestions for an analysis with optional filtering
+ */
+export const getSuggestionsByAnalysis = query(
+  v.object({
+    analysisId: analysisIdSchema,
+    options: v.optional(
+      v.object({
+        type: v.optional(v.string()),
+        severity: v.optional(v.picklist(['critical', 'warning', 'info'])),
+        limit: v.optional(v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(1000))),
+        offset: v.optional(v.pipe(v.number(), v.integer(), v.minValue(0))),
+      }),
+      {},
+    ),
+  }),
+  async ({ analysisId, options }) => {
+    // Verify analysis exists
+    const [analysis] = await db
+      .select()
+      .from(analysisRun)
+      .where(eq(analysisRun.id, analysisId))
+      .limit(1);
+
+    if (!analysis) {
+      error(404, `Analysis with ID ${analysisId} not found`);
+    }
+
+    // Build filter conditions
+    const conditions = [eq(suggestion.analysisRunId, analysisId)];
+
+    if (options.type) {
+      conditions.push(eq(suggestion.type, options.type));
+    }
+
+    if (options.severity) {
+      conditions.push(eq(suggestion.severity, options.severity));
+    }
+
+    const where = and(...conditions);
+
+    // Get total count
+    const [{ total }] = await db.select({ total: count() }).from(suggestion).where(where);
+
+    // Get paginated data
+    const limit = options.limit || 100;
+    const offset = options.offset || 0;
+
+    const suggestions = await db
+      .select()
+      .from(suggestion)
+      .where(where)
+      .orderBy(
+        // Order by severity (critical > warning > info), then by id
+        sql`CASE ${suggestion.severity} 
+            WHEN 'critical' THEN 1 
+            WHEN 'warning' THEN 2 
+            WHEN 'info' THEN 3 
+            END`,
+        asc(suggestion.id),
+      )
+      .limit(limit)
+      .offset(offset);
+
+    // Get links for each suggestion
+    const suggestionsWithLinks: SuggestionWithLinks[] = await Promise.all(
+      suggestions.map(async (sug) => {
+        const links = await db
+          .select()
+          .from(suggestionLink)
+          .where(eq(suggestionLink.suggestionId, sug.id));
+
+        // Resolve entity paths for modules
+        const linksWithPaths = await Promise.all(
+          links.map(async (link) => {
+            if (link.entityType === 'Module') {
+              const [mod] = await db
+                .select({ filePath: module.filePath })
+                .from(module)
+                .where(eq(module.id, link.entityId))
+                .limit(1);
+
+              return {
+                entityType: link.entityType,
+                entityId: link.entityId,
+                entityPath: mod?.filePath,
+              };
+            }
+            return {
+              entityType: link.entityType,
+              entityId: link.entityId,
+            };
+          }),
+        );
+
+        return {
+          ...sug,
+          links: linksWithPaths,
+        };
+      }),
+    );
+
+    const result: PaginatedResult<SuggestionWithLinks> = {
+      data: suggestionsWithLinks,
+      pagination: {
+        total,
+        limit,
+        offset,
+        hasMore: offset + limit < total,
+      },
+    };
+
+    return result;
+  },
+);
+
