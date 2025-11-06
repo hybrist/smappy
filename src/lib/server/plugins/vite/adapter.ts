@@ -94,7 +94,13 @@ export class ViteAdapter extends BundlerAdapter {
 
     for (const [id, chunkOrAsset] of Object.entries(bundle)) {
       // Only process chunks (not assets)
-      if (chunkOrAsset?.type !== 'chunk') {
+      // Type guard: check if it's a chunk
+      if (
+        !chunkOrAsset ||
+        typeof chunkOrAsset !== 'object' ||
+        !('type' in chunkOrAsset) ||
+        chunkOrAsset.type !== 'chunk'
+      ) {
         continue;
       }
 
@@ -105,7 +111,7 @@ export class ViteAdapter extends BundlerAdapter {
         for (const [moduleId, moduleInfo] of Object.entries(chunk.modules)) {
           // Type guard for module info - Rollup modules have renderedLength
           const info = moduleInfo as { renderedLength?: number };
-          
+
           // Skip virtual modules and node_modules unless configured
           if (
             moduleId.startsWith('\0') ||
@@ -168,7 +174,13 @@ export class ViteAdapter extends BundlerAdapter {
     const chunks: BundlerChunk[] = [];
 
     for (const [id, chunkOrAsset] of Object.entries(bundle)) {
-      if (chunkOrAsset?.type !== 'chunk') {
+      // Type guard: check if it's a chunk
+      if (
+        !chunkOrAsset ||
+        typeof chunkOrAsset !== 'object' ||
+        !('type' in chunkOrAsset) ||
+        chunkOrAsset.type !== 'chunk'
+      ) {
         continue;
       }
 
@@ -208,7 +220,13 @@ export class ViteAdapter extends BundlerAdapter {
 
     for (const [, chunkOrAsset] of Object.entries(bundle)) {
       // Process chunks (JS files)
-      if (chunkOrAsset?.type === 'chunk') {
+      // Type guard: check if it's a chunk
+      if (
+        chunkOrAsset &&
+        typeof chunkOrAsset === 'object' &&
+        'type' in chunkOrAsset &&
+        chunkOrAsset.type === 'chunk'
+      ) {
         const chunk = chunkOrAsset as OutputChunk;
         const fileName = chunk.fileName;
 
