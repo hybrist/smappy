@@ -6,6 +6,7 @@
 </script>
 
 <svelte:head>
+  <title>SvelteKit</title>
   <link rel="icon" href={favicon} />
 </svelte:head>
 
