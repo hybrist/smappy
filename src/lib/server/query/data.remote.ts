@@ -11,9 +11,9 @@ import { analysisRun, module, symbol, dependency, chunk, bundle } from '../db/sc
 import { eq, desc, asc, and, gte, lte, sql, count } from 'drizzle-orm';
 import type {
   AnalysisSummary,
-  AnalysisComparison,
+  LegacyAnalysisComparison as AnalysisComparison,
   DependencyGraph,
-  PaginatedResult,
+  LegacyPaginatedResult as PaginatedResult,
   Module,
   Symbol,
 } from './types';
@@ -150,13 +150,20 @@ export const getModulesByAnalysis = query(
     const limit = options.limit || 50;
     const offset = options.offset || 0;
 
-    const modules = await db
+    const modulesRaw = await db
       .select()
       .from(module)
       .where(where)
       .orderBy(orderBy)
       .limit(limit)
       .offset(offset);
+
+    // Parse JSON fields for exports and usedExports
+    const modules: Module[] = modulesRaw.map((mod) => ({
+      ...mod,
+      exports: mod.exports ? JSON.parse(mod.exports) : null,
+      usedExports: mod.usedExports ? JSON.parse(mod.usedExports) : null,
+    }));
 
     const result: PaginatedResult<Module> = {
       data: modules,
@@ -297,10 +304,23 @@ export const compareAnalyses = query(compareAnalysesSchema, async ({ id1, id2 })
   const [before, after] = await Promise.all([getAnalysisSummary(id1), getAnalysisSummary(id2)]);
 
   // Get modules for both analyses
-  const [modulesBefore, modulesAfter] = await Promise.all([
+  const [modulesBeforeRaw, modulesAfterRaw] = await Promise.all([
     db.select().from(module).where(eq(module.analysisRunId, id1)),
     db.select().from(module).where(eq(module.analysisRunId, id2)),
   ]);
+
+  // Parse JSON fields for exports and usedExports
+  const modulesBefore: Module[] = modulesBeforeRaw.map((mod) => ({
+    ...mod,
+    exports: mod.exports ? JSON.parse(mod.exports) : null,
+    usedExports: mod.usedExports ? JSON.parse(mod.usedExports) : null,
+  }));
+
+  const modulesAfter: Module[] = modulesAfterRaw.map((mod) => ({
+    ...mod,
+    exports: mod.exports ? JSON.parse(mod.exports) : null,
+    usedExports: mod.usedExports ? JSON.parse(mod.usedExports) : null,
+  }));
 
   // Create maps for comparison
   const beforeMap = new Map(modulesBefore.map((m) => [m.filePath, m]));
