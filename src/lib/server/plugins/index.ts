@@ -36,3 +36,7 @@ export {
 // Re-export adapters
 export { BundlerAdapter, AdapterRegistry, createDefaultAdapter } from './adapters.js';
 export type { AdapterFactory } from './adapters.js';
+
+// Re-export Angular plugin
+export { AngularAdapter, angularBundleAnalysisBuilder } from './angular/index.js';
+export type { AngularBuilderOptions } from './angular/index.js';
