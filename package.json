@@ -46,6 +46,7 @@
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^22.19.0",
     "@types/pako": "^2.0.4",
+    "@types/rollup": "^0.54.0",
     "@vitest/browser": "^3.2.4",
     "drizzle-kit": "^0.31.6",
     "drizzle-orm": "^0.44.7",

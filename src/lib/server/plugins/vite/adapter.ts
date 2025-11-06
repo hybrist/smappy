@@ -94,7 +94,7 @@ export class ViteAdapter extends BundlerAdapter {
 
     for (const [id, chunkOrAsset] of Object.entries(bundle)) {
       // Only process chunks (not assets)
-      if (chunkOrAsset.type !== 'chunk') {
+      if (chunkOrAsset?.type !== 'chunk') {
         continue;
       }
 
@@ -103,6 +103,9 @@ export class ViteAdapter extends BundlerAdapter {
       // Extract module information from chunk
       if (chunk.modules) {
         for (const [moduleId, moduleInfo] of Object.entries(chunk.modules)) {
+          // Type guard for module info - Rollup modules have renderedLength
+          const info = moduleInfo as { renderedLength?: number };
+          
           // Skip virtual modules and node_modules unless configured
           if (
             moduleId.startsWith('\0') ||
@@ -133,7 +136,7 @@ export class ViteAdapter extends BundlerAdapter {
           modules.push({
             identifier: moduleId,
             name: moduleId,
-            size: moduleInfo.renderedLength,
+            size: info.renderedLength,
             source,
             dependencies: [...new Set(dependencies)], // Deduplicate
             reasons: chunk.isEntry
@@ -165,7 +168,7 @@ export class ViteAdapter extends BundlerAdapter {
     const chunks: BundlerChunk[] = [];
 
     for (const [id, chunkOrAsset] of Object.entries(bundle)) {
-      if (chunkOrAsset.type !== 'chunk') {
+      if (chunkOrAsset?.type !== 'chunk') {
         continue;
       }
 
@@ -205,7 +208,7 @@ export class ViteAdapter extends BundlerAdapter {
 
     for (const [, chunkOrAsset] of Object.entries(bundle)) {
       // Process chunks (JS files)
-      if (chunkOrAsset.type === 'chunk') {
+      if (chunkOrAsset?.type === 'chunk') {
         const chunk = chunkOrAsset as OutputChunk;
         const fileName = chunk.fileName;
 
@@ -221,7 +224,7 @@ export class ViteAdapter extends BundlerAdapter {
             // Check for inline source map
             if (chunk.map) {
               sourceMap = typeof chunk.map === 'string' ? chunk.map : JSON.stringify(chunk.map);
-            } else {
+            } else if (fileName && content) {
               // Try to extract from content
               const bundlePath = this.resolveBundlePath(fileName, outputDir);
               sourceMap = extractSourceMap(content, bundlePath, outputDir);
