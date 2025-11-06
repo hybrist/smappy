@@ -176,7 +176,8 @@ export function main() {
 
   // Create chain of dependencies
   for (let i = 1; i < depth; i++) {
-    const nextModule = i < depth - 1 ? `./src/module${i + 1}.js` : null;
+    // Import path should be relative to current module's directory
+    const nextModule = i < depth - 1 ? `./module${i + 1}.js` : null;
     modules.push({
       filePath: `./src/module${i}.js`,
       sourceContent: `
@@ -238,7 +239,8 @@ export function main() {
   // Create branches with deep chains
   for (let b = 0; b < branches; b++) {
     for (let d = 0; d < depth; d++) {
-      const nextLevel = d < depth - 1 ? `./src/branch${b}_${d + 1}.js` : null;
+      // Import path should be relative to current module's directory
+      const nextLevel = d < depth - 1 ? `./branch${b}_${d + 1}.js` : null;
       modules.push({
         filePath: `./src/branch${b}_${d}.js`,
         sourceContent: `
