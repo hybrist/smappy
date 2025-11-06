@@ -22,8 +22,6 @@ import {
   detectFileType,
   normalizePath,
   resolveModulePath,
-  getSize,
-  readFileContentSafe,
   shouldExcludeFile,
   shouldIncludeFile,
   isModuleFile,
@@ -70,7 +68,7 @@ export abstract class BundlerAdapter {
    * @param errors - Array to collect errors
    * @returns Array of normalized ModuleInput
    */
-  protected convertModules(bundlerModules: BundlerModule[], errors: string[]): ModuleInput[] {
+  protected convertModules(bundlerModules: BundlerModule[], _errors: string[]): ModuleInput[] {
     const modules: ModuleInput[] = [];
 
     for (const bundlerModule of bundlerModules) {
@@ -121,7 +119,7 @@ export abstract class BundlerAdapter {
    * @param errors - Array to collect errors
    * @returns Array of normalized ChunkInput
    */
-  protected convertChunks(bundlerChunks: BundlerChunk[], errors: string[]): ChunkInput[] {
+  protected convertChunks(bundlerChunks: BundlerChunk[], _errors: string[]): ChunkInput[] {
     const chunks: ChunkInput[] = [];
 
     for (const bundlerChunk of bundlerChunks) {
@@ -144,7 +142,7 @@ export abstract class BundlerAdapter {
    * @param errors - Array to collect errors
    * @returns Array of normalized BundleInput
    */
-  protected convertBundles(bundlerBundles: BundlerBundle[], errors: string[]): BundleInput[] {
+  protected convertBundles(bundlerBundles: BundlerBundle[], _errors: string[]): BundleInput[] {
     const bundles: BundleInput[] = [];
 
     for (const bundlerBundle of bundlerBundles) {

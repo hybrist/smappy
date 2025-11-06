@@ -3,8 +3,7 @@
  * Common functions for parsing stats, extracting source maps, and normalizing data
  */
 
-import type { BundleInput, ChunkInput, ModuleInput } from '../ingestion/types/index.js';
-import type { BundlerModule, BundlerChunk, BundlerBundle } from './types.js';
+import type { BundleInput, ModuleInput } from '../ingestion/types/index.js';
 import { readFileSync } from 'node:fs';
 import { join, dirname, extname } from 'node:path';
 
