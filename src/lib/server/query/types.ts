@@ -145,3 +145,79 @@ export interface PaginatedResult<T> {
   pageSize: number;
   totalPages: number;
 }
+
+/**
+ * Analysis summary with aggregate statistics
+ */
+export interface AnalysisSummary extends AnalysisRun {
+  totalModules: number;
+  totalSize: number;
+  totalGzipSize: number;
+  thirdPartyModules: number;
+  thirdPartySize: number;
+  chunksCount: number;
+  bundlesCount: number;
+}
+
+/**
+ * Dependency graph node for graph visualization
+ */
+export interface DependencyGraphNode {
+  id: number;
+  filePath: string;
+  bundledSize: number;
+  isThirdParty: boolean;
+  packageName: string | null;
+}
+
+/**
+ * Dependency graph edge for graph visualization
+ */
+export interface DependencyGraphEdge {
+  from: number; // moduleId
+  to: number; // moduleId
+  importType: string;
+  importedSymbols: string[] | null;
+}
+
+/**
+ * Complete dependency graph for visualization
+ */
+export interface DependencyGraph {
+  nodes: DependencyGraphNode[];
+  edges: DependencyGraphEdge[];
+}
+
+/**
+ * Legacy paginated result format (for compatibility with data.remote.ts)
+ */
+export interface LegacyPaginatedResult<T> {
+  data: T[];
+  pagination: {
+    total: number;
+    limit: number;
+    offset: number;
+    hasMore: boolean;
+  };
+}
+
+/**
+ * Legacy comparison result format (for compatibility with data.remote.ts)
+ */
+export interface LegacyAnalysisComparison {
+  before: AnalysisSummary;
+  after: AnalysisSummary;
+  diff: {
+    totalSizeDiff: number;
+    totalGzipSizeDiff: number;
+    modulesDiff: number;
+    addedModules: Module[];
+    removedModules: Module[];
+    changedModules: Array<{
+      module: Module;
+      beforeSize: number;
+      afterSize: number;
+      sizeDiff: number;
+    }>;
+  };
+}
