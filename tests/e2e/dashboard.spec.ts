@@ -3,7 +3,7 @@
  * Tests that the UI correctly displays ingested bundle data
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, type ConsoleMessage } from '@playwright/test';
 import { ingestBundle, type BundleIngestionInput } from '../../src/lib/server/ingestion/index.js';
 import type {
   BundleInput,
@@ -99,7 +99,7 @@ export class DashboardComponent {
 
     // Check that there are no console errors
     const errors: string[] = [];
-    page.on('console', (msg) => {
+    page.on('console', (msg: ConsoleMessage) => {
       if (msg.type() === 'error') {
         errors.push(msg.text());
       }
