@@ -102,7 +102,7 @@ export class WebpackAdapter extends BundlerAdapter {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     statsJson: any,
     compilation: Compilation,
-    _outputPath: string,
+    outputPath: string,
     _errors: string[],
   ): BundlerModule[] {
     const modules: BundlerModule[] = [];
@@ -137,9 +137,15 @@ export class WebpackAdapter extends BundlerAdapter {
             }
           }
         } catch {
-          // Source not available, try reading from file system
+          // Source not available from compilation; could be missing moduleGraph or incompatible webpack version
+          if (this.config?.debug) {
+            console.debug(
+              `[webpack-adapter] Failed to extract source from compilation for moduleId: ${moduleId}. Falling back to file system.`,
+            );
+          }
+          // Try reading from file system
           try {
-            const modulePath = this.resolveModulePath(moduleId, _outputPath);
+            const modulePath = this.resolveModulePath(moduleId, outputPath);
             source = readFileContent(modulePath);
           } catch {
             // Source not available, that's okay
@@ -188,7 +194,7 @@ export class WebpackAdapter extends BundlerAdapter {
             // Try to get source content
             let source: string | undefined;
             try {
-              const modulePath = this.resolveModulePath(moduleId, _outputPath);
+              const modulePath = this.resolveModulePath(moduleId, outputPath);
               source = readFileContent(modulePath);
             } catch {
               // Source not available
@@ -258,7 +264,7 @@ export class WebpackAdapter extends BundlerAdapter {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     statsJson: any,
     _compilation: Compilation,
-    _outputPath: string,
+    outputPath: string,
     _errors: string[],
   ): BundlerBundle[] {
     const bundles: BundlerBundle[] = [];
@@ -281,7 +287,7 @@ export class WebpackAdapter extends BundlerAdapter {
       let sourceMap: string | undefined;
 
       try {
-        const bundlePath = this.resolveBundlePath(fileName, _outputPath);
+        const bundlePath = this.resolveBundlePath(fileName, outputPath);
         content = readFileContent(bundlePath);
 
         // Extract source map if enabled
@@ -292,7 +298,7 @@ export class WebpackAdapter extends BundlerAdapter {
             sourceMap = readFileContent(sourceMapPath);
           } catch {
             // Try to extract from content
-            sourceMap = extractSourceMap(content, bundlePath, _outputPath);
+            sourceMap = extractSourceMap(content, bundlePath, outputPath);
           }
         }
       } catch (error) {
@@ -330,7 +336,7 @@ export class WebpackAdapter extends BundlerAdapter {
   /**
    * Resolve module path from module identifier
    */
-  private resolveModulePath(moduleId: string, _outputPath: string): string {
+  private resolveModulePath(moduleId: string, outputPath: string): string {
     // Remove webpack-specific prefixes
     let cleanId = moduleId;
     if (cleanId.startsWith('multi ')) {
@@ -343,21 +349,21 @@ export class WebpackAdapter extends BundlerAdapter {
 
     // If it's already an absolute path, return it normalized
     if (cleanId.startsWith('/') || cleanId.match(/^[A-Z]:/)) {
-      return normalizePath(cleanId, this.baseDir);
+      return normalizePath(cleanId, outputPath || this.baseDir);
     }
 
-    // Try to resolve relative to base directory
-    return normalizePath(cleanId, this.baseDir);
+    // Try to resolve relative to output path or base directory
+    return normalizePath(cleanId, outputPath || this.baseDir);
   }
 
   /**
    * Resolve bundle file path
    */
-  private resolveBundlePath(fileName: string, _outputPath: string): string {
+  private resolveBundlePath(fileName: string, outputPath: string): string {
     if (fileName.startsWith('/')) {
       return fileName;
     }
-    return normalizePath(fileName, this.baseDir);
+    return normalizePath(fileName, outputPath || this.baseDir);
   }
 
   /**

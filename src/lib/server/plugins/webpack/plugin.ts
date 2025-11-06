@@ -78,7 +78,7 @@ export class WebpackBundleAnalysisPlugin {
         const extractionResult = adapter.extract({
           stats,
           compilation,
-          outputPath: outputPath.toString(),
+          outputPath: outputPath,
         });
 
         // Log warnings and errors
@@ -106,18 +106,20 @@ export class WebpackBundleAnalysisPlugin {
                 `Analysis run ID: ${result.analysisRunId}`,
             );
           } catch (error) {
-            console.error('[Webpack Bundle Analysis] Failed to ingest bundles:', error);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            console.error('[Webpack Bundle Analysis] Failed to ingest bundles:', errorMessage);
             if (this.config?.debug) {
-              console.error(error);
+              console.error('Full error details:', error);
             }
           }
         }
 
         callback();
       } catch (error) {
-        console.error('[Webpack Bundle Analysis] Failed to analyze bundle:', error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error('[Webpack Bundle Analysis] Failed to analyze bundle:', errorMessage);
         if (this.config?.debug) {
-          console.error(error);
+          console.error('Full error details:', error);
         }
         callback();
       }
