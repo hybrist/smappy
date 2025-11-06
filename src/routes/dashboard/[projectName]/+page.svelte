@@ -54,7 +54,6 @@
         </section>
 
         <BundleOverview
-          bundles={data.bundles || []}
           bundleBreakdown={data.bundleBreakdown || {}}
           chunks={data.chunks || []}
           topModules={data.topModules || []}

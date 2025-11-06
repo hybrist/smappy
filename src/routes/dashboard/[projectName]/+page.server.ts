@@ -79,8 +79,8 @@ export const load: PageServerLoad = async ({ params, url }) => {
         }),
       ]);
       topModules = modulesData.items;
-    } catch (error) {
-      console.error('Error fetching bundle overview data:', error);
+    } catch (err) {
+      console.error('Error fetching bundle overview data:', err);
       // Continue with empty data
     }
   }

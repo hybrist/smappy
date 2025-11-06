@@ -1,20 +1,19 @@
 <script lang="ts">
-  import type { Bundle, Chunk, Module } from '$lib/server/query/types.js';
+  import type { Chunk, Module } from '$lib/server/query/types.js';
 
   interface Props {
-    bundles: Bundle[];
     bundleBreakdown: Record<string, { count: number; totalSize: number; totalGzipSize: number }>;
     chunks: Chunk[];
     topModules: Module[];
     analysisId: number;
   }
 
-  let { bundles: _bundles, bundleBreakdown, chunks, topModules, analysisId }: Props = $props();
+  let { bundleBreakdown, chunks, topModules, analysisId }: Props = $props();
 
   // Module table state
   let searchQuery = $state('');
-  let fileTypeFilter = $state<string | null>(null);
-  let thirdPartyFilter = $state<boolean | null>(null);
+  let fileTypeFilter = $state<string>('');
+  let thirdPartyFilter = $state<string>('');
   let sortBy = $state<'filePath' | 'bundledSize' | 'originalSize'>('bundledSize');
   let sortOrder = $state<'asc' | 'desc'>('desc');
   let currentPage = $state(1);
@@ -25,6 +24,7 @@
   let totalModules = $state(0);
   let totalPages = $state(0);
   let isLoadingModules = $state(false);
+  let loadError = $state<string | null>(null);
 
   function formatBytes(bytes: number): string {
     if (bytes === 0) return '0 B';
@@ -47,6 +47,7 @@
 
   async function loadModules() {
     isLoadingModules = true;
+    loadError = null;
     try {
       const params: string[] = [
         `analysisId=${encodeURIComponent(analysisId.toString())}`,
@@ -57,16 +58,19 @@
       ];
       if (searchQuery) params.push(`search=${encodeURIComponent(searchQuery)}`);
       if (fileTypeFilter) params.push(`fileType=${encodeURIComponent(fileTypeFilter)}`);
-      if (thirdPartyFilter !== null)
-        params.push(`isThirdParty=${encodeURIComponent(thirdPartyFilter.toString())}`);
+      if (thirdPartyFilter) params.push(`isThirdParty=${encodeURIComponent(thirdPartyFilter)}`);
 
       const response = await fetch(`/api/modules?${params.join('&')}`);
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
       const data = await response.json();
       modules = data.items || [];
       totalModules = data.total || 0;
       totalPages = data.totalPages || 0;
-    } catch (error) {
-      console.error('Error loading modules:', error);
+    } catch (err) {
+      console.error('Error loading modules:', err);
+      loadError = 'Failed to load modules. Please try again.';
       modules = [];
       totalModules = 0;
       totalPages = 0;
@@ -97,13 +101,16 @@
   }
 
   // Create a reactive key that changes when we need to reload
-  const reloadKey = $derived(
+  // Using this in $effect to trigger reloads when dependencies change
+  const _reloadKey = $derived(
     `${analysisId}-${currentPage}-${sortBy}-${sortOrder}-${searchQuery}-${fileTypeFilter}-${thirdPartyFilter}`,
   );
 
-  // Load modules when the reload key changes
+  // Load modules when dependencies change
   $effect(() => {
-    if (analysisId && reloadKey) {
+    if (analysisId != null) {
+      // Access _reloadKey to make the effect reactive to all dependencies
+      void _reloadKey;
       loadModules();
     }
   });
@@ -256,15 +263,15 @@
       </div>
       <div class="filter-group">
         <select bind:value={fileTypeFilter} onchange={handleFilter} class="filter-select">
-          <option value={null}>All File Types</option>
+          <option value="">All File Types</option>
           {#each bundleFileTypes as type (type)}
             <option value={type}>{type}</option>
           {/each}
         </select>
         <select bind:value={thirdPartyFilter} onchange={handleFilter} class="filter-select">
-          <option value={null}>All Sources</option>
-          <option value={false}>Source Only</option>
-          <option value={true}>Third-party Only</option>
+          <option value="">All Sources</option>
+          <option value="false">Source Only</option>
+          <option value="true">Third-party Only</option>
         </select>
       </div>
     </div>
@@ -273,6 +280,8 @@
     <div class="modules-table-container">
       {#if isLoadingModules}
         <div class="loading">Loading modules...</div>
+      {:else if loadError}
+        <div class="error-state">{loadError}</div>
       {:else if modules.length === 0}
         <div class="empty-state">No modules found</div>
       {:else}
@@ -734,7 +743,8 @@
   }
 
   .loading,
-  .empty-state {
+  .empty-state,
+  .error-state {
     padding: 2rem;
     text-align: center;
     color: #6b7280;
@@ -742,8 +752,19 @@
 
   @media (prefers-color-scheme: dark) {
     .loading,
-    .empty-state {
+    .empty-state,
+    .error-state {
       color: #9ca3af;
+    }
+  }
+
+  .error-state {
+    color: #dc2626;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .error-state {
+      color: #ef4444;
     }
   }
 
