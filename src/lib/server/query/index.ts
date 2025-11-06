@@ -709,6 +709,41 @@ export async function getTreemapData(
     children: [],
   };
 
+  // Load all symbols if needed (batch query to avoid N+1)
+  const symbolsByModule: Map<number, Symbol[]> = new Map();
+  if (includeSymbols) {
+    const moduleIds = modules.map((m) => m.id);
+    const allSymbols = await db
+      .select({
+        id: schema.symbol.id,
+        moduleId: schema.symbol.moduleId,
+        name: schema.symbol.name,
+        type: schema.symbol.type,
+        sourceStartLine: schema.symbol.sourceStartLine,
+        sourceStartCol: schema.symbol.sourceStartCol,
+        sourceEndLine: schema.symbol.sourceEndLine,
+        sourceEndCol: schema.symbol.sourceEndCol,
+        astHash: schema.symbol.astHash,
+        isExported: schema.symbol.isExported,
+        computedBundledSize: schema.symbol.computedBundledSize,
+        computedGzipSize: schema.symbol.computedGzipSize,
+      })
+      .from(schema.symbol)
+      .where(sql`${schema.symbol.moduleId} IN ${moduleIds}`)
+      .orderBy(asc(schema.symbol.sourceStartLine), asc(schema.symbol.sourceStartCol));
+
+    // Group symbols by module ID
+    for (const symbol of allSymbols) {
+      if (!symbolsByModule.has(symbol.moduleId)) {
+        symbolsByModule.set(symbol.moduleId, []);
+      }
+      symbolsByModule.get(symbol.moduleId)!.push({
+        ...symbol,
+        astHash: symbol.astHash ?? null,
+      });
+    }
+  }
+
   // Organize modules into directory structure
   for (const module of modules) {
     const pathParts = module.filePath.split('/').filter((p) => p.length > 0);
@@ -735,8 +770,8 @@ export async function getTreemapData(
     const fileName = pathParts[pathParts.length - 1] || module.filePath;
 
     if (includeSymbols) {
-      // Load symbols for this module
-      const symbols = await getSymbolsByModule(module.id);
+      // Get symbols for this module from the pre-loaded map
+      const symbols = symbolsByModule.get(module.id) || [];
 
       if (symbols.length > 0) {
         // Module with symbols - create a node with symbol children

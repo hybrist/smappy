@@ -324,8 +324,11 @@
 
   // Reload when analysisId or includeSymbols changes
   $effect(() => {
-    if (analysisId) {
-      void includeSymbols; // Make effect reactive to this
+    // Access both dependencies to make effect reactive to changes
+    const id = analysisId;
+    const _symbols = includeSymbols;
+    
+    if (id) {
       loadTreemapData();
     }
   });
