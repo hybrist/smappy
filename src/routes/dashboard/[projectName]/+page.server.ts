@@ -9,6 +9,9 @@ import {
   getBundleBreakdownByFileType,
   getChunksByAnalysis,
   getModulesByAnalysis,
+  type Bundle,
+  type Chunk,
+  type Module,
 } from '$lib/server/query/index.js';
 
 export const load: PageServerLoad = async ({ params, url }) => {
@@ -54,11 +57,11 @@ export const load: PageServerLoad = async ({ params, url }) => {
   }
 
   // Fetch bundle overview data if analysis exists
-  let bundles = [];
-  let bundleBreakdown = new Map();
-  let chunks = [];
-  let topModules = [];
-  let modulesData = null;
+  let bundles: Bundle[] = [];
+  let bundleBreakdown = new Map<string, { count: number; totalSize: number; totalGzipSize: number }>();
+  let chunks: Chunk[] = [];
+  let topModules: Module[] = [];
+  let modulesData: { items: Module[] } | null = null;
 
   if (analysis) {
     try {
