@@ -221,3 +221,27 @@ export interface LegacyAnalysisComparison {
     }>;
   };
 }
+
+/**
+ * Bundle query result
+ */
+export interface Bundle {
+  id: number;
+  analysisRunId: number;
+  fileName: string;
+  fileType: string;
+  size: number;
+  gzipSize: number | null;
+}
+
+/**
+ * Chunk query result
+ */
+export interface Chunk {
+  id: number;
+  analysisRunId: number;
+  name: string | null;
+  totalSize: number;
+  isEntry: boolean;
+  isAsync: boolean;
+}

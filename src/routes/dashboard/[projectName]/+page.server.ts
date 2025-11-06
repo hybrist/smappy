@@ -5,6 +5,13 @@ import {
   getAnalysisHistory,
   getLatestAnalysis,
   getAnalysisById,
+  getBundlesByAnalysis,
+  getBundleBreakdownByFileType,
+  getChunksByAnalysis,
+  getModulesByAnalysis,
+  type Bundle,
+  type Chunk,
+  type Module,
 } from '$lib/server/query/index.js';
 
 export const load: PageServerLoad = async ({ params, url }) => {
@@ -49,11 +56,47 @@ export const load: PageServerLoad = async ({ params, url }) => {
     }
   }
 
+  // Fetch bundle overview data if analysis exists
+  let bundles: Bundle[] = [];
+  let bundleBreakdown = new Map<
+    string,
+    { count: number; totalSize: number; totalGzipSize: number }
+  >();
+  let chunks: Chunk[] = [];
+  let topModules: Module[] = [];
+  let modulesData: { items: Module[] } | null = null;
+
+  if (analysis) {
+    try {
+      [bundles, bundleBreakdown, chunks, modulesData] = await Promise.all([
+        getBundlesByAnalysis(analysis.id),
+        getBundleBreakdownByFileType(analysis.id),
+        getChunksByAnalysis(analysis.id),
+        getModulesByAnalysis(analysis.id, {
+          sortBy: 'bundledSize',
+          sortOrder: 'desc',
+          pageSize: 10, // Top 10 largest modules
+        }),
+      ]);
+      topModules = modulesData.items;
+    } catch (err) {
+      console.error('Error fetching bundle overview data:', err);
+      // Continue with empty data
+    }
+  }
+
   return {
     projectName,
     projects,
     analysisHistory,
     selectedAnalysisId,
     analysis,
+    bundles: bundles.map((b) => ({
+      ...b,
+      gzipSize: b.gzipSize ?? null,
+    })),
+    bundleBreakdown: Object.fromEntries(bundleBreakdown),
+    chunks,
+    topModules,
   };
 };
