@@ -177,20 +177,19 @@ export class DuplicateDetector implements SuggestionRule {
   }
 
   /**
-   * Generate a hash for code content
+   * Generate a hash for code content using a proper hash algorithm
    */
   private generateCodeHash(code: string): string {
     // Normalize the code before hashing
     const normalized = this.normalizeCode(code);
 
-    // Use a simple hash for now (could be improved with actual crypto hash)
-    let hash = 0;
+    // Use a simple but better hash (FNV-1a)
+    let hash = 2166136261; // FNV offset basis
     for (let i = 0; i < normalized.length; i++) {
-      const char = normalized.charCodeAt(i);
-      hash = (hash << 5) - hash + char;
-      hash = hash & hash; // Convert to 32bit integer
+      hash ^= normalized.charCodeAt(i);
+      hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
     }
-    return Math.abs(hash).toString(36);
+    return (hash >>> 0).toString(36);
   }
 
   /**
@@ -210,37 +209,98 @@ export class DuplicateDetector implements SuggestionRule {
   }
 
   /**
-   * Find duplicate code blocks
+   * Find duplicate code blocks with optimized O(n) hash grouping
    */
   private findDuplicates(blocks: CodeBlock[]): DuplicatePair[] {
     const duplicates: DuplicatePair[] = [];
     const seen = new Set<string>();
 
-    for (let i = 0; i < blocks.length; i++) {
-      for (let j = i + 1; j < blocks.length; j++) {
-        const block1 = blocks[i];
-        const block2 = blocks[j];
+    // Group blocks by hash for O(n) lookups of exact duplicates
+    const hashGroups = new Map<string, CodeBlock[]>();
+    for (const block of blocks) {
+      const existing = hashGroups.get(block.astHash);
+      if (existing) {
+        existing.push(block);
+      } else {
+        hashGroups.set(block.astHash, [block]);
+      }
+    }
 
-        // Skip if from the same file
-        if (block1.filePath === block2.filePath) {
-          continue;
+    // Check exact duplicates from hash groups
+    for (const [_hash, group] of hashGroups) {
+      if (group.length > 1) {
+        // Found exact duplicates
+        for (let i = 0; i < group.length; i++) {
+          for (let j = i + 1; j < group.length; j++) {
+            const block1 = group[i];
+            const block2 = group[j];
+
+            // Skip if from the same file
+            if (block1.filePath === block2.filePath) {
+              continue;
+            }
+
+            const pairKey = [block1.filePath, block1.symbolName, block2.filePath, block2.symbolName]
+              .sort()
+              .join('|');
+
+            if (!seen.has(pairKey)) {
+              duplicates.push({ block1, block2, similarity: 100 });
+              seen.add(pairKey);
+            }
+          }
         }
+      }
+    }
 
-        // Create a unique key for this pair to avoid duplicates
-        const pairKey = [block1.filePath, block1.symbolName, block2.filePath, block2.symbolName]
-          .sort()
-          .join('|');
+    // For similar (non-exact) matches, only compare blocks of similar size
+    // This reduces comparisons significantly
+    const sizeGroups = new Map<number, CodeBlock[]>();
+    for (const block of blocks) {
+      // Group by size bucket (within 20% of each other)
+      const sizeBucket = Math.floor(block.size / (block.size * 0.2));
+      const existing = sizeGroups.get(sizeBucket);
+      if (existing) {
+        existing.push(block);
+      } else {
+        sizeGroups.set(sizeBucket, [block]);
+      }
+    }
 
-        if (seen.has(pairKey)) {
-          continue;
-        }
+    // Only compare blocks in the same size bucket
+    for (const [_bucket, group] of sizeGroups) {
+      if (group.length < 2) continue;
 
-        // Calculate similarity
-        const similarity = this.calculateSimilarity(block1, block2);
+      for (let i = 0; i < group.length; i++) {
+        for (let j = i + 1; j < group.length; j++) {
+          const block1 = group[i];
+          const block2 = group[j];
 
-        if (similarity >= this.config.similarityThreshold) {
-          duplicates.push({ block1, block2, similarity });
-          seen.add(pairKey);
+          // Skip if from the same file
+          if (block1.filePath === block2.filePath) {
+            continue;
+          }
+
+          // Skip if already found as exact duplicate
+          if (block1.astHash === block2.astHash) {
+            continue;
+          }
+
+          const pairKey = [block1.filePath, block1.symbolName, block2.filePath, block2.symbolName]
+            .sort()
+            .join('|');
+
+          if (seen.has(pairKey)) {
+            continue;
+          }
+
+          // Calculate similarity
+          const similarity = this.calculateSimilarity(block1, block2);
+
+          if (similarity >= this.config.similarityThreshold) {
+            duplicates.push({ block1, block2, similarity });
+            seen.add(pairKey);
+          }
         }
       }
     }
