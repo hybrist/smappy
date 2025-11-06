@@ -122,7 +122,10 @@ export class WebpackAdapter extends BundlerAdapter {
         // Try to get source content from compilation
         let source: string | undefined;
         try {
-          const moduleFromCompilation = compilation.moduleGraph.getModuleById(moduleId);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const moduleGraph = compilation.moduleGraph as any;
+          const moduleFromCompilation =
+            moduleGraph.getModuleById?.(moduleId) || moduleGraph.getModule?.(moduleId);
           if (moduleFromCompilation) {
             // Try to get source from module
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -185,7 +188,7 @@ export class WebpackAdapter extends BundlerAdapter {
             // Try to get source content
             let source: string | undefined;
             try {
-              const modulePath = this.resolveModulePath(moduleId, outputPath);
+              const modulePath = this.resolveModulePath(moduleId, _outputPath);
               source = readFileContent(modulePath);
             } catch {
               // Source not available
@@ -278,18 +281,18 @@ export class WebpackAdapter extends BundlerAdapter {
       let sourceMap: string | undefined;
 
       try {
-        const bundlePath = this.resolveBundlePath(fileName, outputPath);
+        const bundlePath = this.resolveBundlePath(fileName, _outputPath);
         content = readFileContent(bundlePath);
 
         // Extract source map if enabled
-        if (this.options.extractSourceMaps !== false) {
+        if (this.options.extractSourceMaps !== false && content) {
           // Check for separate source map file
           const sourceMapPath = bundlePath + '.map';
           try {
             sourceMap = readFileContent(sourceMapPath);
           } catch {
             // Try to extract from content
-            sourceMap = extractSourceMap(content, bundlePath, outputPath);
+            sourceMap = extractSourceMap(content, bundlePath, _outputPath);
           }
         }
       } catch (error) {
