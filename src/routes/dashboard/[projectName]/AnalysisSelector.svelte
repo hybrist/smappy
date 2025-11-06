@@ -53,14 +53,42 @@
 
 <style>
   .analysis-selector {
-    @apply flex-1;
+    flex: 1;
   }
 
   .analysis-select {
-    @apply w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white;
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid #d1d5db;
+    background-color: #ffffff;
+    padding: 0.5rem 1rem;
+    color: #111827;
+    outline: none;
+  }
+
+  .analysis-select:focus {
+    border-color: transparent;
+    ring: 2px;
+    ring-color: #3b82f6;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .analysis-select {
+      border-color: #4b5563;
+      background-color: #1f2937;
+      color: #ffffff;
+    }
   }
 
   .sr-only {
-    @apply sr-only;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
   }
 </style>

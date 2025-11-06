@@ -19,7 +19,7 @@
     {#if projects.length > 0}
       <div class="project-list" role="list">
         {#each projects as project (project)}
-          <button class="project-card" onclick={() => handleProjectSelect(project)} role="listitem">
+          <button class="project-card" onclick={() => handleProjectSelect(project)}>
             <h2 class="project-name">{project}</h2>
             <p class="project-action">View Analysis →</p>
           </button>
@@ -35,42 +35,139 @@
 
 <style>
   .dashboard-landing {
-    @apply flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 dark:bg-gray-900;
+    display: flex;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    background-color: #f9fafb;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .dashboard-landing {
+      background-color: #111827;
+    }
   }
 
   .landing-content {
-    @apply w-full max-w-4xl;
+    width: 100%;
+    max-width: 56rem;
   }
 
   .landing-title {
-    @apply mb-2 text-center text-3xl font-bold text-gray-900 dark:text-white;
+    margin-bottom: 0.5rem;
+    text-align: center;
+    font-size: 1.875rem;
+    font-weight: bold;
+    color: #111827;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .landing-title {
+      color: #ffffff;
+    }
   }
 
   .landing-description {
-    @apply mb-8 text-center text-gray-600 dark:text-gray-400;
+    margin-bottom: 2rem;
+    text-align: center;
+    color: #4b5563;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .landing-description {
+      color: #9ca3af;
+    }
   }
 
   .project-list {
-    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .project-list {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .project-list {
+      grid-template-columns: repeat(3, 1fr);
+    }
   }
 
   .project-card {
-    @apply w-full cursor-pointer rounded-lg border border-gray-200 bg-white p-6 text-left shadow transition-shadow hover:shadow-lg dark:border-gray-700 dark:bg-gray-800;
+    width: 100%;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    padding: 1.5rem;
+    text-align: left;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    transition: box-shadow 0.2s;
+  }
+
+  .project-card:hover {
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .project-card {
+      border-color: #374151;
+      background-color: #1f2937;
+    }
   }
 
   .project-name {
-    @apply mb-2 text-lg font-semibold text-gray-900 dark:text-white;
+    margin-bottom: 0.5rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .project-name {
+      color: #ffffff;
+    }
   }
 
   .project-action {
-    @apply text-sm text-blue-600 dark:text-blue-400;
+    font-size: 0.875rem;
+    color: #2563eb;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .project-action {
+      color: #60a5fa;
+    }
   }
 
   .empty-state {
-    @apply rounded-lg border border-gray-200 bg-white p-8 text-center shadow dark:border-gray-700 dark:bg-gray-800;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .empty-state {
+      border-color: #374151;
+      background-color: #1f2937;
+    }
   }
 
   .empty-state p {
-    @apply text-gray-600 dark:text-gray-400;
+    color: #4b5563;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .empty-state p {
+      color: #9ca3af;
+    }
   }
 </style>

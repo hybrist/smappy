@@ -26,7 +26,11 @@
     <div class="dashboard-header">
       <ProjectSelector {projects} {projectName} />
       {#if projectName}
-        <AnalysisSelector {projectName} {analysisHistory} {selectedAnalysisId} />
+        <AnalysisSelector
+          {projectName}
+          {analysisHistory}
+          {selectedAnalysisId}
+        />
       {/if}
     </div>
 
@@ -67,42 +71,126 @@
 
 <style>
   .dashboard-container {
-    @apply mx-auto w-full max-w-7xl px-4 py-6;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 80rem;
+    padding: 1.5rem 1rem;
   }
 
   .dashboard-header {
-    @apply mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between;
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .dashboard-header {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
   }
 
   .dashboard-content {
-    @apply space-y-6;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
   }
 
   .stats-section {
-    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .stats-section {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .stats-section {
+      grid-template-columns: repeat(4, 1fr);
+    }
   }
 
   .stat-card {
-    @apply rounded-lg border border-gray-200 bg-white p-6 shadow dark:border-gray-700 dark:bg-gray-800;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .stat-card {
+      border-color: #374151;
+      background-color: #1f2937;
+    }
   }
 
   .stat-card h3 {
-    @apply mb-2 text-sm font-medium text-gray-500 dark:text-gray-400;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6b7280;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .stat-card h3 {
+      color: #9ca3af;
+    }
   }
 
   .stat-value {
-    @apply text-2xl font-bold text-gray-900 dark:text-white;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #111827;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .stat-value {
+      color: #ffffff;
+    }
   }
 
   .stat-label {
-    @apply mt-1 text-sm text-gray-600 dark:text-gray-300;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: #4b5563;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .stat-label {
+      color: #d1d5db;
+    }
   }
 
   .empty-state {
-    @apply rounded-lg border border-gray-200 bg-white p-8 text-center shadow dark:border-gray-700 dark:bg-gray-800;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .empty-state {
+      border-color: #374151;
+      background-color: #1f2937;
+    }
   }
 
   .empty-state p {
-    @apply text-gray-600 dark:text-gray-400;
+    color: #4b5563;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .empty-state p {
+      color: #9ca3af;
+    }
   }
 </style>

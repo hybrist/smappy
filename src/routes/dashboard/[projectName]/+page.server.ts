@@ -1,13 +1,13 @@
 import { error } from '@sveltejs/kit';
-import type { ServerLoad } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
 import {
   getAllProjects,
   getAnalysisHistory,
   getLatestAnalysis,
   getAnalysisById,
-} from '$lib/server/query/data.remote';
+} from '$lib/server/query/index.js';
 
-export const load: ServerLoad = async ({ params, url }) => {
+export const load: PageServerLoad = async ({ params, url }) => {
   const projectName = params.projectName;
 
   if (!projectName) {
@@ -15,7 +15,7 @@ export const load: ServerLoad = async ({ params, url }) => {
   }
 
   // Get all projects for the selector
-  const projects = await getAllProjects(undefined);
+  const projects = await getAllProjects();
 
   // Get analysis history for the project
   const analysisHistory = await getAnalysisHistory(projectName);

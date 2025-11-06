@@ -19,9 +19,7 @@
           href="/dashboard/{$page.params.projectName}"
           class="nav-link"
           class:active={currentPath === `/dashboard/${$page.params.projectName}`}
-          aria-current={currentPath === `/dashboard/${$page.params.projectName}`
-            ? 'page'
-            : undefined}
+          aria-current={currentPath === `/dashboard/${$page.params.projectName}` ? 'page' : undefined}
         >
           Overview
         </a>
@@ -31,9 +29,7 @@
           href="/dashboard/{$page.params.projectName}/modules"
           class="nav-link"
           class:active={currentPath.startsWith(`/dashboard/${$page.params.projectName}/modules`)}
-          aria-current={currentPath.startsWith(`/dashboard/${$page.params.projectName}/modules`)
-            ? 'page'
-            : undefined}
+          aria-current={currentPath.startsWith(`/dashboard/${$page.params.projectName}/modules`) ? 'page' : undefined}
         >
           Modules
         </a>
@@ -42,14 +38,8 @@
         <a
           href="/dashboard/{$page.params.projectName}/dependencies"
           class="nav-link"
-          class:active={currentPath.startsWith(
-            `/dashboard/${$page.params.projectName}/dependencies`,
-          )}
-          aria-current={currentPath.startsWith(
-            `/dashboard/${$page.params.projectName}/dependencies`,
-          )
-            ? 'page'
-            : undefined}
+          class:active={currentPath.startsWith(`/dashboard/${$page.params.projectName}/dependencies`)}
+          aria-current={currentPath.startsWith(`/dashboard/${$page.params.projectName}/dependencies`) ? 'page' : undefined}
         >
           Dependencies
         </a>
@@ -59,9 +49,7 @@
           href="/dashboard/{$page.params.projectName}/compare"
           class="nav-link"
           class:active={currentPath.startsWith(`/dashboard/${$page.params.projectName}/compare`)}
-          aria-current={currentPath.startsWith(`/dashboard/${$page.params.projectName}/compare`)
-            ? 'page'
-            : undefined}
+          aria-current={currentPath.startsWith(`/dashboard/${$page.params.projectName}/compare`) ? 'page' : undefined}
         >
           Compare
         </a>
@@ -81,48 +69,114 @@
 
 <style>
   .dashboard-layout {
-    @apply min-h-screen bg-gray-50 dark:bg-gray-900;
+    min-height: 100vh;
+    background-color: #f9fafb;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .dashboard-layout {
+      background-color: #111827;
+    }
   }
 
   .dashboard-nav {
-    @apply sticky top-0 z-10 border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid #e5e7eb;
+    background-color: #ffffff;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .dashboard-nav {
+      border-color: #374151;
+      background-color: #1f2937;
+    }
   }
 
   .nav-header {
-    @apply border-b border-gray-200 px-4 py-4 dark:border-gray-700;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 1rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .nav-header {
+      border-color: #374151;
+    }
   }
 
   .nav-title {
-    @apply text-xl font-bold text-gray-900 dark:text-white;
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #111827;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .nav-title {
+      color: #ffffff;
+    }
   }
 
   .nav-link {
-    @apply text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white;
+    color: #374151;
+    transition: color 0.2s;
+  }
+
+  .nav-link:hover {
+    color: #111827;
   }
 
   .nav-link.active {
-    @apply font-semibold text-blue-600 dark:text-blue-400;
+    font-weight: 600;
+    color: #2563eb;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .nav-link {
+      color: #d1d5db;
+    }
+
+    .nav-link:hover {
+      color: #ffffff;
+    }
+
+    .nav-link.active {
+      color: #60a5fa;
+    }
   }
 
   .nav-links {
-    @apply flex gap-6 overflow-x-auto px-4 py-2;
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    padding: 0.5rem 1rem;
   }
 
   .nav-links li {
-    @apply list-none;
+    list-style: none;
   }
 
   .dashboard-main {
-    @apply flex-1;
+    flex: 1;
   }
 
   .dashboard-empty {
-    @apply flex min-h-[400px] items-center justify-center text-gray-500 dark:text-gray-400;
+    display: flex;
+    min-height: 400px;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .dashboard-empty {
+      color: #9ca3af;
+    }
   }
 
   @media (max-width: 640px) {
     .nav-links {
-      @apply gap-4;
+      gap: 1rem;
     }
   }
 </style>
