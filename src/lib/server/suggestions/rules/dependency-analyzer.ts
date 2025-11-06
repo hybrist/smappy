@@ -194,7 +194,14 @@ function detectCircularDependencies(importMap: Map<string, Set<string>>): string
  */
 function normalizeCycle(cycle: string[]): string[] {
   if (cycle.length === 0) return cycle;
-  const minIndex = cycle.reduce((minIdx, node, idx) => (node < cycle[minIdx] ? idx : minIdx), 0);
+  let minValue = cycle[0];
+  let minIndex = 0;
+  for (let i = 1; i < cycle.length; i++) {
+    if (cycle[i] < minValue) {
+      minValue = cycle[i];
+      minIndex = i;
+    }
+  }
   return cycle.slice(minIndex).concat(cycle.slice(0, minIndex));
 }
 
@@ -223,7 +230,7 @@ function areCyclesEqual(cycle1: string[], cycle2: string[]): boolean {
  * Detect unused third-party dependencies
  * A third-party dependency is unused if:
  * 1. It's a third-party module
- * 2. No other modules import from it (only in reverseMap, not imported by others)
+ * 2. No first-party modules import from it
  */
 function detectUnusedThirdPartyDependencies(
   modules: ModuleWithAnalysis[],
@@ -232,15 +239,24 @@ function detectUnusedThirdPartyDependencies(
 ): Array<{ packageName: string; modulePath: string }> {
   const unused: Array<{ packageName: string; modulePath: string }> = [];
 
+  // Find all first-party module file paths
+  const firstPartyModulePaths = new Set(
+    modules.filter((m) => !m.isThirdParty).map((m) => m.filePath),
+  );
+
   // Find all third-party modules
   const thirdPartyModules = modules.filter((m) => m.isThirdParty && m.packageName);
 
   for (const module of thirdPartyModules) {
-    // Check if this module is imported by any other module
+    // Check if this module is imported by any first-party module
     const importers = reverseMap.get(module.filePath) || new Set();
+    // Filter importers to only include first-party modules
+    const firstPartyImporters = Array.from(importers).filter((imp) =>
+      firstPartyModulePaths.has(imp),
+    );
 
-    // If no one imports it, it's unused
-    if (importers.size === 0) {
+    // If no first-party module imports it, it's unused
+    if (firstPartyImporters.length === 0) {
       unused.push({
         packageName: module.packageName!,
         modulePath: module.filePath,
@@ -298,13 +314,14 @@ function findLongestPath(
   let maxLength = 1;
 
   for (const imported of imports) {
-    const subPath = findLongestPath(imported, importMap, new Set(visited));
+    const subPath = findLongestPath(imported, importMap, visited);
     if (subPath.length + 1 > maxLength) {
       maxLength = subPath.length + 1;
       longestPath = [start, ...subPath];
     }
   }
 
+  visited.delete(start); // Backtrack
   return longestPath;
 }
 
@@ -316,22 +333,29 @@ function deduplicateChains(chains: string[][]): string[][] {
 
   for (const chain of chains) {
     // Check if this chain is a sub-chain of an existing one
-    let isSubChain = false;
-    for (const existing of unique) {
+    let shouldSkip = false;
+    const indicesToRemove: number[] = [];
+
+    for (let i = 0; i < unique.length; i++) {
+      const existing = unique[i];
       if (isSubChainOf(chain, existing)) {
-        isSubChain = true;
+        // This chain is a sub-chain of an existing one, skip it
+        shouldSkip = true;
         break;
       }
-      // If existing is a sub-chain of this, replace it
+      // If existing is a sub-chain of this, mark it for removal
       if (isSubChainOf(existing, chain)) {
-        const index = unique.indexOf(existing);
-        unique[index] = chain;
-        isSubChain = true;
-        break;
+        indicesToRemove.push(i);
       }
     }
 
-    if (!isSubChain) {
+    // Remove shorter sub-chains (in reverse order to maintain indices)
+    for (let i = indicesToRemove.length - 1; i >= 0; i--) {
+      unique.splice(indicesToRemove[i], 1);
+    }
+
+    // Add the chain if it's not a sub-chain of any existing chain
+    if (!shouldSkip) {
       unique.push(chain);
     }
   }
