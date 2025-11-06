@@ -3,7 +3,6 @@
 
   let { projects, projectName } = $props();
 
-  // eslint-disable-next-line svelte/no-navigation-without-resolve
   function handleProjectChange(event: Event) {
     const target = event.target as HTMLSelectElement;
     const newProjectName = target.value;

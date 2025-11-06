@@ -3,7 +3,6 @@
 
   let { projectName, analysisHistory, selectedAnalysisId } = $props();
 
-  // eslint-disable-next-line svelte/no-navigation-without-resolve
   function handleAnalysisChange(event: Event) {
     const target = event.target as HTMLSelectElement;
     const analysisId = target.value;

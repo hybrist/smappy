@@ -1,13 +1,45 @@
 #!/usr/bin/env node
+
+// IMPORTANT: Load .env BEFORE any database imports so DATABASE_URL is available
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+// Load .env file if DATABASE_URL is not set
+if (!process.env.DATABASE_URL) {
+  try {
+    const envPath = resolve(process.cwd(), '.env');
+    const envContent = readFileSync(envPath, 'utf-8');
+    envContent.split('\n').forEach((line) => {
+      const match = line.match(/^([^=]+)=(.*)$/);
+      if (match) {
+        const [, key, value] = match;
+        if (key.trim() === 'DATABASE_URL' && !process.env.DATABASE_URL) {
+          process.env.DATABASE_URL = value.trim();
+        }
+      }
+    });
+  } catch {
+    // .env file doesn't exist, that's okay
+  }
+}
+
+// Default to :memory: if still not set
+if (!process.env.DATABASE_URL) {
+  console.warn('⚠️  DATABASE_URL not set, using :memory: (data will not persist)');
+  console.warn('   To persist data, create a .env file with: DATABASE_URL=local.db');
+  process.env.DATABASE_URL = ':memory:';
+}
+
 /**
  * Script to seed the database with example data
  * Usage:
- *   pnpm run seed                      # Seed with realistic data
- *   pnpm run seed --profile minimal    # Seed with minimal data
- *   pnpm run seed --profile comprehensive  # Seed with comprehensive data
- *   pnpm run seed --no-clean           # Don't clean database before seeding
+ *   pnpm run db:seed                      # Seed with realistic data
+ *   pnpm run db:seed --profile minimal    # Seed with minimal data
+ *   pnpm run db:seed --profile comprehensive  # Seed with comprehensive data
+ *   pnpm run db:seed --no-clean           # Don't clean database before seeding
  */
 
+// Import AFTER setting DATABASE_URL
 import { seedDatabase, type SeedProfile } from '../src/lib/server/db/seed.js';
 
 // Parse command line arguments
@@ -50,6 +82,7 @@ if (!['minimal', 'realistic', 'comprehensive'].includes(profile)) {
 
 // Run seeding
 console.log('Starting database seed...');
+console.log(`Database: ${process.env.DATABASE_URL}`);
 console.log(`Profile: ${profile}`);
 console.log(`Clean database first: ${clean}`);
 console.log('');

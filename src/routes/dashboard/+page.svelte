@@ -6,7 +6,6 @@
   const projects = $derived(data.projects);
 
   function handleProjectSelect(projectName: string) {
-    // eslint-disable-next-line svelte/no-navigation-without-resolve
     goto(`/dashboard/${encodeURIComponent(projectName)}`);
   }
 </script>
