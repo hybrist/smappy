@@ -41,6 +41,15 @@ export default defineConfig({
           exclude: ['src/**/*.svelte.{test,spec}.{js,ts}', 'tests/**'],
         },
       },
+      {
+        extends: './vite.config.ts',
+        test: {
+          name: 'benchmarks',
+          environment: 'node',
+          include: ['tests/benchmarks/**/*.{bench,test,spec}.{js,ts}'],
+          exclude: ['src/**', 'tests/e2e/**'],
+        },
+      },
     ],
   },
 });
