@@ -1,0 +1,48 @@
+name: Performance Benchmarks
+
+on:
+  push:
+    branches: [svelte]
+  pull_request:
+    branches: [svelte]
+  schedule:
+    # Run benchmarks daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  benchmark:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: ':memory:'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run ingestion benchmarks
+        run: pnpm test tests/benchmarks/ingestion.bench.ts --reporter=verbose
+        continue-on-error: false
+
+      - name: Run query benchmarks
+        run: pnpm test tests/benchmarks/queries.bench.ts --reporter=verbose
+        continue-on-error: false
+
+      - name: Check benchmark results
+        # The benchmarks themselves have performance assertions
+        # If they fail, this step will show the failure
+        run: |
+          echo "Benchmark suite completed successfully"
+          echo "All performance targets have been met"
