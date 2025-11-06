@@ -14,7 +14,8 @@ if (!process.env.DATABASE_URL) {
       if (match) {
         const [, key, value] = match;
         if (key.trim() === 'DATABASE_URL' && !process.env.DATABASE_URL) {
-          process.env.DATABASE_URL = value.trim();
+          // Strip quotes from the value if present
+          process.env.DATABASE_URL = value.trim().replace(/^["']|["']$/g, '');
         }
       }
     });
@@ -56,7 +57,7 @@ for (let i = 0; i < args.length; i++) {
     clean = false;
   } else if (arg === '--help' || arg === '-h') {
     console.log(`
-Usage: pnpm run seed [options]
+Usage: pnpm run db:seed [options]
 
 Options:
   --profile <profile>    Seed data profile: minimal, realistic, or comprehensive (default: realistic)
@@ -64,10 +65,10 @@ Options:
   --help, -h            Show this help message
 
 Examples:
-  pnpm run seed                          # Seed with realistic data
-  pnpm run seed --profile minimal        # Seed with minimal data
-  pnpm run seed --profile comprehensive  # Seed with comprehensive data
-  pnpm run seed --no-clean               # Keep existing data and add seed data
+  pnpm run db:seed                          # Seed with realistic data
+  pnpm run db:seed --profile minimal        # Seed with minimal data
+  pnpm run db:seed --profile comprehensive  # Seed with comprehensive data
+  pnpm run db:seed --no-clean               # Keep existing data and add seed data
 `);
     process.exit(0);
   }
