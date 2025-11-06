@@ -4,7 +4,11 @@
  */
 
 import type { SuggestionRule, SuggestionContext } from '../types.js';
-import type { SuggestionData, DependencyRelationship } from '../../ingestion/db/writer.js';
+import type {
+  SuggestionData,
+  DependencyRelationship,
+  ModuleWithAnalysis,
+} from '../../ingestion/db/writer.js';
 
 export interface DependencyAnalyzerOptions {
   /** Maximum dependency depth before warning (default: 5) */
@@ -222,7 +226,7 @@ function areCyclesEqual(cycle1: string[], cycle2: string[]): boolean {
  * 2. No other modules import from it (only in reverseMap, not imported by others)
  */
 function detectUnusedThirdPartyDependencies(
-  modules: (typeof import('../../ingestion/db/writer.js').ModuleWithAnalysis)[],
+  modules: ModuleWithAnalysis[],
   dependencies: DependencyRelationship[],
   reverseMap: Map<string, Set<string>>,
 ): Array<{ packageName: string; modulePath: string }> {
@@ -253,7 +257,7 @@ function detectUnusedThirdPartyDependencies(
  */
 function detectDeepDependencyChains(
   importMap: Map<string, Set<string>>,
-  moduleMap: Map<string, (typeof import('../../ingestion/db/writer.js').ModuleWithAnalysis)[0]>,
+  moduleMap: Map<string, ModuleWithAnalysis>,
   maxDepth: number,
 ): string[][] {
   const deepChains: string[][] = [];
