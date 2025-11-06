@@ -566,6 +566,7 @@ export const getSuggestionsByAnalysis = query(
 
         return {
           ...sug,
+          severity: sug.severity as 'critical' | 'warning' | 'info',
           links: linksWithPaths,
         };
       }),
