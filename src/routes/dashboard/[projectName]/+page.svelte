@@ -3,6 +3,7 @@
   import ProjectSelector from './ProjectSelector.svelte';
   import AnalysisSelector from './AnalysisSelector.svelte';
   import DashboardLayout from './DashboardLayout.svelte';
+  import BundleOverview from './BundleOverview.svelte';
 
   let { data } = $props();
 
@@ -51,6 +52,13 @@
             </p>
           </div>
         </section>
+
+        <BundleOverview
+          bundleBreakdown={data.bundleBreakdown || {}}
+          chunks={data.chunks || []}
+          topModules={data.topModules || []}
+          analysisId={analysis.id}
+        />
       </div>
     {:else if projectName}
       <div class="empty-state" role="alert">
