@@ -45,7 +45,9 @@
   >
     {#each analysisHistory as run (run.id)}
       <option value={run.id.toString()} selected={run.id === selectedAnalysisId}>
-        {formatDate(run.createdAt)} - {run.totalModules} modules, {formatBytes(run.totalSize)}
+        {formatDate(run.createdAt)} - {run.moduleCount || 0} modules, {formatBytes(
+          run.totalSize || 0,
+        )}
       </option>
     {/each}
   </select>
