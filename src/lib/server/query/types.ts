@@ -273,3 +273,22 @@ export interface SuggestionLinkEntity {
   entityId: number;
   entityPath?: string;
 }
+
+/**
+ * Treemap node for hierarchical visualization
+ */
+export interface TreemapNode {
+  name: string;
+  value?: number;
+  children?: TreemapNode[];
+  // Additional metadata for visualization
+  moduleId?: number;
+  symbolId?: number;
+  fileType?: string;
+  isThirdParty?: boolean;
+  packageName?: string | null;
+  filePath?: string;
+  originalSize?: number;
+  bundledSize?: number;
+  gzipSize?: number;
+}
