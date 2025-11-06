@@ -1,12 +1,12 @@
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import Database from 'better-sqlite3';
 import * as schema from './schema';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-// Support both SvelteKit $env and Node.js process.env for compatibility
-// Use process.env for compatibility with non-SvelteKit contexts (e.g., tests, Playwright)
+// Use process.env for environment variable access, which works in both SvelteKit and Node.js contexts
 // In SvelteKit, environment variables are typically available via process.env as well
+// (SvelteKit also exposes $env imports, but process.env is sufficient for compatibility)
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error('DATABASE_URL is not set');
 
@@ -16,18 +16,30 @@ const client = new Database(databaseUrl);
 // For file-based databases, migrations should be run separately
 if (databaseUrl === ':memory:') {
 	try {
-		const migrationPath = join(process.cwd(), 'drizzle', '0000_acoustic_wildside.sql');
-		const migrationSQL = readFileSync(migrationPath, 'utf-8');
+		const drizzleDir = join(process.cwd(), 'drizzle');
+		// Find all migration SQL files and sort them to apply in order
+		const migrationFiles = readdirSync(drizzleDir)
+			.filter((file) => {
+				const filePath = join(drizzleDir, file);
+				return file.endsWith('.sql') && statSync(filePath).isFile();
+			})
+			.sort();
 
-		// Split by statement-breakpoint comments and execute each statement
-		const statements = migrationSQL
-			.split(/--> statement-breakpoint/i)
-			.map((s) => s.trim())
-			.filter((s) => s.length > 0);
+		// Apply all migrations in order
+		for (const migrationFile of migrationFiles) {
+			const migrationPath = join(drizzleDir, migrationFile);
+			const migrationSQL = readFileSync(migrationPath, 'utf-8');
 
-		for (const statement of statements) {
-			if (statement.trim()) {
-				client.exec(statement);
+			// Split by statement-breakpoint comments and execute each statement
+			const statements = migrationSQL
+				.split(/--> statement-breakpoint/i)
+				.map((s) => s.trim())
+				.filter((s) => s.length > 0);
+
+			for (const statement of statements) {
+				if (statement) {
+					client.exec(statement);
+				}
 			}
 		}
 	} catch (error) {
