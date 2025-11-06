@@ -54,7 +54,7 @@ webpack: (config, { webpack }) => {
         compilation.hooks.processAssets.tap(
           {
             name: 'NextJsBundleAnalysis',
-            stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ANALYSE,
+            stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ANALYZE,
           },
           (assets) => {
             // Extract bundle data
@@ -68,23 +68,25 @@ webpack: (config, { webpack }) => {
 };
 ```
 
-### Next.js Specific Hooks
+### Build Lifecycle Hooks
 
-Next.js provides additional hooks via `next.config.js`:
+Next.js does not provide `onBuildStart` and `onBuildComplete` hooks in `next.config.js`. Instead, use webpack plugin hooks:
 
 ```javascript
-module.exports = {
-  // Before build starts
-  onBuildStart: async () => {
-    console.log('Build starting...');
-  },
-
-  // After build completes
-  onBuildComplete: async (result) => {
-    if (result.errors.length === 0) {
-      // Process bundles
-    }
-  },
+webpack: (config, { webpack }) => {
+  config.plugins.push({
+    apply: (compiler) => {
+      compiler.hooks.beforeRun.tap('BuildLifecyclePlugin', (compiler) => {
+        console.log('Build starting...');
+      });
+      compiler.hooks.done.tap('BuildLifecyclePlugin', (stats) => {
+        if (!stats.hasErrors()) {
+          // Process bundles
+        }
+      });
+    },
+  });
+  return config;
 };
 ```
 
@@ -192,7 +194,7 @@ function extractBundles(nextDir) {
 compilation.hooks.processAssets.tap(
   {
     name: 'NextJsBundleAnalysis',
-    stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ANALYSE,
+    stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ANALYZE,
   },
   (assets) => {
     for (const [filename, asset] of Object.entries(assets)) {
@@ -363,14 +365,8 @@ module.exports = {
 
     return config;
   },
-
-  // Optional: Custom build output handling
-  onBuildComplete: async (result) => {
-    if (result.errors.length === 0) {
-      // Additional processing if needed
-    }
-  },
 };
+// Note: For custom build output handling, use a custom build script or a webpack plugin.
 ```
 
 ## Version Compatibility

@@ -130,7 +130,7 @@ The `extractSourceMap` utility handles all three cases.
 
 Module paths need normalization across bundlers:
 
-- **Virtual Modules**: Webpack uses `\0` prefix, Rollup uses `\0` prefix
+- **Virtual Modules**: Rollup (and Vite) use `\0` prefix; Webpack uses different internal identifiers for virtual modules
 - **Node Modules**: Third-party modules identified by `node_modules` in path
 - **Aliases**: Path mappings configured in bundler config
 - **Relative vs Absolute**: Normalized to consistent format

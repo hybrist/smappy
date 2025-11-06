@@ -29,7 +29,7 @@ compiler.hooks.compilation.tap('WebpackBundleAnalysis', (compilation) => {
   compilation.hooks.processAssets.tap(
     {
       name: 'WebpackBundleAnalysis',
-      stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ANALYSE,
+      stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ANALYZE,
     },
     (assets) => {
       // Access compilation.assets for bundle files
@@ -139,9 +139,9 @@ Webpack chunks represent code-split entry points:
 
 ```typescript
 for (const chunk of compilation.chunks) {
-  const isEntry = chunk.hasEntryModule();
+  const isEntry = chunk.hasRuntime();
   const isAsync = !chunk.canBeInitial();
-  const modules = Array.from(chunk.modulesIterable);
+  const modules = compilation.chunkGraph.getChunkModules(chunk);
 }
 ```
 
@@ -169,7 +169,7 @@ export class WebpackBundleAnalysisPlugin {
       compilation.hooks.processAssets.tap(
         {
           name: 'WebpackBundleAnalysis',
-          stage: Compilation.PROCESS_ASSETS_STAGE_ANALYSE,
+          stage: Compilation.PROCESS_ASSETS_STAGE_ANALYZE,
         },
         () => {
           const stats = compilation.getStats().toJson({
@@ -231,7 +231,7 @@ module.exports = {
 
 ### Virtual Modules
 
-Webpack uses `\0` prefix for virtual modules (e.g., `\0webpack/runtime`). These should be filtered or handled specially.
+Webpack uses identifiers like `webpack/runtime/...` for its runtime and internal modules, without the `\0` prefix. These modules should be filtered or handled specially if needed.
 
 ### Node Modules
 
