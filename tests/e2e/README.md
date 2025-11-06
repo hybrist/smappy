@@ -7,11 +7,13 @@ This directory contains end-to-end tests for the Smappy dashboard UI.
 The dashboard e2e tests (`dashboard.spec.ts`) cover:
 
 ### Dashboard Landing Page
+
 - Displaying project list with cards
 - Navigation to individual project dashboards
 - Proper rendering of page title and description
 
 ### Project Dashboard Page
+
 - Displaying bundle statistics (Total Size, Modules, Bundler)
 - Showing correct module counts
 - Displaying bundler type (vite, webpack, rollup, etc.)
@@ -34,6 +36,7 @@ pnpm test:e2e:debug
 ## Test Setup
 
 The tests use Playwright to:
+
 1. Start a development server automatically
 2. Ingest test bundle data before each test
 3. Navigate to dashboard pages and verify UI elements

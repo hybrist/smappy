@@ -10,9 +10,31 @@ import type {
   ModuleInput,
   ChunkInput,
 } from '../../src/lib/server/ingestion/types/index.js';
+import { db } from '../../src/lib/server/db/index.js';
+import { sql } from 'drizzle-orm';
+
+/**
+ * Helper function to clean the database before each test suite
+ */
+async function cleanDatabase() {
+  // Delete all data from all tables (in correct order to avoid foreign key constraints)
+  await db.run(sql`DELETE FROM SourceMapEntry`);
+  await db.run(sql`DELETE FROM Dependency`);
+  await db.run(sql`DELETE FROM Symbol`);
+  await db.run(sql`DELETE FROM Chunk_Module`);
+  await db.run(sql`DELETE FROM Suggestion_Link`);
+  await db.run(sql`DELETE FROM Suggestion`);
+  await db.run(sql`DELETE FROM Module`);
+  await db.run(sql`DELETE FROM Chunk`);
+  await db.run(sql`DELETE FROM Bundle`);
+  await db.run(sql`DELETE FROM AnalysisRun`);
+}
 
 test.describe('Dashboard Landing Page', () => {
   test.beforeEach(async () => {
+    // Clean database before each test
+    await cleanDatabase();
+
     // Set up test data with multiple projects
     const projects = ['test-project-1', 'test-project-2'];
 
@@ -82,6 +104,9 @@ test.describe('Project Dashboard Page', () => {
   const projectName = 'dashboard-test-project';
 
   test.beforeEach(async () => {
+    // Clean database before each test
+    await cleanDatabase();
+
     // Set up test data with realistic bundle analysis
     const modules: ModuleInput[] = [
       {
