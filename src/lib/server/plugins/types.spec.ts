@@ -87,7 +87,11 @@ describe('Plugin Types', () => {
         readonly bundlerName = 'test';
         readonly bundlerVersion = '1.0.0';
 
-        extract() {
+        extract(
+          _bundlerOutput: unknown,
+          _options: BundlerPluginOptions,
+          _config?: PluginConfig,
+        ): PluginExtractionResult {
           return {
             bundles: [],
             modules: [],
@@ -112,7 +116,11 @@ describe('Plugin Types', () => {
       class TestPlugin implements BundlerPlugin {
         readonly bundlerName = 'test';
 
-        async extract() {
+        async extract(
+          _bundlerOutput: unknown,
+          _options: BundlerPluginOptions,
+          _config?: PluginConfig,
+        ): Promise<PluginExtractionResult> {
           return {
             bundles: [],
             modules: [],

@@ -148,7 +148,17 @@ export abstract class BundlerAdapter {
     for (const bundlerBundle of bundlerBundles) {
       const bundleContent = bundlerBundle.content || '';
       const bundlePath = bundlerBundle.fileName;
-      const bundleType = detectFileType(bundlePath);
+      const detectedType = detectFileType(bundlePath);
+      // BundleInput only accepts JS/TS types, not CSS/JSON
+      const bundleType: BundleInput['type'] =
+        detectedType === 'js' ||
+        detectedType === 'mjs' ||
+        detectedType === 'cjs' ||
+        detectedType === 'jsx' ||
+        detectedType === 'tsx' ||
+        detectedType === 'ts'
+          ? detectedType
+          : 'js';
 
       // Extract source map if enabled
       let sourceMapReference: string | undefined;

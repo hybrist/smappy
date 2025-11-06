@@ -18,7 +18,7 @@ describe('BundlerAdapter', () => {
   };
 
   class TestAdapter extends BundlerAdapter {
-    extract(): PluginExtractionResult {
+    extract(_bundlerOutput: unknown): PluginExtractionResult {
       return {
         bundles: [],
         modules: [],
@@ -63,7 +63,7 @@ describe('BundlerAdapter', () => {
   describe('convertModules', () => {
     it('should convert bundler modules to ModuleInput', () => {
       class TestAdapter extends BundlerAdapter {
-        extract(): PluginExtractionResult {
+        extract(_bundlerOutput: unknown): PluginExtractionResult {
           const errors: string[] = [];
           const modules = this.convertModules(
             [
@@ -97,7 +97,7 @@ describe('BundlerAdapter', () => {
 
     it('should filter out excluded patterns', () => {
       class TestAdapter extends BundlerAdapter {
-        extract(): PluginExtractionResult {
+        extract(_bundlerOutput: unknown): PluginExtractionResult {
           const errors: string[] = [];
           const modules = this.convertModules(
             [
@@ -138,7 +138,7 @@ describe('BundlerAdapter', () => {
 
     it('should filter out third-party modules when configured', () => {
       class TestAdapter extends BundlerAdapter {
-        extract(): PluginExtractionResult {
+        extract(_bundlerOutput: unknown): PluginExtractionResult {
           const errors: string[] = [];
           const modules = this.convertModules(
             [
@@ -181,7 +181,7 @@ describe('BundlerAdapter', () => {
   describe('convertChunks', () => {
     it('should convert bundler chunks to ChunkInput', () => {
       class TestAdapter extends BundlerAdapter {
-        extract(): PluginExtractionResult {
+        extract(_bundlerOutput: unknown): PluginExtractionResult {
           const errors: string[] = [];
           const chunks = this.convertChunks(
             [
@@ -221,7 +221,7 @@ describe('BundlerAdapter', () => {
   describe('createIngestionOptions', () => {
     it('should create IngestionOptions from plugin options', () => {
       class TestAdapter extends BundlerAdapter {
-        extract(): PluginExtractionResult {
+        extract(_bundlerOutput: unknown): PluginExtractionResult {
           const options = this.createIngestionOptions('webpack');
           return {
             bundles: [],

@@ -34,9 +34,5 @@ export {
 } from './utils.js';
 
 // Re-export adapters
-export {
-  BundlerAdapter,
-  AdapterFactory,
-  AdapterRegistry,
-  createDefaultAdapter,
-} from './adapters.js';
+export { BundlerAdapter, AdapterRegistry, createDefaultAdapter } from './adapters.js';
+export type { AdapterFactory } from './adapters.js';
