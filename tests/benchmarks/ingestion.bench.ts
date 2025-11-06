@@ -213,7 +213,7 @@ describe('Ingestion Performance Benchmarks', () => {
       // Performance target: should complete in under 3.5 minutes for 50MB
       // Note: Large bundle tests are slower in CI environments
       expect(result.duration).toBeLessThan(210000);
-    }, 240000); // 4 minute timeout for large bundle
+    }, 360000); // 6 minute timeout for large bundle (slow in CI)
   });
 
   describe('AST Analysis Performance', () => {
