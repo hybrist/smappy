@@ -44,7 +44,7 @@ describe('ViteAdapter', () => {
               renderedLength: 25,
             },
           },
-        } as OutputChunk,
+        } as unknown as OutputChunk,
       };
 
       const rollupOutput = {
@@ -84,7 +84,7 @@ describe('ViteAdapter', () => {
               renderedLength: 15,
             },
           },
-        } as OutputChunk,
+        } as unknown as OutputChunk,
       };
 
       const rollupOutput = {
@@ -121,7 +121,7 @@ describe('ViteAdapter', () => {
               renderedLength: 25,
             },
           },
-        } as OutputChunk,
+        } as unknown as OutputChunk,
         'vendor.js': {
           type: 'chunk',
           fileName: 'vendor.js',
@@ -137,7 +137,7 @@ describe('ViteAdapter', () => {
               renderedLength: 100,
             },
           },
-        } as OutputChunk,
+        } as unknown as OutputChunk,
       };
 
       const rollupOutput = {
@@ -176,7 +176,7 @@ describe('ViteAdapter', () => {
           facadeModuleId: 'src/server.js',
           isImported: false,
           modules: {},
-        } as OutputChunk,
+        } as unknown as OutputChunk,
       };
 
       const rollupOutput = {
@@ -217,7 +217,7 @@ describe('ViteAdapter', () => {
               renderedLength: 100,
             },
           },
-        } as OutputChunk,
+        } as unknown as OutputChunk,
       };
 
       const rollupOutput = {
@@ -259,7 +259,7 @@ describe('ViteAdapter', () => {
               renderedLength: 100,
             },
           },
-        } as OutputChunk,
+        } as unknown as OutputChunk,
       };
 
       const rollupOutput = {
@@ -301,7 +301,7 @@ describe('ViteAdapter', () => {
               renderedLength: 15,
             },
           },
-        } as OutputChunk,
+        } as unknown as OutputChunk,
       };
 
       const rollupOutput = {
@@ -336,7 +336,7 @@ describe('ViteAdapter', () => {
           facadeModuleId: 'src/main.js',
           isImported: false,
           modules: {},
-        } as OutputChunk,
+        } as unknown as OutputChunk,
       };
 
       const rollupOutput = {
