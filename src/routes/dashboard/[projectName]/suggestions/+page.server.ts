@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { getSuggestionsByAnalysis } from '$lib/server/query/data.remote';
+import type { SuggestionWithLinks } from '$lib/server/query/types';
 import { getAllProjects, getAnalysisHistory, getLatestAnalysis } from '$lib/server/query/index.js';
 
 export const load: PageServerLoad = async ({ params, url }) => {
@@ -48,7 +49,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
   }
 
   // Fetch suggestions data if analysis exists
-  let suggestions = [];
+  let suggestions: SuggestionWithLinks[] = [];
   if (analysis) {
     try {
       const result = await getSuggestionsByAnalysis({ analysisId: analysis.id, options: {} });

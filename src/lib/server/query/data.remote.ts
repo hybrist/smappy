@@ -552,13 +552,13 @@ export const getSuggestionsByAnalysis = query(
                 .limit(1);
 
               return {
-                entityType: link.entityType,
+                entityType: link.entityType as 'Module' | 'Symbol' | 'Dependency' | 'Chunk',
                 entityId: link.entityId,
                 entityPath: mod?.filePath,
               };
             }
             return {
-              entityType: link.entityType,
+              entityType: link.entityType as 'Module' | 'Symbol' | 'Dependency' | 'Chunk',
               entityId: link.entityId,
             };
           }),
@@ -584,4 +584,3 @@ export const getSuggestionsByAnalysis = query(
     return result;
   },
 );
-

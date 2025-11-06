@@ -73,9 +73,7 @@
           class:active={currentPath.startsWith(
             `/dashboard/${$page.params.projectName}/suggestions`,
           )}
-          aria-current={currentPath.startsWith(
-            `/dashboard/${$page.params.projectName}/suggestions`,
-          )
+          aria-current={currentPath.startsWith(`/dashboard/${$page.params.projectName}/suggestions`)
             ? 'page'
             : undefined}
         >

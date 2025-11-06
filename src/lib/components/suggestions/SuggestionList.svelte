@@ -62,7 +62,7 @@
       <label for="type-filter" class="filter-label">Type:</label>
       <select id="type-filter" bind:value={selectedType} class="filter-select">
         <option value="all">All Types</option>
-        {#each uniqueTypes() as type}
+        {#each uniqueTypes() as type (type)}
           <option value={type}>{type}</option>
         {/each}
       </select>

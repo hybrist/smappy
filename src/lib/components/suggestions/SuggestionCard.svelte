@@ -47,12 +47,13 @@
     <div class="suggestion-links">
       <h4 class="links-title">Related entities:</h4>
       <ul class="links-list">
-        {#each suggestion.links as link}
+        {#each suggestion.links as link (link.entityId)}
           <li class="link-item">
             {#if link.entityType === 'Module' && link.entityPath && projectName}
               <a
                 href="/dashboard/{projectName}/modules?path={encodeURIComponent(link.entityPath)}"
                 class="entity-link"
+                data-sveltekit-reload
               >
                 <span class="entity-type">{link.entityType}:</span>
                 {link.entityPath}
