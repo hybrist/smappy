@@ -14,27 +14,22 @@
   let selectedSeverity = $state<string>('all');
 
   // Get unique types from suggestions
-  const uniqueTypes = $derived(() => {
-    const types = new Set(suggestions.map((s) => s.type));
-    return Array.from(types).sort();
-  });
+  const uniqueTypes = $derived(Array.from(new Set(suggestions.map((s) => s.type))).sort());
 
   // Filter suggestions based on selected filters
-  const filteredSuggestions = $derived(() => {
-    return suggestions.filter((suggestion) => {
+  const filteredSuggestions = $derived(
+    suggestions.filter((suggestion) => {
       const typeMatch = selectedType === 'all' || suggestion.type === selectedType;
       const severityMatch = selectedSeverity === 'all' || suggestion.severity === selectedSeverity;
       return typeMatch && severityMatch;
-    });
-  });
+    }),
+  );
 
   // Count by severity
-  const severityCounts = $derived(() => {
-    return {
-      critical: suggestions.filter((s) => s.severity === 'critical').length,
-      warning: suggestions.filter((s) => s.severity === 'warning').length,
-      info: suggestions.filter((s) => s.severity === 'info').length,
-    };
+  const severityCounts = $derived({
+    critical: suggestions.filter((s) => s.severity === 'critical').length,
+    warning: suggestions.filter((s) => s.severity === 'warning').length,
+    info: suggestions.filter((s) => s.severity === 'info').length,
   });
 </script>
 
@@ -43,15 +38,15 @@
     <h2 class="list-title">Suggestions</h2>
     <div class="severity-summary">
       <span class="severity-count severity-critical-count">
-        <span class="count-badge">{severityCounts().critical}</span>
+        <span class="count-badge">{severityCounts.critical}</span>
         Critical
       </span>
       <span class="severity-count severity-warning-count">
-        <span class="count-badge">{severityCounts().warning}</span>
+        <span class="count-badge">{severityCounts.warning}</span>
         Warning
       </span>
       <span class="severity-count severity-info-count">
-        <span class="count-badge">{severityCounts().info}</span>
+        <span class="count-badge">{severityCounts.info}</span>
         Info
       </span>
     </div>
@@ -62,7 +57,7 @@
       <label for="type-filter" class="filter-label">Type:</label>
       <select id="type-filter" bind:value={selectedType} class="filter-select">
         <option value="all">All Types</option>
-        {#each uniqueTypes() as type (type)}
+        {#each uniqueTypes as type (type)}
           <option value={type}>{type}</option>
         {/each}
       </select>
@@ -79,11 +74,11 @@
     </div>
 
     <div class="filter-summary">
-      Showing {filteredSuggestions().length} of {suggestions.length} suggestions
+      Showing {filteredSuggestions.length} of {suggestions.length} suggestions
     </div>
   </div>
 
-  {#if filteredSuggestions().length === 0}
+  {#if filteredSuggestions.length === 0}
     <div class="empty-state">
       {#if suggestions.length === 0}
         <p>No suggestions available for this analysis.</p>
@@ -93,7 +88,7 @@
     </div>
   {:else}
     <div class="suggestions-grid">
-      {#each filteredSuggestions() as suggestion (suggestion.id)}
+      {#each filteredSuggestions as suggestion (suggestion.id)}
         <SuggestionCard {suggestion} {projectName} />
       {/each}
     </div>

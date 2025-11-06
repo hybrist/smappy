@@ -500,11 +500,11 @@ export const getSuggestionsByAnalysis = query(
     // Build filter conditions
     const conditions = [eq(suggestion.analysisRunId, analysisId)];
 
-    if (options.type) {
+    if (options?.type) {
       conditions.push(eq(suggestion.type, options.type));
     }
 
-    if (options.severity) {
+    if (options?.severity) {
       conditions.push(eq(suggestion.severity, options.severity));
     }
 
@@ -514,8 +514,8 @@ export const getSuggestionsByAnalysis = query(
     const [{ total }] = await db.select({ total: count() }).from(suggestion).where(where);
 
     // Get paginated data
-    const limit = options.limit || 100;
-    const offset = options.offset || 0;
+    const limit = options?.limit || 100;
+    const offset = options?.offset || 0;
 
     const suggestions = await db
       .select()

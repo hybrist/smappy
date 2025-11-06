@@ -9,36 +9,26 @@
   let { suggestion, projectName }: Props = $props();
 
   // Derive severity class for badge styling
-  const severityClass = $derived(() => {
-    switch (suggestion.severity) {
-      case 'critical':
-        return 'severity-critical';
-      case 'warning':
-        return 'severity-warning';
-      case 'info':
-        return 'severity-info';
-      default:
-        return 'severity-info';
-    }
-  });
+  const severityClass = $derived(
+    suggestion.severity === 'critical'
+      ? 'severity-critical'
+      : suggestion.severity === 'warning'
+        ? 'severity-warning'
+        : 'severity-info',
+  );
 
-  const severityLabel = $derived(() => {
-    switch (suggestion.severity) {
-      case 'critical':
-        return 'Critical';
-      case 'warning':
-        return 'Warning';
-      case 'info':
-        return 'Info';
-      default:
-        return 'Info';
-    }
-  });
+  const severityLabel = $derived(
+    suggestion.severity === 'critical'
+      ? 'Critical'
+      : suggestion.severity === 'warning'
+        ? 'Warning'
+        : 'Info',
+  );
 </script>
 
 <div class="suggestion-card">
   <div class="suggestion-header">
-    <span class="severity-badge {severityClass()}">{severityLabel()}</span>
+    <span class="severity-badge {severityClass}">{severityLabel}</span>
     <span class="suggestion-type">{suggestion.type}</span>
   </div>
   <h3 class="suggestion-title">{suggestion.title}</h3>
