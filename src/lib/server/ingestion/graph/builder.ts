@@ -4,7 +4,13 @@
  */
 
 import { parse } from '@babel/parser';
-import traverse, { type NodePath } from '@babel/traverse';
+import traverseDefault, { type NodePath } from '@babel/traverse';
+
+// Handle both default and named exports from @babel/traverse
+const traverse =
+  typeof traverseDefault === 'function'
+    ? traverseDefault
+    : (traverseDefault as { default: typeof traverseDefault }).default;
 import type {
   ImportDeclaration,
   ExportNamedDeclaration,
