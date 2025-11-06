@@ -10,6 +10,7 @@ import {
 } from './large-module-detector.js';
 import type { SuggestionContext } from '../../suggestions/types.js';
 import type { ModuleWithAnalysis } from '../db/writer.js';
+import { createMockBundleInput, createMockChunkInput } from '../types/index.js';
 
 describe('LargeModuleDetector', () => {
   let detector: LargeModuleDetector;
@@ -333,8 +334,8 @@ describe('LargeModuleDetector', () => {
 
     it('should work with chunks and bundles in context', () => {
       context.modules = [createModule('./src/large.js', 60 * 1024)];
-      context.chunks = [{ name: 'main', filePath: './dist/main.js' }];
-      context.bundles = [{ name: 'app' }];
+      context.chunks = [createMockChunkInput({ name: 'main' })];
+      context.bundles = [createMockBundleInput({ fileName: 'app.js' })];
 
       const suggestions = detector.execute(context);
 
