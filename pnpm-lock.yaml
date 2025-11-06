@@ -69,6 +69,9 @@ importers:
       '@types/pako':
         specifier: ^2.0.4
         version: 2.0.4
+      '@types/rollup':
+        specifier: ^0.54.0
+        version: 0.54.0
       '@vitest/browser':
         specifier: ^3.2.4
         version: 3.2.4(playwright@1.56.1)(vite@7.1.12(@types/node@22.19.0)(jiti@2.6.1)(lightningcss@1.30.2))(vitest@3.2.4)
@@ -111,6 +114,9 @@ importers:
       prettier-plugin-tailwindcss:
         specifier: ^0.7.1
         version: 0.7.1(prettier-plugin-svelte@3.4.0(prettier@3.6.2)(svelte@5.43.3))(prettier@3.6.2)
+      rollup:
+        specifier: ^4.52.5
+        version: 4.52.5
       storybook:
         specifier: ^10.0.4
         version: 10.0.4(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(vite@7.1.12(@types/node@22.19.0)(jiti@2.6.1)(lightningcss@1.30.2))
@@ -968,6 +974,10 @@ packages:
 
   '@types/pako@2.0.4':
     resolution: {integrity: sha512-VWDCbrLeVXJM9fihYodcLiIv0ku+AlOa/TQ1SvYOaBuyrSKgEcro95LJyIsJ4vSo6BXIxOKxiJAat04CmST9Fw==}
+
+  '@types/rollup@0.54.0':
+    resolution: {integrity: sha512-oeYztLHhQ98jnr+u2cs1c3tHOGtpzrm9DJlIdEjznwoXWidUbrI+X6ib7zCkPIbB7eJ7VbbKNQ5n/bPnSg6Naw==}
+    deprecated: This is a stub types definition for rollup (https://github.com/rollup/rollup). rollup provides its own type definitions, so you don't need @types/rollup installed!
 
   '@types/unist@2.0.11':
     resolution: {integrity: sha512-CmBKiL6NNo/OqgmMn95Fk9Whlp2mtvIv+KNpQKN2F4SjvrEesubTRWGYSg+BnWZOnlCaSTU1sMpsBOzgbYhnsA==}
@@ -3182,6 +3192,10 @@ snapshots:
       undici-types: 6.21.0
 
   '@types/pako@2.0.4': {}
+
+  '@types/rollup@0.54.0':
+    dependencies:
+      rollup: 4.52.5
 
   '@types/unist@2.0.11': {}
 
