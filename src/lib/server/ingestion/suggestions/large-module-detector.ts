@@ -55,7 +55,7 @@ export class LargeModuleDetector implements SuggestionRule {
       }
 
       const size = module.bundledSize;
-      let severity: 'critical' | 'warning' | 'info' | null = null;
+      let severity: 'critical' | 'warning' | null = null;
       let title = '';
       let description = '';
 

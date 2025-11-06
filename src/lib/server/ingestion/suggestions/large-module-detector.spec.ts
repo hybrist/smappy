@@ -237,8 +237,7 @@ describe('LargeModuleDetector', () => {
 
   describe('size formatting', () => {
     it('should format bytes correctly in suggestions', () => {
-      context.modules = [createModule('./src/small.js', 512)]; // 512 bytes
-      context.modules[0].bundledSize = 60 * 1024; // Override to trigger warning
+      context.modules = [createModule('./src/medium.js', 60 * 1024)];
 
       const suggestions = detector.execute(context);
       expect(suggestions[0].title).toContain('60.0KB');
