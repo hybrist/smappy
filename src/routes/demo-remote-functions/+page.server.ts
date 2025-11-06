@@ -6,25 +6,24 @@
 import { getLatestAnalysis, getModulesByAnalysis } from '$lib/server/query/data.remote';
 
 export async function load() {
-	// Example: Load latest analysis for a project
-	try {
-		const analysis = await getLatestAnalysis('test-project');
-		const modules = await getModulesByAnalysis({
-			analysisId: analysis.id,
-			options: { limit: 10 },
-		});
+  // Example: Load latest analysis for a project
+  try {
+    const analysis = await getLatestAnalysis('test-project');
+    const modules = await getModulesByAnalysis({
+      analysisId: analysis.id,
+      options: { limit: 10 },
+    });
 
-		return {
-			analysis,
-			modules,
-		};
-	} catch (error) {
-		// Handle errors gracefully
-		return {
-			analysis: null,
-			modules: null,
-			error: error instanceof Error ? error.message : 'Unknown error',
-		};
-	}
+    return {
+      analysis,
+      modules,
+    };
+  } catch (error) {
+    // Handle errors gracefully
+    return {
+      analysis: null,
+      modules: null,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
 }
-
