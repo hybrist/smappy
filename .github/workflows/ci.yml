@@ -8,7 +8,7 @@ on:
 
 jobs:
   lint:
-    name: Lint and Format Check
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,7 +27,7 @@ jobs:
         run: pnpm run lint:eslint
 
   format:
-    name: Lint and Format Check
+    name: Format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
