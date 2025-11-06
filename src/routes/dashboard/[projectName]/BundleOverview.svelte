@@ -250,18 +250,18 @@
           type="text"
           placeholder="Search modules..."
           bind:value={searchQuery}
-          on:input={handleSearch}
+          oninput={handleSearch}
           class="search-input"
         />
       </div>
       <div class="filter-group">
-        <select bind:value={fileTypeFilter} on:change={handleFilter} class="filter-select">
+        <select bind:value={fileTypeFilter} onchange={handleFilter} class="filter-select">
           <option value={null}>All File Types</option>
           {#each bundleFileTypes as type (type)}
             <option value={type}>{type}</option>
           {/each}
         </select>
-        <select bind:value={thirdPartyFilter} on:change={handleFilter} class="filter-select">
+        <select bind:value={thirdPartyFilter} onchange={handleFilter} class="filter-select">
           <option value={null}>All Sources</option>
           <option value={false}>Source Only</option>
           <option value={true}>Third-party Only</option>
