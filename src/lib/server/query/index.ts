@@ -503,6 +503,82 @@ export async function compareAnalyses(
 }
 
 // ============================================================================
+// Project and Analysis History Queries
+// ============================================================================
+
+/**
+ * Get all unique project names
+ *
+ * @returns Array of project names
+ */
+export async function getAllProjects(): Promise<string[]> {
+  const projects = await db
+    .select({ projectName: schema.analysisRun.projectName })
+    .from(schema.analysisRun)
+    .where(sql`${schema.analysisRun.projectName} IS NOT NULL`);
+
+  const uniqueProjects = [...new Set(projects.map((p) => p.projectName).filter(Boolean))];
+  return uniqueProjects as string[];
+}
+
+/**
+ * Get all analysis runs for a project, ordered by creation date (newest first)
+ *
+ * @param projectName - Project name
+ * @returns Array of analysis runs
+ */
+export async function getAnalysisHistory(projectName: string): Promise<AnalysisRun[]> {
+  const runs = await db
+    .select({
+      id: schema.analysisRun.id,
+      projectName: schema.analysisRun.projectName,
+      createdAt: schema.analysisRun.createdAt,
+      bundler: schema.analysisRun.bundler,
+    })
+    .from(schema.analysisRun)
+    .where(eq(schema.analysisRun.projectName, projectName))
+    .orderBy(desc(schema.analysisRun.createdAt), desc(schema.analysisRun.id));
+
+  // Get aggregated statistics for each run
+  const runsWithStats = await Promise.all(
+    runs.map(async (run) => {
+      const [moduleStats, bundleStats] = await Promise.all([
+        db
+          .select({
+            moduleCount: sql<number>`count(*)`.as('moduleCount'),
+          })
+          .from(schema.module)
+          .where(eq(schema.module.analysisRunId, run.id)),
+        db
+          .select({
+            bundleCount: sql<number>`count(*)`.as('bundleCount'),
+            totalSize: sql<number>`sum(${schema.bundle.size})`.as('totalSize'),
+            totalGzipSize: sql<number>`sum(${schema.bundle.gzipSize})`.as('totalGzipSize'),
+          })
+          .from(schema.bundle)
+          .where(eq(schema.bundle.analysisRunId, run.id)),
+      ]);
+
+      const moduleStat = moduleStats[0];
+      const bundleStat = bundleStats[0];
+
+      return {
+        id: run.id,
+        projectName: run.projectName,
+        createdAt: run.createdAt,
+        bundler: run.bundler,
+        moduleCount: moduleStat?.moduleCount ?? 0,
+        bundleCount: bundleStat?.bundleCount ?? 0,
+        totalSize: bundleStat?.totalSize ?? 0,
+        totalGzipSize: bundleStat?.totalGzipSize ?? 0,
+      };
+    }),
+  );
+
+  return runsWithStats;
+}
+
+// ============================================================================
 // Re-exports
 // ============================================================================
 
