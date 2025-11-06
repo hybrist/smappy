@@ -27,6 +27,10 @@ src/lib/paraglide
 .inlang/
 project.inlang/
 
+# Playwright
+test-results/
+playwright-report/
+
 # SQLite
 *.db
 

@@ -7,8 +7,7 @@ import { join } from 'node:path';
 // Use process.env for environment variable access, which works in both SvelteKit and Node.js contexts
 // In SvelteKit, environment variables are typically available via process.env as well
 // (SvelteKit also exposes $env imports, but process.env is sufficient for compatibility)
-const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) throw new Error('DATABASE_URL is not set');
+const databaseUrl = process.env.DATABASE_URL || ':memory:';
 
 const client = new Database(databaseUrl);
 
