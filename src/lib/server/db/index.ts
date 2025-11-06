@@ -11,9 +11,15 @@ const databaseUrl = process.env.DATABASE_URL || ':memory:';
 
 const client = new Database(databaseUrl);
 
-// Initialize schema for in-memory databases (used in tests)
-// For file-based databases, migrations should be run separately
-if (databaseUrl === ':memory:') {
+// Check if database is empty (no tables)
+// Note: SQLite will create an empty database file if it doesn't exist yet
+// This is intentional - we want to initialize schema for new databases
+const tables = client.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
+const isEmpty = tables.length === 0;
+
+// Initialize schema for in-memory databases or newly created/empty file-based databases
+// For existing file-based databases with tables, migrations should be run via drizzle-kit
+if (databaseUrl === ':memory:' || isEmpty) {
   try {
     const drizzleDir = join(process.cwd(), 'drizzle');
     // Find all migration SQL files and sort them to apply in order
