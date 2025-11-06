@@ -4,78 +4,19 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { ingestBundle, type BundleIngestionInput } from '../../src/lib/server/ingestion/index.js';
-import type {
-  BundleInput,
-  ModuleInput,
-  ChunkInput,
-} from '../../src/lib/server/ingestion/types/index.js';
-import { db } from '../../src/lib/server/db/index.js';
-import { sql } from 'drizzle-orm';
-
-/**
- * Helper function to clean the database before each test suite
- */
-async function cleanDatabase() {
-  // Delete all data from all tables (in correct order to avoid foreign key constraints)
-  await db.run(sql`DELETE FROM SourceMapEntry`);
-  await db.run(sql`DELETE FROM Dependency`);
-  await db.run(sql`DELETE FROM Symbol`);
-  await db.run(sql`DELETE FROM Chunk_Module`);
-  await db.run(sql`DELETE FROM Suggestion_Link`);
-  await db.run(sql`DELETE FROM Suggestion`);
-  await db.run(sql`DELETE FROM Module`);
-  await db.run(sql`DELETE FROM Chunk`);
-  await db.run(sql`DELETE FROM Bundle`);
-  await db.run(sql`DELETE FROM AnalysisRun`);
-}
+import { ingestBundle } from '../../src/lib/server/ingestion/index.js';
+import { cleanDatabase, createDashboardTestData } from '../../src/lib/server/db/seed.js';
 
 test.describe('Dashboard Landing Page', () => {
   test.beforeEach(async () => {
     // Clean database before each test
     await cleanDatabase();
 
-    // Set up test data with multiple projects
-    const projects = ['test-project-1', 'test-project-2'];
+    // Set up test data with multiple projects using seed data
+    const { landingPageProjects } = createDashboardTestData();
 
-    for (const projectName of projects) {
-      const modules: ModuleInput[] = [
-        {
-          filePath: `./src/${projectName}/main.js`,
-          sourceContent: `export function main() { return '${projectName}'; }`,
-          fileType: 'js',
-        },
-      ];
-
-      const bundles: BundleInput[] = [
-        {
-          fileName: `${projectName}.js`,
-          content: '/* bundled code */',
-          type: 'js',
-        },
-      ];
-
-      const chunks: ChunkInput[] = [
-        {
-          name: 'main',
-          isEntry: true,
-          isAsync: false,
-          moduleIds: [`./src/${projectName}/main.js`],
-        },
-      ];
-
-      const input: BundleIngestionInput = {
-        options: {
-          bundlerType: 'vite',
-          projectName,
-          enableIncremental: false,
-        },
-        bundles,
-        modules,
-        chunks,
-      };
-
-      await ingestBundle(input);
+    for (const project of landingPageProjects) {
+      await ingestBundle(project);
     }
   });
 
@@ -107,54 +48,9 @@ test.describe('Project Dashboard Page', () => {
     // Clean database before each test
     await cleanDatabase();
 
-    // Set up test data with realistic bundle analysis
-    const modules: ModuleInput[] = [
-      {
-        filePath: './src/components/Button.tsx',
-        sourceContent: `export function Button() { return <button>Click</button>; }`,
-        fileType: 'tsx',
-      },
-      {
-        filePath: './src/utils/helpers.ts',
-        sourceContent: `export function formatDate(d: Date) { return d.toISOString(); }`,
-        fileType: 'ts',
-      },
-      {
-        filePath: './src/main.ts',
-        sourceContent: `import { Button } from './components/Button';`,
-        fileType: 'ts',
-      },
-    ];
-
-    const bundles: BundleInput[] = [
-      {
-        fileName: 'main.js',
-        content: '/* main bundle code */',
-        type: 'js',
-      },
-    ];
-
-    const chunks: ChunkInput[] = [
-      {
-        name: 'main',
-        isEntry: true,
-        isAsync: false,
-        moduleIds: ['./src/main.ts', './src/components/Button.tsx', './src/utils/helpers.ts'],
-      },
-    ];
-
-    const input: BundleIngestionInput = {
-      options: {
-        bundlerType: 'vite',
-        projectName,
-        enableIncremental: false,
-      },
-      bundles,
-      modules,
-      chunks,
-    };
-
-    await ingestBundle(input);
+    // Set up test data with realistic bundle analysis using seed data
+    const { detailedProject } = createDashboardTestData();
+    await ingestBundle(detailedProject);
   });
 
   test('should display project dashboard with stats', async ({ page }) => {
