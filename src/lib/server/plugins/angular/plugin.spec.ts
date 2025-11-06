@@ -89,7 +89,9 @@ describe('angularBundleAnalysisBuilder', () => {
       return !String(path).includes('stats.json');
     });
 
-    vi.mocked(fs.readdirSync).mockReturnValue(['main.js'] as unknown as fs.Dirent[]);
+    vi.mocked(fs.readdirSync).mockReturnValue([
+      { name: 'main.js', isDirectory: () => false, isFile: () => true },
+    ] as unknown as fs.Dirent[]);
     vi.mocked(fs.statSync).mockReturnValue({ isFile: () => true, size: 1024 } as unknown as fs.Stats);
     vi.mocked(fs.readFileSync).mockReturnValue('console.log("app");');
 
@@ -182,7 +184,9 @@ describe('angularBundleAnalysisBuilder', () => {
       useStatsJson: false,
     };
 
-    vi.mocked(fs.readdirSync).mockReturnValue(['main.js'] as unknown as fs.Dirent[]);
+    vi.mocked(fs.readdirSync).mockReturnValue([
+      { name: 'main.js', isDirectory: () => false, isFile: () => true },
+    ] as unknown as fs.Dirent[]);
     vi.mocked(fs.statSync).mockReturnValue({ isFile: () => true, size: 1024 } as unknown as fs.Stats);
     vi.mocked(fs.readFileSync).mockReturnValue('console.log("app");');
 

@@ -9,6 +9,7 @@ import type {
   BundlerChunk,
   BundlerBundle,
 } from '../types.js';
+import type { IngestionOptions } from '../ingestion/types/index.js';
 import { BundlerAdapter } from '../adapters.js';
 import { extractSourceMap } from '../utils.js';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
@@ -257,16 +258,41 @@ export class AngularAdapter extends BundlerAdapter {
   }
 
   /**
+   * Recursively scan directory for files
+   * Compatible with Node.js versions before 18.17.0
+   */
+  private scanDirectory(dir: string, files: string[] = [], baseDir: string = dir): string[] {
+    try {
+      const entries = readdirSync(dir, { withFileTypes: true });
+      
+      for (const entry of entries) {
+        const fullPath = join(dir, entry.name);
+        const relativePath = fullPath.substring(baseDir.length + 1);
+        
+        if (entry.isDirectory()) {
+          this.scanDirectory(fullPath, files, baseDir);
+        } else if (entry.isFile()) {
+          files.push(relativePath);
+        }
+      }
+    } catch {
+      // Ignore read errors for subdirectories
+    }
+    
+    return files;
+  }
+
+  /**
    * Extract bundles from output directory (fallback when stats.json is not available)
    */
   private extractBundlesFromDirectory(outputPath: string, errors: string[]): BundlerBundle[] {
     const bundles: BundlerBundle[] = [];
 
     try {
-      const files = readdirSync(outputPath, { recursive: true });
+      const files = this.scanDirectory(outputPath);
 
       for (const file of files) {
-        const filePath = join(outputPath, file.toString());
+        const filePath = join(outputPath, file);
         const ext = extname(filePath);
 
         // Only process JavaScript files
@@ -284,7 +310,7 @@ export class AngularAdapter extends BundlerAdapter {
           const sourceMap = this.extractSourceMapForBundle(filePath, outputPath);
 
           bundles.push({
-            fileName: file.toString(),
+            fileName: file,
             content,
             size: stats.size,
             sourceMap: sourceMap || undefined,
@@ -354,7 +380,7 @@ export class AngularAdapter extends BundlerAdapter {
    */
   protected createIngestionOptions(
     bundlerType: 'webpack' | 'rollup' | 'esbuild' | 'vite' | 'parcel' | 'other',
-  ): import('../ingestion/types/index.js').IngestionOptions {
+  ): IngestionOptions {
     return {
       bundlerType,
       projectName: this.options.projectName,

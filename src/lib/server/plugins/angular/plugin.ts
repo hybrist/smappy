@@ -58,6 +58,12 @@ export async function angularBundleAnalysisBuilder(
   const rootDir = context?.workspaceRoot || process.cwd();
   const logger = context?.logger || console;
 
+  // Validate required options
+  if (!options.projectName) {
+    logger.error('[Angular Bundle Analysis] projectName is required');
+    return { success: false };
+  }
+
   try {
     // Determine output directory
     const outputPath = buildOutputDir
