@@ -170,8 +170,8 @@ describe('AngularAdapter', () => {
         .mockReturnValueOnce('console.log("main");') // main.js
         .mockReturnValueOnce('console.log("polyfills");'); // polyfills.js
 
-      vi.mocked(fs.readdirSync).mockReturnValue(['main.js', 'polyfills.js'] as any);
-      vi.mocked(fs.statSync).mockReturnValue({ isFile: () => true, size: 1024 } as any);
+      vi.mocked(fs.readdirSync).mockReturnValue(['main.js', 'polyfills.js'] as unknown as fs.Dirent[]);
+      vi.mocked(fs.statSync).mockReturnValue({ isFile: () => true, size: 1024 } as unknown as fs.Stats);
 
       const angularOutput = {
         outputPath: '/project/dist/test-angular-app',

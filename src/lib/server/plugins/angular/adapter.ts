@@ -10,7 +10,7 @@ import type {
   BundlerBundle,
 } from '../types.js';
 import { BundlerAdapter } from '../adapters.js';
-import { normalizePath, extractSourceMap, readFileContent } from '../utils.js';
+import { extractSourceMap } from '../utils.js';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, extname } from 'node:path';
 
@@ -149,7 +149,7 @@ export class AngularAdapter extends BundlerAdapter {
   /**
    * Load stats.json from output directory
    */
-  private loadStatsJson(outputPath: string, errors: string[]): AngularStatsJson | null {
+  private loadStatsJson(outputPath: string, _errors: string[]): AngularStatsJson | null {
     try {
       const statsPath = join(outputPath, 'stats.json');
       const statsContent = readFileSync(statsPath, 'utf-8');
@@ -308,7 +308,7 @@ export class AngularAdapter extends BundlerAdapter {
    * Extract source map for a bundle
    * Tries both inline and external source maps
    */
-  private extractSourceMapForBundle(bundlePath: string, outputPath: string): string | null {
+  private extractSourceMapForBundle(bundlePath: string, _outputPath: string): string | null {
     if (!this.options.extractSourceMaps) {
       return null;
     }

@@ -84,13 +84,13 @@ describe('angularBundleAnalysisBuilder', () => {
   });
 
   it('should work without stats.json using directory scan', async () => {
-    vi.mocked(fs.existsSync).mockImplementation((path: any) => {
+    vi.mocked(fs.existsSync).mockImplementation((path: unknown) => {
       // Output dir exists, but stats.json doesn't
-      return !path.toString().includes('stats.json');
+      return !String(path).includes('stats.json');
     });
 
-    vi.mocked(fs.readdirSync).mockReturnValue(['main.js'] as any);
-    vi.mocked(fs.statSync).mockReturnValue({ isFile: () => true, size: 1024 } as any);
+    vi.mocked(fs.readdirSync).mockReturnValue(['main.js'] as unknown as fs.Dirent[]);
+    vi.mocked(fs.statSync).mockReturnValue({ isFile: () => true, size: 1024 } as unknown as fs.Stats);
     vi.mocked(fs.readFileSync).mockReturnValue('console.log("app");');
 
     const result = await angularBundleAnalysisBuilder(baseOptions);
@@ -169,7 +169,7 @@ describe('angularBundleAnalysisBuilder', () => {
       logger: mockLogger,
     };
 
-    const result = await angularBundleAnalysisBuilder(baseOptions, context);
+    await angularBundleAnalysisBuilder(baseOptions, context);
 
     expect(mockLogger.warn).toHaveBeenCalledWith(
       expect.stringContaining('Failed to load stats.json')
@@ -182,8 +182,8 @@ describe('angularBundleAnalysisBuilder', () => {
       useStatsJson: false,
     };
 
-    vi.mocked(fs.readdirSync).mockReturnValue(['main.js'] as any);
-    vi.mocked(fs.statSync).mockReturnValue({ isFile: () => true, size: 1024 } as any);
+    vi.mocked(fs.readdirSync).mockReturnValue(['main.js'] as unknown as fs.Dirent[]);
+    vi.mocked(fs.statSync).mockReturnValue({ isFile: () => true, size: 1024 } as unknown as fs.Stats);
     vi.mocked(fs.readFileSync).mockReturnValue('console.log("app");');
 
     const result = await angularBundleAnalysisBuilder(options);
