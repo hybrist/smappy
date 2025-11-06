@@ -4,8 +4,8 @@
  */
 
 async function globalSetup() {
-	// Schema initialization is handled in src/lib/server/db/index.ts
-	// when DATABASE_URL is :memory:
+  // Schema initialization is handled in src/lib/server/db/index.ts
+  // when DATABASE_URL is :memory:
 }
 
 export default globalSetup;
