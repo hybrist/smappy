@@ -58,7 +58,10 @@ export const load: PageServerLoad = async ({ params, url }) => {
 
   // Fetch bundle overview data if analysis exists
   let bundles: Bundle[] = [];
-  let bundleBreakdown = new Map<string, { count: number; totalSize: number; totalGzipSize: number }>();
+  let bundleBreakdown = new Map<
+    string,
+    { count: number; totalSize: number; totalGzipSize: number }
+  >();
   let chunks: Chunk[] = [];
   let topModules: Module[] = [];
   let modulesData: { items: Module[] } | null = null;
