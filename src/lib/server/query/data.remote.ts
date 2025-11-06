@@ -373,6 +373,39 @@ export const compareAnalyses = query(compareAnalysesSchema, async ({ id1, id2 })
 });
 
 /**
+ * Get all unique project names
+ */
+export const getAllProjects = query(v.optional(v.any()), async () => {
+  const projects = await db
+    .select({ projectName: analysisRun.projectName })
+    .from(analysisRun)
+    .where(sql`${analysisRun.projectName} IS NOT NULL`);
+
+  const uniqueProjects = [...new Set(projects.map((p) => p.projectName).filter(Boolean))];
+  return uniqueProjects;
+});
+
+/**
+ * Get all analysis runs for a project, ordered by creation date (newest first)
+ */
+export const getAnalysisHistory = query(projectNameSchema, async (projectName) => {
+  const runs = await db
+    .select()
+    .from(analysisRun)
+    .where(eq(analysisRun.projectName, projectName))
+    .orderBy(desc(analysisRun.createdAt), desc(analysisRun.id));
+
+  // Get aggregated statistics for each run
+  const runsWithStats = await Promise.all(
+    runs.map(async (run) => {
+      return await getAnalysisSummary(run.id);
+    }),
+  );
+
+  return runsWithStats;
+});
+
+/**
  * Helper function to get analysis summary with aggregated statistics
  */
 async function getAnalysisSummary(analysisId: number): Promise<AnalysisSummary> {

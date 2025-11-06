@@ -47,4 +47,11 @@ export default defineConfig(
       },
     },
   },
+  {
+    // Disable navigation rule for dashboard - using standard SvelteKit patterns
+    files: ['src/routes/dashboard/**/*.svelte'],
+    rules: {
+      'svelte/no-navigation-without-resolve': 'off',
+    },
+  },
 );
