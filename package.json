@@ -48,6 +48,7 @@
     "@types/node": "^22.19.0",
     "@types/pako": "^2.0.4",
     "@types/rollup": "^0.54.0",
+    "@types/webpack": "^5.28.5",
     "@vitest/browser": "^3.2.4",
     "drizzle-kit": "^0.31.6",
     "drizzle-orm": "^0.44.7",
@@ -73,7 +74,8 @@
     "vite": "^7.1.12",
     "vite-plugin-devtools-json": "^1.0.0",
     "vitest": "^3.2.4",
-    "vitest-browser-svelte": "^1.1.0"
+    "vitest-browser-svelte": "^1.1.0",
+    "webpack": "^5.102.1"
   },
   "dependencies": {
     "better-sqlite3": "^12.4.1",
