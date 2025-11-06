@@ -68,8 +68,8 @@
 
   .analysis-select:focus {
     border-color: transparent;
-    ring: 2px;
-    ring-color: #3b82f6;
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
   }
 
   @media (prefers-color-scheme: dark) {

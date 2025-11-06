@@ -26,11 +26,7 @@
     <div class="dashboard-header">
       <ProjectSelector {projects} {projectName} />
       {#if projectName}
-        <AnalysisSelector
-          {projectName}
-          {analysisHistory}
-          {selectedAnalysisId}
-        />
+        <AnalysisSelector {projectName} {analysisHistory} {selectedAnalysisId} />
       {/if}
     </div>
 
@@ -39,18 +35,13 @@
         <section class="stats-section" aria-label="Analysis statistics">
           <div class="stat-card">
             <h3>Total Size</h3>
-            <p class="stat-value">{formatBytes(analysis.totalSize)}</p>
-            <p class="stat-label">Gzip: {formatBytes(analysis.totalGzipSize)}</p>
+            <p class="stat-value">{formatBytes(analysis.totalSize ?? 0)}</p>
+            <p class="stat-label">Gzip: {formatBytes(analysis.totalGzipSize ?? 0)}</p>
           </div>
           <div class="stat-card">
             <h3>Modules</h3>
-            <p class="stat-value">{analysis.totalModules}</p>
-            <p class="stat-label">Third-party: {analysis.thirdPartyModules}</p>
-          </div>
-          <div class="stat-card">
-            <h3>Bundles</h3>
-            <p class="stat-value">{analysis.bundlesCount}</p>
-            <p class="stat-label">Chunks: {analysis.chunksCount}</p>
+            <p class="stat-value">{analysis.moduleCount ?? 0}</p>
+            <p class="stat-label">Bundles: {analysis.bundleCount ?? 0}</p>
           </div>
           <div class="stat-card">
             <h3>Bundler</h3>

@@ -7,7 +7,7 @@
 </script>
 
 <div class="dashboard-layout">
-  <nav class="dashboard-nav" role="navigation" aria-label="Dashboard navigation">
+  <nav class="dashboard-nav" aria-label="Dashboard navigation">
     <div class="nav-header">
       <h1 class="nav-title">
         <a href="/dashboard" class="nav-link">Bundle Analysis</a>
@@ -19,7 +19,9 @@
           href="/dashboard/{$page.params.projectName}"
           class="nav-link"
           class:active={currentPath === `/dashboard/${$page.params.projectName}`}
-          aria-current={currentPath === `/dashboard/${$page.params.projectName}` ? 'page' : undefined}
+          aria-current={currentPath === `/dashboard/${$page.params.projectName}`
+            ? 'page'
+            : undefined}
         >
           Overview
         </a>
@@ -29,7 +31,9 @@
           href="/dashboard/{$page.params.projectName}/modules"
           class="nav-link"
           class:active={currentPath.startsWith(`/dashboard/${$page.params.projectName}/modules`)}
-          aria-current={currentPath.startsWith(`/dashboard/${$page.params.projectName}/modules`) ? 'page' : undefined}
+          aria-current={currentPath.startsWith(`/dashboard/${$page.params.projectName}/modules`)
+            ? 'page'
+            : undefined}
         >
           Modules
         </a>
@@ -38,8 +42,14 @@
         <a
           href="/dashboard/{$page.params.projectName}/dependencies"
           class="nav-link"
-          class:active={currentPath.startsWith(`/dashboard/${$page.params.projectName}/dependencies`)}
-          aria-current={currentPath.startsWith(`/dashboard/${$page.params.projectName}/dependencies`) ? 'page' : undefined}
+          class:active={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/dependencies`,
+          )}
+          aria-current={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/dependencies`,
+          )
+            ? 'page'
+            : undefined}
         >
           Dependencies
         </a>
@@ -49,14 +59,16 @@
           href="/dashboard/{$page.params.projectName}/compare"
           class="nav-link"
           class:active={currentPath.startsWith(`/dashboard/${$page.params.projectName}/compare`)}
-          aria-current={currentPath.startsWith(`/dashboard/${$page.params.projectName}/compare`) ? 'page' : undefined}
+          aria-current={currentPath.startsWith(`/dashboard/${$page.params.projectName}/compare`)
+            ? 'page'
+            : undefined}
         >
           Compare
         </a>
       </li>
     </ul>
   </nav>
-  <main class="dashboard-main" role="main">
+  <main class="dashboard-main">
     {#if $page.params.projectName}
       {@render children()}
     {:else}
