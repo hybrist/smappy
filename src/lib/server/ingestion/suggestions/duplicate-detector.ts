@@ -177,16 +177,17 @@ export class DuplicateDetector implements SuggestionRule {
   }
 
   /**
-   * Generate a hash for code content using a proper hash algorithm
+   * Generate a hash for code content using FNV-1a algorithm
    */
   private generateCodeHash(code: string): string {
     // Normalize the code before hashing
     const normalized = this.normalizeCode(code);
 
-    // Use a simple but better hash (FNV-1a)
-    let hash = 2166136261; // FNV offset basis
+    // FNV-1a hash implementation
+    let hash = 2166136261; // FNV offset basis (32-bit)
     for (let i = 0; i < normalized.length; i++) {
       hash ^= normalized.charCodeAt(i);
+      // FNV prime: 16777619
       hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
     }
     return (hash >>> 0).toString(36);
@@ -257,8 +258,8 @@ export class DuplicateDetector implements SuggestionRule {
     // This reduces comparisons significantly
     const sizeGroups = new Map<number, CodeBlock[]>();
     for (const block of blocks) {
-      // Group by size bucket (within 20% of each other)
-      const sizeBucket = Math.floor(block.size / (block.size * 0.2));
+      // Group by size bucket (rounds to nearest 100 bytes)
+      const sizeBucket = Math.floor(block.size / 100);
       const existing = sizeGroups.get(sizeBucket);
       if (existing) {
         existing.push(block);
