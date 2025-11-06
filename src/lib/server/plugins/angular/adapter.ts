@@ -9,7 +9,7 @@ import type {
   BundlerChunk,
   BundlerBundle,
 } from '../types.js';
-import type { IngestionOptions } from '../ingestion/types/index.js';
+import type { IngestionOptions } from '../../ingestion/types/index.js';
 import { BundlerAdapter } from '../adapters.js';
 import { extractSourceMap } from '../utils.js';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
@@ -164,10 +164,7 @@ export class AngularAdapter extends BundlerAdapter {
   /**
    * Extract modules from stats.json
    */
-  private extractModulesFromStats(
-    stats: AngularStatsJson,
-    _errors: string[],
-  ): BundlerModule[] {
+  private extractModulesFromStats(stats: AngularStatsJson, _errors: string[]): BundlerModule[] {
     const modules: BundlerModule[] = [];
 
     if (!stats.modules) {
@@ -189,10 +186,7 @@ export class AngularAdapter extends BundlerAdapter {
   /**
    * Extract chunks from stats.json
    */
-  private extractChunksFromStats(
-    stats: AngularStatsJson,
-    _errors: string[],
-  ): BundlerChunk[] {
+  private extractChunksFromStats(stats: AngularStatsJson, _errors: string[]): BundlerChunk[] {
     const chunks: BundlerChunk[] = [];
 
     if (!stats.chunks) {
@@ -259,16 +253,16 @@ export class AngularAdapter extends BundlerAdapter {
 
   /**
    * Recursively scan directory for files
-   * Compatible with Node.js versions before 18.17.0
+   * Compatible with Node.js v10.10.0+ (withFileTypes option)
    */
   private scanDirectory(dir: string, files: string[] = [], baseDir: string = dir): string[] {
     try {
       const entries = readdirSync(dir, { withFileTypes: true });
-      
+
       for (const entry of entries) {
         const fullPath = join(dir, entry.name);
         const relativePath = fullPath.substring(baseDir.length + 1);
-        
+
         if (entry.isDirectory()) {
           this.scanDirectory(fullPath, files, baseDir);
         } else if (entry.isFile()) {
@@ -278,7 +272,7 @@ export class AngularAdapter extends BundlerAdapter {
     } catch {
       // Ignore read errors for subdirectories
     }
-    
+
     return files;
   }
 
@@ -343,7 +337,7 @@ export class AngularAdapter extends BundlerAdapter {
       const bundleContent = readFileSync(bundlePath, 'utf-8');
 
       // Try inline source map first
-      const inlineSourceMap = extractSourceMap(bundleContent);
+      const inlineSourceMap = extractSourceMap(bundleContent, bundlePath);
       if (inlineSourceMap) {
         return inlineSourceMap;
       }

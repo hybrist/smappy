@@ -116,7 +116,9 @@ describe('AngularAdapter', () => {
             entry: true,
             initial: true,
             async: false,
-            modules: [{ id: 'src/main.ts', identifier: 'src/main.ts', name: 'src/main.ts', size: 1024 }],
+            modules: [
+              { id: 'src/main.ts', identifier: 'src/main.ts', name: 'src/main.ts', size: 1024 },
+            ],
           },
           {
             id: 'lazy',
@@ -125,7 +127,9 @@ describe('AngularAdapter', () => {
             entry: false,
             initial: false,
             async: true,
-            modules: [{ id: 'src/lazy.ts', identifier: 'src/lazy.ts', name: 'src/lazy.ts', size: 512 }],
+            modules: [
+              { id: 'src/lazy.ts', identifier: 'src/lazy.ts', name: 'src/lazy.ts', size: 512 },
+            ],
           },
         ],
         modules: [
@@ -149,7 +153,7 @@ describe('AngularAdapter', () => {
       const result = adapter.extract(angularOutput);
 
       expect(result.chunks).toHaveLength(2);
-      
+
       const lazyChunk = result.chunks.find((c) => c.name === 'lazy-module');
       expect(lazyChunk).toBeDefined();
       expect(lazyChunk?.isAsync).toBe(true);
@@ -174,8 +178,13 @@ describe('AngularAdapter', () => {
       vi.mocked(fs.readdirSync).mockReturnValue([
         { name: 'main.js', isDirectory: () => false, isFile: () => true },
         { name: 'polyfills.js', isDirectory: () => false, isFile: () => true },
-      ] as unknown as fs.Dirent[]);
-      vi.mocked(fs.statSync).mockReturnValue({ isFile: () => true, size: 1024 } as unknown as fs.Stats);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ] as any);
+      vi.mocked(fs.statSync).mockReturnValue({
+        isFile: () => true,
+        size: 1024,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
 
       const angularOutput = {
         outputPath: '/project/dist/test-angular-app',
@@ -207,8 +216,9 @@ describe('AngularAdapter', () => {
         ],
       };
 
-      const bundleContent = 'console.log("test");\n//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozfQ==';
-      
+      const bundleContent =
+        'console.log("test");\n//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozfQ==';
+
       vi.mocked(fs.readFileSync).mockReturnValue(bundleContent);
 
       const angularOutput = {

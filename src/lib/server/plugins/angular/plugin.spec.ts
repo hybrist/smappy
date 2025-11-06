@@ -34,7 +34,7 @@ describe('angularBundleAnalysisBuilder', () => {
     vi.clearAllMocks();
     vi.mocked(fs.existsSync).mockReturnValue(true);
     vi.mocked(ingestion.ingestBundle).mockResolvedValue({
-      analysisRunId: 'test-run-id',
+      analysisRunId: 1,
       projectName: 'test-app',
       timestamp: new Date(),
     });
@@ -91,8 +91,13 @@ describe('angularBundleAnalysisBuilder', () => {
 
     vi.mocked(fs.readdirSync).mockReturnValue([
       { name: 'main.js', isDirectory: () => false, isFile: () => true },
-    ] as unknown as fs.Dirent[]);
-    vi.mocked(fs.statSync).mockReturnValue({ isFile: () => true, size: 1024 } as unknown as fs.Stats);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ] as any);
+    vi.mocked(fs.statSync).mockReturnValue({
+      isFile: () => true,
+      size: 1024,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
     vi.mocked(fs.readFileSync).mockReturnValue('console.log("app");');
 
     const result = await angularBundleAnalysisBuilder(baseOptions);
@@ -174,7 +179,7 @@ describe('angularBundleAnalysisBuilder', () => {
     await angularBundleAnalysisBuilder(baseOptions, context);
 
     expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to load stats.json')
+      expect.stringContaining('Failed to load stats.json'),
     );
   });
 
@@ -186,8 +191,13 @@ describe('angularBundleAnalysisBuilder', () => {
 
     vi.mocked(fs.readdirSync).mockReturnValue([
       { name: 'main.js', isDirectory: () => false, isFile: () => true },
-    ] as unknown as fs.Dirent[]);
-    vi.mocked(fs.statSync).mockReturnValue({ isFile: () => true, size: 1024 } as unknown as fs.Stats);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ] as any);
+    vi.mocked(fs.statSync).mockReturnValue({
+      isFile: () => true,
+      size: 1024,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
     vi.mocked(fs.readFileSync).mockReturnValue('console.log("app");');
 
     const result = await angularBundleAnalysisBuilder(options);
@@ -196,7 +206,7 @@ describe('angularBundleAnalysisBuilder', () => {
     // Should not try to read stats.json
     expect(vi.mocked(fs.readFileSync)).not.toHaveBeenCalledWith(
       expect.stringContaining('stats.json'),
-      'utf-8'
+      'utf-8',
     );
   });
 });
