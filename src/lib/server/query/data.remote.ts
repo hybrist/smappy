@@ -523,10 +523,10 @@ export const getSuggestionsByAnalysis = query(
       .where(where)
       .orderBy(
         // Order by severity (critical > warning > info), then by id
-        sql`CASE ${suggestion.severity} 
-            WHEN 'critical' THEN 1 
-            WHEN 'warning' THEN 2 
-            WHEN 'info' THEN 3 
+        sql`CASE ${suggestion.severity}
+            WHEN 'critical' THEN 1
+            WHEN 'warning' THEN 2
+            WHEN 'info' THEN 3
             END`,
         asc(suggestion.id),
       )
@@ -583,5 +583,36 @@ export const getSuggestionsByAnalysis = query(
     };
 
     return result;
+  },
+);
+
+/**
+ * Get hierarchical treemap data for visualization
+ */
+export const getTreemapData = query(
+  v.object({
+    analysisId: analysisIdSchema,
+    includeSymbols: v.optional(v.boolean(), false),
+    maxModules: v.optional(v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(10000)), 1000),
+  }),
+  async ({ analysisId, includeSymbols, maxModules }) => {
+    // Import the getTreemapData function from index.ts
+    const { getTreemapData: getTreemapDataImpl } = await import('./index.js');
+
+    // Verify analysis exists
+    const [analysis] = await db
+      .select()
+      .from(analysisRun)
+      .where(eq(analysisRun.id, analysisId))
+      .limit(1);
+
+    if (!analysis) {
+      error(404, `Analysis with ID ${analysisId} not found`);
+    }
+
+    return await getTreemapDataImpl(analysisId, {
+      includeSymbols,
+      maxModules,
+    });
   },
 );

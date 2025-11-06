@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onDestroy } from 'svelte';
   import { browser } from '$app/environment';
   import * as d3 from 'd3';
   import type { TreemapNode } from '$lib/server/query/types.js';
@@ -303,13 +303,6 @@
     }, 250);
   }
 
-  onMount(() => {
-    loadTreemapData();
-    if (browser) {
-      window.addEventListener('resize', handleResize);
-    }
-  });
-
   onDestroy(() => {
     // Cleanup D3 elements
     if (containerElement) {
@@ -322,7 +315,7 @@
     if (resizeTimeout) clearTimeout(resizeTimeout);
   });
 
-  // Reload when analysisId or includeSymbols changes
+  // Load data and handle resize events
   $effect(() => {
     // Access both dependencies to make effect reactive to changes
     const id = analysisId;
@@ -330,6 +323,16 @@
     
     if (id) {
       loadTreemapData();
+    }
+    
+    // Setup resize listener (only in browser and only once)
+    if (browser && typeof window !== 'undefined') {
+      window.addEventListener('resize', handleResize);
+      
+      // Return cleanup function
+      return () => {
+        window.removeEventListener('resize', handleResize);
+      };
     }
   });
 </script>

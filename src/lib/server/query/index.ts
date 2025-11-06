@@ -713,24 +713,29 @@ export async function getTreemapData(
   const symbolsByModule: Map<number, Symbol[]> = new Map();
   if (includeSymbols) {
     const moduleIds = modules.map((m) => m.id);
-    const allSymbols = await db
-      .select({
-        id: schema.symbol.id,
-        moduleId: schema.symbol.moduleId,
-        name: schema.symbol.name,
-        type: schema.symbol.type,
-        sourceStartLine: schema.symbol.sourceStartLine,
-        sourceStartCol: schema.symbol.sourceStartCol,
-        sourceEndLine: schema.symbol.sourceEndLine,
-        sourceEndCol: schema.symbol.sourceEndCol,
-        astHash: schema.symbol.astHash,
-        isExported: schema.symbol.isExported,
-        computedBundledSize: schema.symbol.computedBundledSize,
-        computedGzipSize: schema.symbol.computedGzipSize,
-      })
-      .from(schema.symbol)
-      .where(sql`${schema.symbol.moduleId} IN ${moduleIds}`)
-      .orderBy(asc(schema.symbol.sourceStartLine), asc(schema.symbol.sourceStartCol));
+    
+    // Only query if there are modules to avoid empty IN clause
+    let allSymbols: Symbol[] = [];
+    if (moduleIds.length > 0) {
+      allSymbols = await db
+        .select({
+          id: schema.symbol.id,
+          moduleId: schema.symbol.moduleId,
+          name: schema.symbol.name,
+          type: schema.symbol.type,
+          sourceStartLine: schema.symbol.sourceStartLine,
+          sourceStartCol: schema.symbol.sourceStartCol,
+          sourceEndLine: schema.symbol.sourceEndLine,
+          sourceEndCol: schema.symbol.sourceEndCol,
+          astHash: schema.symbol.astHash,
+          isExported: schema.symbol.isExported,
+          computedBundledSize: schema.symbol.computedBundledSize,
+          computedGzipSize: schema.symbol.computedGzipSize,
+        })
+        .from(schema.symbol)
+        .where(sql`${schema.symbol.moduleId} IN ${moduleIds}`)
+        .orderBy(asc(schema.symbol.sourceStartLine), asc(schema.symbol.sourceStartCol));
+    }
 
     // Group symbols by module ID
     for (const symbol of allSymbols) {
