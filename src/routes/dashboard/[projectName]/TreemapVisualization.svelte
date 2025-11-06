@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
+  import { browser } from '$app/environment';
   import * as d3 from 'd3';
   import type { TreemapNode } from '$lib/server/query/types.js';
 
@@ -304,7 +305,9 @@
 
   onMount(() => {
     loadTreemapData();
-    window.addEventListener('resize', handleResize);
+    if (browser) {
+      window.addEventListener('resize', handleResize);
+    }
   });
 
   onDestroy(() => {
@@ -313,7 +316,9 @@
       d3.select(containerElement).selectAll('*').remove();
     }
     // Remove resize listener
-    window.removeEventListener('resize', handleResize);
+    if (browser) {
+      window.removeEventListener('resize', handleResize);
+    }
     if (resizeTimeout) clearTimeout(resizeTimeout);
   });
 
