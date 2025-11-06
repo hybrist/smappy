@@ -15,15 +15,15 @@
   let containerElement = $state<HTMLDivElement | undefined>(undefined);
   let isLoading = $state(true);
   let error = $state<string | null>(null);
-  let treemapData = $state<TreemapNode | null>(null);
+  let _treemapData = $state<TreemapNode | null>(null);
   let currentLevel = $state<TreemapNode | null>(null);
   let breadcrumbs = $state<TreemapNode[]>([]);
   let tooltip = $state<{
     visible: boolean;
     x: number;
     y: number;
-    content: string;
-  }>({ visible: false, x: 0, y: 0, content: '' });
+    lines: string[];
+  }>({ visible: false, x: 0, y: 0, lines: [] });
 
   // Color scales for different types
   const fileTypeColors: Record<string, string> = {
@@ -84,7 +84,7 @@
       }
 
       const data = await response.json();
-      treemapData = data;
+      _treemapData = data;
       currentLevel = data;
       breadcrumbs = [data];
       renderTreemap();
@@ -102,12 +102,17 @@
     // Clear previous content
     d3.select(containerElement).selectAll('*').remove();
 
+    // Make treemap responsive
+    const containerWidth = containerElement.clientWidth || width;
+    const containerHeight = height;
+
     const svg = d3
       .select(containerElement)
       .append('svg')
-      .attr('width', width)
-      .attr('height', height)
-      .attr('viewBox', `0 0 ${width} ${height}`)
+      .attr('width', '100%')
+      .attr('height', containerHeight)
+      .attr('viewBox', `0 0 ${containerWidth} ${containerHeight}`)
+      .attr('preserveAspectRatio', 'xMidYMid meet')
       .style('font-family', 'system-ui, -apple-system, sans-serif')
       .style('font-size', '12px');
 
@@ -120,7 +125,7 @@
     // Create treemap layout
     const treemapLayout = d3
       .treemap<TreemapNode>()
-      .size([width, height])
+      .size([containerWidth, containerHeight])
       .padding(2)
       .round(true);
 
@@ -133,29 +138,40 @@
       .join('g')
       .attr('transform', (d) => `translate(${d.x0},${d.y0})`);
 
-    // Add rectangles
+    // Add rectangles with animation
     cell
       .append('rect')
-      .attr('width', (d) => d.x1 - d.x0)
-      .attr('height', (d) => d.y1 - d.y0)
+      .attr('width', 0)
+      .attr('height', 0)
       .attr('fill', (d) => getNodeColor(d.data))
       .attr('stroke', '#fff')
       .attr('stroke-width', 1)
+      .attr('rx', 2)
+      .attr('ry', 2)
       .style('cursor', (d) => (d.data.children && d.data.children.length > 0 ? 'pointer' : 'default'))
+      .style('transition', 'fill 0.2s ease')
       .on('click', (event, d) => {
         if (d.data.children && d.data.children.length > 0) {
           drillDown(d.data);
         }
       })
-      .on('mouseenter', (event, d) => {
+      .on('mouseenter', function (event, d) {
+        // Highlight on hover
+        d3.select(this).attr('stroke', '#000').attr('stroke-width', 2);
         showTooltip(event, d.data);
       })
       .on('mousemove', (event) => {
         updateTooltipPosition(event);
       })
-      .on('mouseleave', () => {
+      .on('mouseleave', function () {
+        // Remove highlight
+        d3.select(this).attr('stroke', '#fff').attr('stroke-width', 1);
         hideTooltip();
-      });
+      })
+      .transition()
+      .duration(500)
+      .attr('width', (d) => d.x1 - d.x0)
+      .attr('height', (d) => d.y1 - d.y0);
 
     // Add labels for larger cells
     cell
@@ -163,10 +179,11 @@
       .attr('x', 4)
       .attr('y', 16)
       .attr('fill', '#fff')
-      .attr('fill-opacity', 0.9)
+      .attr('fill-opacity', 0)
       .style('font-size', '11px')
       .style('font-weight', '500')
       .style('pointer-events', 'none')
+      .style('text-shadow', '0 1px 2px rgba(0,0,0,0.5)')
       .text((d) => {
         const cellWidth = d.x1 - d.x0;
         const cellHeight = d.y1 - d.y0;
@@ -177,7 +194,11 @@
           return name.length > maxChars ? name.substring(0, maxChars - 3) + '...' : name;
         }
         return '';
-      });
+      })
+      .transition()
+      .delay(200)
+      .duration(300)
+      .attr('fill-opacity', 0.9);
 
     // Add size labels for larger cells
     cell
@@ -185,9 +206,10 @@
       .attr('x', 4)
       .attr('y', 30)
       .attr('fill', '#fff')
-      .attr('fill-opacity', 0.7)
+      .attr('fill-opacity', 0)
       .style('font-size', '10px')
       .style('pointer-events', 'none')
+      .style('text-shadow', '0 1px 2px rgba(0,0,0,0.5)')
       .text((d) => {
         const cellWidth = d.x1 - d.x0;
         const cellHeight = d.y1 - d.y0;
@@ -196,7 +218,11 @@
           return formatBytes(getNodeValue(d.data));
         }
         return '';
-      });
+      })
+      .transition()
+      .delay(200)
+      .duration(300)
+      .attr('fill-opacity', 0.7);
   }
 
   function drillDown(node: TreemapNode) {
@@ -215,7 +241,7 @@
 
   function showTooltip(event: MouseEvent, node: TreemapNode) {
     const lines: string[] = [];
-    lines.push(`<strong>${node.name}</strong>`);
+    lines.push(node.name);
 
     if (node.filePath) {
       lines.push(`Path: ${node.filePath}`);
@@ -249,7 +275,7 @@
       visible: true,
       x: event.clientX,
       y: event.clientY,
-      content: lines.join('<br>'),
+      lines,
     };
   }
 
@@ -267,8 +293,18 @@
     tooltip = { ...tooltip, visible: false };
   }
 
+  // Handle window resize
+  let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
+  function handleResize() {
+    if (resizeTimeout) clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      renderTreemap();
+    }, 250);
+  }
+
   onMount(() => {
     loadTreemapData();
+    window.addEventListener('resize', handleResize);
   });
 
   onDestroy(() => {
@@ -276,6 +312,9 @@
     if (containerElement) {
       d3.select(containerElement).selectAll('*').remove();
     }
+    // Remove resize listener
+    window.removeEventListener('resize', handleResize);
+    if (resizeTimeout) clearTimeout(resizeTimeout);
   });
 
   // Reload when analysisId or includeSymbols changes
@@ -303,7 +342,7 @@
   {:else if currentLevel}
     <!-- Breadcrumb navigation -->
     <div class="breadcrumbs" role="navigation" aria-label="Treemap navigation">
-      {#each breadcrumbs as crumb, index}
+      {#each breadcrumbs as crumb, index (index)}
         <button
           type="button"
           class="breadcrumb-item"
@@ -343,7 +382,13 @@
         style="left: {tooltip.x + 10}px; top: {tooltip.y + 10}px;"
         role="tooltip"
       >
-        {@html tooltip.content}
+        {#each tooltip.lines as line, index (index)}
+          {#if index === 0}
+            <div class="tooltip-title">{line}</div>
+          {:else}
+            <div class="tooltip-line">{line}</div>
+          {/if}
+        {/each}
       </div>
     {/if}
   {/if}
@@ -586,5 +631,15 @@
       background-color: rgba(255, 255, 255, 0.95);
       color: #111827;
     }
+  }
+
+  .tooltip-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  .tooltip-line {
+    font-size: 0.8125rem;
+    opacity: 0.9;
   }
 </style>

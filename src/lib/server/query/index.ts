@@ -10,7 +10,7 @@ import type {
   AnalysisRun,
   Module,
   Symbol,
-  Dependency,
+  Dependency as _Dependency,
   DependencyNode,
   DependencyEdge,
   AnalysisComparison,
