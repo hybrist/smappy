@@ -37,16 +37,19 @@
       <div class="dashboard-content">
         <section class="stats-section" aria-label="Analysis statistics">
           <StatCard
+            data-testid="stat-card-total-size"
             title="Total Size"
             value={formatBytes(analysis.totalSize ?? 0)}
             subtitle="Gzip: {formatBytes(analysis.totalGzipSize ?? 0)}"
           />
           <StatCard
+            data-testid="stat-card-modules"
             title="Modules"
             value={`${analysis.moduleCount ?? 0}`}
             subtitle="Bundles: {analysis.bundleCount ?? 0}"
           />
           <StatCard
+            data-testid="stat-card-bundler"
             title="Bundler"
             value={analysis.bundler || 'Unknown'}
             subtitle={new Date(analysis.createdAt).toLocaleDateString()}
@@ -62,6 +65,7 @@
       </div>
     {:else if projectName}
       <EmptyState
+        data-testid="empty-state-no-analysis"
         title="No analysis data found"
         description={`No analysis data found for project "${projectName}". Please run an analysis to view bundle insights.`}
       />
