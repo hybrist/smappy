@@ -245,3 +245,31 @@ export interface Chunk {
   isEntry: boolean;
   isAsync: boolean;
 }
+
+/**
+ * Suggestion query result
+ */
+export interface Suggestion {
+  id: number;
+  analysisRunId: number;
+  type: string;
+  severity: 'critical' | 'warning' | 'info';
+  title: string;
+  description: string;
+}
+
+/**
+ * Suggestion with linked entities
+ */
+export interface SuggestionWithLinks extends Suggestion {
+  links: SuggestionLinkEntity[];
+}
+
+/**
+ * Linked entity for a suggestion
+ */
+export interface SuggestionLinkEntity {
+  entityType: 'Module' | 'Symbol' | 'Dependency' | 'Chunk';
+  entityId: number;
+  entityPath?: string;
+}
