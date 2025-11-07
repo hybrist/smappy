@@ -23,8 +23,8 @@ test.describe('Dashboard Landing Page', () => {
   test('should display dashboard landing page with project list', async ({ page }) => {
     await page.goto('/dashboard', { waitUntil: 'networkidle' });
 
-    // Check the page title
-    await expect(page.locator('h1')).toContainText('Bundle Analysis Dashboard', { timeout: 5000 });
+    // Check the Smappy logo is visible
+    await expect(page.getByAltText('Smappy')).toBeVisible({ timeout: 5000 });
 
     // Verify project cards are displayed
     await expect(page.getByTestId('project-card')).toHaveCount(2, { timeout: 5000 });
@@ -56,8 +56,8 @@ test.describe('Project Dashboard Page', () => {
   test('should display project dashboard with stats', async ({ page }) => {
     await page.goto(`/dashboard/${projectName}`, { waitUntil: 'networkidle' });
 
-    // Check navigation
-    await expect(page.getByText('Bundle Analysis')).toBeVisible({ timeout: 5000 });
+    // Check navigation - Smappy logo should be visible
+    await expect(page.getByAltText('Smappy')).toBeVisible({ timeout: 5000 });
 
     // Check stats section is visible
     await expect(page.getByTestId('stat-card-total-size')).toBeVisible({ timeout: 5000 });
@@ -99,8 +99,8 @@ test.describe('Project Dashboard Page', () => {
   test('should handle non-existent project', async ({ page }) => {
     await page.goto('/dashboard/non-existent-project', { waitUntil: 'networkidle' });
 
-    // Should still load the page
-    await expect(page.getByText('Bundle Analysis')).toBeVisible({ timeout: 5000 });
+    // Should still load the page - check for Smappy logo
+    await expect(page.getByAltText('Smappy')).toBeVisible({ timeout: 5000 });
 
     // Should show no analysis message
     await expect(page.getByTestId('empty-state-no-analysis')).toBeVisible({ timeout: 5000 });

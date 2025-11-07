@@ -1,0 +1,31 @@
+<svg width="180" height="48" viewBox="0 0 180 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Crocodile Icon: Simplified croc head with snapping jaws -->
+  <g id="croc-icon">
+    <!-- Upper jaw -->
+    <path d="M8 16 C8 12 12 8 18 8 L32 8 C36 8 38 10 38 14 L38 18 L8 18 Z" fill="#059669" />
+    <!-- Lower jaw -->
+    <path d="M8 22 L38 22 L38 26 C38 30 36 32 32 32 L18 32 C12 32 8 28 8 24 Z" fill="#047857" />
+    <!-- Teeth on upper jaw -->
+    <path d="M12 18 L12 14 M16 18 L16 15 M20 18 L20 14 M24 18 L24 15 M28 18 L28 14 M32 18 L32 15 M36 18 L36 14"
+          stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" />
+    <!-- Teeth on lower jaw -->
+    <path d="M12 22 L12 26 M16 22 L16 25 M20 22 L20 26 M24 22 L24 25 M28 22 L28 26 M32 22 L32 25 M36 22 L36 26"
+          stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" />
+    <!-- Eye -->
+    <circle cx="30" cy="12" r="2.5" fill="#ffffff" />
+    <circle cx="30" cy="12" r="1.2" fill="#064e3b" />
+    <!-- Nostril -->
+    <circle cx="14" cy="11" r="1" fill="#047857" />
+  </g>
+
+  <!-- Smappy Wordmark -->
+  <g id="wordmark">
+    <text x="50" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="700" fill="#111827">
+      Smappy
+    </text>
+    <!-- Tagline -->
+    <text x="50" y="40" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="500" fill="#6b7280" letter-spacing="1">
+      BUNDLE ANALYZER
+    </text>
+  </g>
+</svg>

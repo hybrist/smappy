@@ -6,19 +6,28 @@
   const currentPath = $derived($page.url.pathname);
 </script>
 
-<div class="dashboard-layout">
-  <nav class="dashboard-nav" aria-label="Dashboard navigation">
-    <div class="nav-header">
-      <h1 class="nav-title">
-        <a href="/dashboard" class="nav-link">Bundle Analysis</a>
-      </h1>
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <nav
+    class="sticky top-0 z-10 border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+    aria-label="Dashboard navigation"
+  >
+    <div class="border-b border-gray-200 px-4 py-3 dark:border-gray-700">
+      <a
+        href="/dashboard"
+        class="inline-block transition-opacity hover:opacity-80"
+        aria-label="Smappy - Bundle Analyzer"
+      >
+        <img src="/logo.svg" alt="Smappy" class="block h-12 w-auto" />
+      </a>
     </div>
-    <ul class="nav-links" role="list">
+    <ul class="flex gap-6 overflow-x-auto px-4 py-2 sm:gap-6" role="list">
       <li>
         <a
           href="/dashboard/{$page.params.projectName}"
-          class="nav-link"
-          class:active={currentPath === `/dashboard/${$page.params.projectName}`}
+          class="text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+          class:font-semibold={currentPath === `/dashboard/${$page.params.projectName}`}
+          class:text-primary-600={currentPath === `/dashboard/${$page.params.projectName}`}
+          class:dark:text-primary-400={currentPath === `/dashboard/${$page.params.projectName}`}
           aria-current={currentPath === `/dashboard/${$page.params.projectName}`
             ? 'page'
             : undefined}
@@ -29,8 +38,16 @@
       <li>
         <a
           href="/dashboard/{$page.params.projectName}/modules"
-          class="nav-link"
-          class:active={currentPath.startsWith(`/dashboard/${$page.params.projectName}/modules`)}
+          class="text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+          class:font-semibold={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/modules`,
+          )}
+          class:text-primary-600={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/modules`,
+          )}
+          class:dark:text-primary-400={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/modules`,
+          )}
           aria-current={currentPath.startsWith(`/dashboard/${$page.params.projectName}/modules`)
             ? 'page'
             : undefined}
@@ -41,8 +58,14 @@
       <li>
         <a
           href="/dashboard/{$page.params.projectName}/dependencies"
-          class="nav-link"
-          class:active={currentPath.startsWith(
+          class="text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+          class:font-semibold={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/dependencies`,
+          )}
+          class:text-primary-600={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/dependencies`,
+          )}
+          class:dark:text-primary-400={currentPath.startsWith(
             `/dashboard/${$page.params.projectName}/dependencies`,
           )}
           aria-current={currentPath.startsWith(
@@ -57,8 +80,16 @@
       <li>
         <a
           href="/dashboard/{$page.params.projectName}/compare"
-          class="nav-link"
-          class:active={currentPath.startsWith(`/dashboard/${$page.params.projectName}/compare`)}
+          class="text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+          class:font-semibold={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/compare`,
+          )}
+          class:text-primary-600={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/compare`,
+          )}
+          class:dark:text-primary-400={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/compare`,
+          )}
           aria-current={currentPath.startsWith(`/dashboard/${$page.params.projectName}/compare`)
             ? 'page'
             : undefined}
@@ -69,8 +100,14 @@
       <li>
         <a
           href="/dashboard/{$page.params.projectName}/suggestions"
-          class="nav-link"
-          class:active={currentPath.startsWith(
+          class="text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+          class:font-semibold={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/suggestions`,
+          )}
+          class:text-primary-600={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/suggestions`,
+          )}
+          class:dark:text-primary-400={currentPath.startsWith(
             `/dashboard/${$page.params.projectName}/suggestions`,
           )}
           aria-current={currentPath.startsWith(`/dashboard/${$page.params.projectName}/suggestions`)
@@ -82,127 +119,13 @@
       </li>
     </ul>
   </nav>
-  <main class="dashboard-main">
+  <main class="flex-1">
     {#if $page.params.projectName}
       {@render children()}
     {:else}
-      <div class="dashboard-empty">
+      <div class="flex min-h-96 items-center justify-center text-gray-600 dark:text-gray-400">
         <p>Please select a project to view analysis data.</p>
       </div>
     {/if}
   </main>
 </div>
-
-<style>
-  .dashboard-layout {
-    min-height: 100vh;
-    background-color: #f9fafb;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .dashboard-layout {
-      background-color: #111827;
-    }
-  }
-
-  .dashboard-nav {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    border-bottom: 1px solid #e5e7eb;
-    background-color: #ffffff;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .dashboard-nav {
-      border-color: #374151;
-      background-color: #1f2937;
-    }
-  }
-
-  .nav-header {
-    border-bottom: 1px solid #e5e7eb;
-    padding: 1rem;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .nav-header {
-      border-color: #374151;
-    }
-  }
-
-  .nav-title {
-    font-size: 1.25rem;
-    font-weight: bold;
-    color: #111827;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .nav-title {
-      color: #ffffff;
-    }
-  }
-
-  .nav-link {
-    color: #374151;
-    transition: color 0.2s;
-  }
-
-  .nav-link:hover {
-    color: #111827;
-  }
-
-  .nav-link.active {
-    font-weight: 600;
-    color: #2563eb;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .nav-link {
-      color: #d1d5db;
-    }
-
-    .nav-link:hover {
-      color: #ffffff;
-    }
-
-    .nav-link.active {
-      color: #60a5fa;
-    }
-  }
-
-  .nav-links {
-    display: flex;
-    gap: 1.5rem;
-    overflow-x: auto;
-    padding: 0.5rem 1rem;
-  }
-
-  .nav-links li {
-    list-style: none;
-  }
-
-  .dashboard-main {
-    flex: 1;
-  }
-
-  .dashboard-empty {
-    display: flex;
-    min-height: 400px;
-    align-items: center;
-    justify-content: center;
-    color: #6b7280;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .dashboard-empty {
-      color: #9ca3af;
-    }
-  }
-
-  @media (max-width: 640px) {
-    .nav-links {
-      gap: 1rem;
-    }
-  }
-</style>
