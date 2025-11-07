@@ -8,7 +8,8 @@
     | 'critical'
     | 'warning'
     | 'info'
-    | 'entry';
+    | 'entry'
+    | 'async';
 
   interface Props {
     /**
@@ -40,6 +41,7 @@
     warning: 'bg-warning-500/10 text-warning-600 dark:bg-warning-500/20 dark:text-warning-400',
     info: 'bg-info-500/10 text-info-600 dark:bg-info-500/20 dark:text-info-400',
     entry: 'bg-primary-500/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-400',
+    async: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
   };
 </script>
 
@@ -49,7 +51,7 @@
   Label badge component with multiple variants for different use cases.
   Uses semantic colors from Tailwind theme for consistent styling.
 
-  Variants: filetype, source, third-party, critical, warning, info, entry
+  Variants: filetype, source, third-party, critical, warning, info, entry, async
   See Badge.stories.svelte for usage examples.
 -->
 
