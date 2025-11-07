@@ -247,5 +247,4 @@
       color: #fde2e2;
     }
   }
-
 </style>

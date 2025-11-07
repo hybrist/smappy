@@ -98,22 +98,22 @@
         <StatCard
           title="Total Size"
           value={formatBytes(comparison.run2.totalSize ?? 0)}
-          subtitle="{formatDelta(comparison.sizeDelta.totalSize)} ({formatPercentage(comparison.sizeDelta.totalSize, comparison.run1.totalSize ?? 0)})"
+          subtitle={`${formatDelta(comparison.sizeDelta.totalSize)} (${formatPercentage(comparison.sizeDelta.totalSize, comparison.run1.totalSize ?? 0)})`}
         />
         <StatCard
           title="Gzip Size"
           value={formatBytes(comparison.run2.totalGzipSize ?? 0)}
-          subtitle="{formatDelta(comparison.sizeDelta.totalGzipSize)} ({formatPercentage(comparison.sizeDelta.totalGzipSize, comparison.run1.totalGzipSize ?? 0)})"
+          subtitle={`${formatDelta(comparison.sizeDelta.totalGzipSize)} (${formatPercentage(comparison.sizeDelta.totalGzipSize, comparison.run1.totalGzipSize ?? 0)})`}
         />
         <StatCard
           title="Modules"
           value={`${comparison.run2.moduleCount ?? 0}`}
-          subtitle="+{comparison.moduleDiff.added.length} -{comparison.moduleDiff.removed.length} ~{comparison.moduleDiff.modified.length}"
+          subtitle={`+${comparison.moduleDiff.added.length} -${comparison.moduleDiff.removed.length} ~${comparison.moduleDiff.modified.length}`}
         />
         <StatCard
           title="Bundles"
           value={`${comparison.run2.bundleCount ?? 0}`}
-          subtitle="+{comparison.bundleDiff.added} -{comparison.bundleDiff.removed} ~{comparison.bundleDiff.modified}"
+          subtitle={`+${comparison.bundleDiff.added} -${comparison.bundleDiff.removed} ~${comparison.bundleDiff.modified}`}
         />
       </section>
 

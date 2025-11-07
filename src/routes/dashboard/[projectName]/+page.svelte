@@ -63,7 +63,7 @@
     {:else if projectName}
       <EmptyState
         title="No analysis data found"
-        description='No analysis data found for project "{projectName}". Please run an analysis to view bundle insights.'
+        description={`No analysis data found for project "${projectName}". Please run an analysis to view bundle insights.`}
       />
     {/if}
   </div>
