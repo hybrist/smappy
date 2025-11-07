@@ -71,6 +71,7 @@
 
   .analysis-select {
     flex: 1;
+    min-width: 0;
     border-radius: 0.5rem;
     border: 1px solid #d1d5db;
     background-color: #ffffff;
