@@ -1,6 +1,9 @@
 <script lang="ts">
   import type { Chunk, Module } from '$lib/server/query/types.js';
   import TreemapVisualization from './TreemapVisualization.svelte';
+  import Badge from '$lib/components/ui/Badge.svelte';
+  import EmptyState from '$lib/components/ui/EmptyState.svelte';
+  import Card from '$lib/components/ui/Card.svelte';
 
   interface Props {
     bundleBreakdown: Record<string, { count: number; totalSize: number; totalGzipSize: number }>;
@@ -127,29 +130,37 @@
     <div class="breakdown-grid">
       {#each bundleFileTypes as fileType (fileType)}
         {@const stats = bundleBreakdown[fileType]}
-        <div class="breakdown-card">
-          <div class="breakdown-header">
-            <span
-              class="file-type-badge"
-              style="background-color: {getFileTypeColor(fileType)}20; color: {getFileTypeColor(
-                fileType,
-              )}"
-            >
-              {fileType}
-            </span>
-            <span class="breakdown-count">{stats.count} file{stats.count !== 1 ? 's' : ''}</span>
-          </div>
-          <div class="breakdown-stats">
-            <div class="stat">
-              <span class="stat-label">Size:</span>
-              <span class="stat-value">{formatBytes(stats.totalSize)}</span>
+        <Card>
+          <div class="flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <span
+                class="inline-block rounded-md px-3 py-1 text-xs font-medium capitalize"
+                style="background-color: {getFileTypeColor(fileType)}20; color: {getFileTypeColor(
+                  fileType,
+                )}"
+              >
+                {fileType}
+              </span>
+              <span class="text-sm text-gray-600 dark:text-gray-400"
+                >{stats.count} file{stats.count !== 1 ? 's' : ''}</span
+              >
             </div>
-            <div class="stat">
-              <span class="stat-label">Gzip:</span>
-              <span class="stat-value">{formatBytes(stats.totalGzipSize)}</span>
+            <div class="flex flex-col gap-2">
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600 dark:text-gray-400">Size:</span>
+                <span class="font-semibold text-gray-900 dark:text-white"
+                  >{formatBytes(stats.totalSize)}</span
+                >
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600 dark:text-gray-400">Gzip:</span>
+                <span class="font-semibold text-gray-900 dark:text-white"
+                  >{formatBytes(stats.totalGzipSize)}</span
+                >
+              </div>
             </div>
           </div>
-        </div>
+        </Card>
       {/each}
     </div>
   </section>
@@ -182,10 +193,10 @@
                 <td>
                   <span class="chunk-name">{chunk.name || '(unnamed)'}</span>
                   {#if chunk.isEntry}
-                    <span class="badge badge-entry">Entry</span>
+                    <Badge variant="entry">Entry</Badge>
                   {/if}
                   {#if chunk.isAsync}
-                    <span class="badge badge-async">Async</span>
+                    <Badge variant="async">Async</Badge>
                   {/if}
                 </td>
                 <td>{formatBytes(chunk.totalSize)}</td>
@@ -241,9 +252,9 @@
                 <td>{formatBytes(module.originalSize)}</td>
                 <td>
                   {#if module.isThirdParty}
-                    <span class="badge badge-third-party">Third-party</span>
+                    <Badge variant="third-party">Third-party</Badge>
                   {:else}
-                    <span class="badge badge-source">Source</span>
+                    <Badge variant="source">Source</Badge>
                   {/if}
                 </td>
               </tr>
@@ -289,11 +300,11 @@
     <!-- Modules Table -->
     <div class="modules-table-container">
       {#if isLoadingModules}
-        <div class="loading">Loading modules...</div>
+        <EmptyState title="Loading modules..." description="Please wait while we fetch the data." />
       {:else if loadError}
-        <div class="error-state">{loadError}</div>
+        <EmptyState title="Error loading modules" description={loadError} />
       {:else if modules.length === 0}
-        <div class="empty-state">No modules found</div>
+        <EmptyState title="No modules found" description="Try adjusting your search or filter criteria." />
       {:else}
         <table class="data-table">
           <thead>
@@ -359,9 +370,9 @@
                 <td>{formatBytes(module.originalSize)}</td>
                 <td>
                   {#if module.isThirdParty}
-                    <span class="badge badge-third-party">Third-party</span>
+                    <Badge variant="third-party">Third-party</Badge>
                   {:else}
-                    <span class="badge badge-source">Source</span>
+                    <Badge variant="source">Source</Badge>
                   {/if}
                 </td>
               </tr>
@@ -453,84 +464,9 @@
     gap: 1rem;
   }
 
-  .breakdown-card {
-    border-radius: 0.5rem;
-    border: 1px solid #e5e7eb;
-    background-color: #ffffff;
-    padding: 1rem;
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .breakdown-card {
-      border-color: #374151;
-      background-color: #1f2937;
-    }
-  }
-
-  .breakdown-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.75rem;
-  }
-
-  .file-type-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 0.375rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    text-transform: capitalize;
-  }
-
   .file-type-badge.small {
     padding: 0.125rem 0.5rem;
     font-size: 0.6875rem;
-  }
-
-  .breakdown-count {
-    font-size: 0.875rem;
-    color: #6b7280;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .breakdown-count {
-      color: #9ca3af;
-    }
-  }
-
-  .breakdown-stats {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .stat {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .stat-label {
-    font-size: 0.875rem;
-    color: #6b7280;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .stat-label {
-      color: #9ca3af;
-    }
-  }
-
-  .stat-value {
-    font-weight: 600;
-    color: #111827;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .stat-value {
-      color: #ffffff;
-    }
   }
 
   .chunks-table-container,
@@ -614,63 +550,6 @@
 
   .chunk-name {
     font-weight: 500;
-  }
-
-  .badge {
-    display: inline-block;
-    padding: 0.125rem 0.5rem;
-    border-radius: 0.25rem;
-    font-size: 0.6875rem;
-    font-weight: 500;
-    margin-left: 0.5rem;
-  }
-
-  .badge-entry {
-    background-color: #dbeafe;
-    color: #1e40af;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .badge-entry {
-      background-color: #1e3a8a;
-      color: #bfdbfe;
-    }
-  }
-
-  .badge-async {
-    background-color: #fef3c7;
-    color: #92400e;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .badge-async {
-      background-color: #78350f;
-      color: #fde68a;
-    }
-  }
-
-  .badge-third-party {
-    background-color: #fce7f3;
-    color: #9f1239;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .badge-third-party {
-      background-color: #831843;
-      color: #fbcfe8;
-    }
-  }
-
-  .badge-source {
-    background-color: #d1fae5;
-    color: #065f46;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .badge-source {
-      background-color: #064e3b;
-      color: #a7f3d0;
-    }
   }
 
   .filters {
@@ -762,32 +641,6 @@
   @media (prefers-color-scheme: dark) {
     .sort-button:hover {
       color: #ffffff;
-    }
-  }
-
-  .loading,
-  .empty-state,
-  .error-state {
-    padding: 2rem;
-    text-align: center;
-    color: #6b7280;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .loading,
-    .empty-state,
-    .error-state {
-      color: #9ca3af;
-    }
-  }
-
-  .error-state {
-    color: #dc2626;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .error-state {
-      color: #ef4444;
     }
   }
 
