@@ -2,6 +2,8 @@
   import { goto } from '$app/navigation';
   import DashboardLayout from '../DashboardLayout.svelte';
   import ProjectSelector from '../ProjectSelector.svelte';
+  import PageHeader from '$lib/components/ui/PageHeader.svelte';
+  import StatCard from '$lib/components/ui/StatCard.svelte';
 
   let { data } = $props();
 
@@ -49,8 +51,8 @@
   <div class="comparison-container">
     <div class="comparison-header">
       <ProjectSelector {projects} {projectName} />
-      <h1 class="comparison-title">Analysis Comparison</h1>
     </div>
+    <PageHeader title="Analysis Comparison" />
 
     <div class="analysis-selector">
       <div class="selector-group">
@@ -93,46 +95,26 @@
     {#if comparison}
       <!-- Summary Statistics -->
       <section class="stats-section" aria-label="Comparison summary">
-        <div class="stat-card">
-          <h3>Total Size</h3>
-          <p class="stat-value">{formatBytes(comparison.run2.totalSize ?? 0)}</p>
-          <p class="stat-delta {getDeltaClass(comparison.sizeDelta.totalSize)}">
-            {formatDelta(comparison.sizeDelta.totalSize)}
-            ({formatPercentage(comparison.sizeDelta.totalSize, comparison.run1.totalSize ?? 0)})
-          </p>
-        </div>
-
-        <div class="stat-card">
-          <h3>Gzip Size</h3>
-          <p class="stat-value">{formatBytes(comparison.run2.totalGzipSize ?? 0)}</p>
-          <p class="stat-delta {getDeltaClass(comparison.sizeDelta.totalGzipSize)}">
-            {formatDelta(comparison.sizeDelta.totalGzipSize)}
-            ({formatPercentage(
-              comparison.sizeDelta.totalGzipSize,
-              comparison.run1.totalGzipSize ?? 0,
-            )})
-          </p>
-        </div>
-
-        <div class="stat-card">
-          <h3>Modules</h3>
-          <p class="stat-value">{comparison.run2.moduleCount ?? 0}</p>
-          <p class="stat-label">
-            <span class="change-added">+{comparison.moduleDiff.added.length}</span>
-            <span class="change-removed">-{comparison.moduleDiff.removed.length}</span>
-            <span class="change-modified">~{comparison.moduleDiff.modified.length}</span>
-          </p>
-        </div>
-
-        <div class="stat-card">
-          <h3>Bundles</h3>
-          <p class="stat-value">{comparison.run2.bundleCount ?? 0}</p>
-          <p class="stat-label">
-            <span class="change-added">+{comparison.bundleDiff.added}</span>
-            <span class="change-removed">-{comparison.bundleDiff.removed}</span>
-            <span class="change-modified">~{comparison.bundleDiff.modified}</span>
-          </p>
-        </div>
+        <StatCard
+          title="Total Size"
+          value={formatBytes(comparison.run2.totalSize ?? 0)}
+          subtitle="{formatDelta(comparison.sizeDelta.totalSize)} ({formatPercentage(comparison.sizeDelta.totalSize, comparison.run1.totalSize ?? 0)})"
+        />
+        <StatCard
+          title="Gzip Size"
+          value={formatBytes(comparison.run2.totalGzipSize ?? 0)}
+          subtitle="{formatDelta(comparison.sizeDelta.totalGzipSize)} ({formatPercentage(comparison.sizeDelta.totalGzipSize, comparison.run1.totalGzipSize ?? 0)})"
+        />
+        <StatCard
+          title="Modules"
+          value={`${comparison.run2.moduleCount ?? 0}`}
+          subtitle="+{comparison.moduleDiff.added.length} -{comparison.moduleDiff.removed.length} ~{comparison.moduleDiff.modified.length}"
+        />
+        <StatCard
+          title="Bundles"
+          value={`${comparison.run2.bundleCount ?? 0}`}
+          subtitle="+{comparison.bundleDiff.added} -{comparison.bundleDiff.removed} ~{comparison.bundleDiff.modified}"
+        />
       </section>
 
       <!-- Module Changes -->
@@ -252,18 +234,6 @@
     gap: 1rem;
   }
 
-  .comparison-title {
-    font-size: 1.875rem;
-    font-weight: bold;
-    color: #111827;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .comparison-title {
-      color: #ffffff;
-    }
-  }
-
   .analysis-selector {
     margin-bottom: 2rem;
     display: flex;
@@ -338,93 +308,6 @@
     .stats-section {
       grid-template-columns: repeat(4, 1fr);
     }
-  }
-
-  .stat-card {
-    border-radius: 0.5rem;
-    border: 1px solid #e5e7eb;
-    background-color: #ffffff;
-    padding: 1.5rem;
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .stat-card {
-      border-color: #374151;
-      background-color: #1f2937;
-    }
-  }
-
-  .stat-card h3 {
-    margin-bottom: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #6b7280;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .stat-card h3 {
-      color: #9ca3af;
-    }
-  }
-
-  .stat-value {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #111827;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .stat-value {
-      color: #ffffff;
-    }
-  }
-
-  .stat-delta {
-    margin-top: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-  }
-
-  .delta-increase {
-    color: #dc2626;
-  }
-
-  .delta-decrease {
-    color: #16a34a;
-  }
-
-  .delta-neutral {
-    color: #6b7280;
-  }
-
-  .stat-label {
-    margin-top: 0.25rem;
-    font-size: 0.875rem;
-    color: #4b5563;
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .stat-label {
-      color: #d1d5db;
-    }
-  }
-
-  .change-added {
-    color: #16a34a;
-    font-weight: 600;
-  }
-
-  .change-removed {
-    color: #dc2626;
-    font-weight: 600;
-  }
-
-  .change-modified {
-    color: #2563eb;
-    font-weight: 600;
   }
 
   .changes-section {

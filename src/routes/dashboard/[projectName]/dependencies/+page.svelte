@@ -3,6 +3,9 @@
   import ProjectSelector from '../ProjectSelector.svelte';
   import AnalysisSelector from '../AnalysisSelector.svelte';
   import DependencyGraphVisualization from './DependencyGraphVisualization.svelte';
+  import PageHeader from '$lib/components/ui/PageHeader.svelte';
+  import StatCard from '$lib/components/ui/StatCard.svelte';
+  import EmptyState from '$lib/components/ui/EmptyState.svelte';
   import type { DependencyGraph } from '$lib/server/query/types.js';
   import type { DependencyCycleAnalysis } from '$lib/utils/dependency-graph.js';
 
@@ -59,35 +62,18 @@
     </div>
 
     {#if analysis && dependencyGraph}
-      <section class="summary-section" aria-label="Dependency graph summary">
-        <div>
-          <h1>Dependency Graph</h1>
-          <p>
-            Explore how modules relate to each other, identify hotspots, and spot circular
-            dependencies across your bundles.
-          </p>
-        </div>
-        {#if graphStats}
-          <div class="summary-grid">
-            <div class="summary-card">
-              <span class="summary-label">Modules</span>
-              <span class="summary-value">{graphStats.nodeCount}</span>
-            </div>
-            <div class="summary-card">
-              <span class="summary-label">Imports</span>
-              <span class="summary-value">{graphStats.edgeCount}</span>
-            </div>
-            <div class="summary-card">
-              <span class="summary-label">Circular groups</span>
-              <span class="summary-value">{graphStats.cycleCount}</span>
-            </div>
-            <div class="summary-card">
-              <span class="summary-label">Modules in cycles</span>
-              <span class="summary-value">{graphStats.circularModuleCount}</span>
-            </div>
-          </div>
-        {/if}
-      </section>
+      <PageHeader
+        title="Dependency Graph"
+        description="Explore how modules relate to each other, identify hotspots, and spot circular dependencies across your bundles."
+      />
+      {#if graphStats}
+        <section class="summary-grid" aria-label="Dependency graph summary">
+          <StatCard title="Modules" value={`${graphStats.nodeCount}`} />
+          <StatCard title="Imports" value={`${graphStats.edgeCount}`} />
+          <StatCard title="Circular groups" value={`${graphStats.cycleCount}`} />
+          <StatCard title="Modules in cycles" value={`${graphStats.circularModuleCount}`} />
+        </section>
+      {/if}
 
       <DependencyGraphVisualization {cycleAnalysis} graph={dependencyGraph} />
 
@@ -123,16 +109,15 @@
         {/if}
       </section>
     {:else if projectName}
-      <div class="empty-state" role="alert">
-        <p>
-          No analysis data available. Ingest bundle data for <strong>{projectName}</strong> to unlock
-          dependency insights.
-        </p>
-      </div>
+      <EmptyState
+        title="No analysis data available"
+        description="Ingest bundle data for {projectName} to unlock dependency insights."
+      />
     {:else}
-      <div class="empty-state" role="alert">
-        <p>Select a project to view dependency information.</p>
-      </div>
+      <EmptyState
+        title="No project selected"
+        description="Select a project to view dependency information."
+      />
     {/if}
   </div>
 </DashboardLayout>
@@ -161,88 +146,10 @@
     }
   }
 
-  .summary-section {
-    display: grid;
-    gap: 1.25rem;
-    border-radius: 0.75rem;
-    border: 1px solid #e5e7eb;
-    background-color: #ffffff;
-    padding: 1.75rem;
-    box-shadow: 0 1px 3px rgb(15 23 42 / 0.08);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .summary-section {
-      border-color: #334155;
-      background-color: #1f2937;
-    }
-  }
-
-  .summary-section h1 {
-    margin: 0;
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: #1f2937;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .summary-section h1 {
-      color: #f9fafb;
-    }
-  }
-
-  .summary-section p {
-    margin: 0.25rem 0 0 0;
-    color: #6b7280;
-    max-width: 42rem;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .summary-section p {
-      color: #d1d5db;
-    }
-  }
-
   .summary-grid {
     display: grid;
     gap: 1rem;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  }
-
-  .summary-card {
-    padding: 1.1rem;
-    border-radius: 0.75rem;
-    background: linear-gradient(145deg, rgba(37, 99, 235, 0.08), rgba(14, 165, 233, 0.08));
-    border: 1px solid rgba(37, 99, 235, 0.15);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .summary-card {
-      background: linear-gradient(145deg, rgba(37, 99, 235, 0.18), rgba(56, 189, 248, 0.12));
-      border-color: rgba(96, 165, 250, 0.3);
-    }
-  }
-
-  .summary-label {
-    display: block;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #2563eb;
-  }
-
-  .summary-value {
-    display: block;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #0f172a;
-    margin-top: 0.35rem;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .summary-value {
-      color: #f8fafc;
-    }
   }
 
   .cycles-section {
@@ -341,29 +248,4 @@
     }
   }
 
-  .empty-state {
-    border-radius: 0.75rem;
-    border: 1px solid #e5e7eb;
-    padding: 2rem;
-    background-color: #ffffff;
-    text-align: center;
-    color: #6b7280;
-    font-size: 0.95rem;
-  }
-
-  .empty-state strong {
-    color: #1f2937;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .empty-state {
-      border-color: #334155;
-      background-color: #1f2937;
-      color: #cbd5f5;
-    }
-
-    .empty-state strong {
-      color: #f9fafb;
-    }
-  }
 </style>
