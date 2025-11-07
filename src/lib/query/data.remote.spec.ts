@@ -7,10 +7,10 @@
 import { describe, it, expect, vi } from 'vitest';
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
-import * as schema from '../db/schema.js';
+import * as schema from '$lib/server/db/schema.js';
 
 // Mock the db module to avoid database initialization issues
-vi.mock('../db/index.js', () => {
+vi.mock('$lib/server/db/index.js', () => {
   const testClient = new Database(':memory:');
   const testDb = drizzle(testClient, { schema });
   return { db: testDb };

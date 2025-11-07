@@ -3,6 +3,7 @@
   import { browser } from '$app/environment';
   import * as d3 from 'd3';
   import type { TreemapNode } from '$lib/server/query/types.js';
+  import { getTreemapData } from '$lib/query/data.remote.js';
 
   interface Props {
     analysisId: number;
@@ -73,18 +74,13 @@
     isLoading = true;
     error = null;
     try {
-      const params = new URLSearchParams({
-        analysisId: analysisId.toString(),
-        includeSymbols: includeSymbols.toString(),
-        maxModules: '1000',
+      // Use remote function for type-safe server calls
+      const data = await getTreemapData({
+        analysisId,
+        includeSymbols,
+        maxModules: 1000,
       });
 
-      const response = await fetch(`/api/treemap?${params}`);
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-
-      const data = await response.json();
       _treemapData = data;
       currentLevel = data;
       breadcrumbs = [data];
@@ -149,7 +145,9 @@
       .attr('stroke-width', 1)
       .attr('rx', 2)
       .attr('ry', 2)
-      .style('cursor', (d) => (d.data.children && d.data.children.length > 0 ? 'pointer' : 'default'))
+      .style('cursor', (d) =>
+        d.data.children && d.data.children.length > 0 ? 'pointer' : 'default',
+      )
       .style('transition', 'fill 0.2s ease')
       .on('click', (event, d) => {
         if (d.data.children && d.data.children.length > 0) {
@@ -320,15 +318,15 @@
     // Access both dependencies to make effect reactive to changes
     const id = analysisId;
     const _symbols = includeSymbols;
-    
+
     if (id) {
       loadTreemapData();
     }
-    
+
     // Setup resize listener (only in browser and only once)
     if (browser && typeof window !== 'undefined') {
       window.addEventListener('resize', handleResize);
-      
+
       // Return cleanup function
       return () => {
         window.removeEventListener('resize', handleResize);
@@ -346,9 +344,7 @@
   {:else if error}
     <div class="error-state">
       <p>{error}</p>
-      <button type="button" onclick={() => loadTreemapData()} class="retry-button">
-        Retry
-      </button>
+      <button type="button" onclick={() => loadTreemapData()} class="retry-button"> Retry </button>
     </div>
   {:else if currentLevel}
     <!-- Breadcrumb navigation -->

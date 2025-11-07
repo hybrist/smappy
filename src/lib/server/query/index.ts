@@ -713,7 +713,7 @@ export async function getTreemapData(
   const symbolsByModule: Map<number, Symbol[]> = new Map();
   if (includeSymbols) {
     const moduleIds = modules.map((m) => m.id);
-    
+
     // Only query if there are modules to avoid empty IN clause
     let allSymbols: Symbol[] = [];
     if (moduleIds.length > 0) {

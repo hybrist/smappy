@@ -6,7 +6,7 @@
 import * as v from 'valibot';
 import { query } from '$app/server';
 import { error } from '@sveltejs/kit';
-import { db } from '../db';
+import { db } from '$lib/server/db';
 import {
   analysisRun,
   module,
@@ -16,7 +16,7 @@ import {
   bundle,
   suggestion,
   suggestionLink,
-} from '../db/schema';
+} from '$lib/server/db/schema';
 import { eq, desc, asc, and, gte, lte, sql, count } from 'drizzle-orm';
 import type {
   AnalysisSummary,
@@ -26,7 +26,7 @@ import type {
   Module,
   Symbol,
   SuggestionWithLinks,
-} from './types';
+} from '$lib/server/query/types';
 
 // Validation schemas
 const projectNameSchema = v.pipe(v.string(), v.nonEmpty('Project name is required'));
@@ -597,7 +597,7 @@ export const getTreemapData = query(
   }),
   async ({ analysisId, includeSymbols, maxModules }) => {
     // Import the getTreemapData function from index.ts
-    const { getTreemapData: getTreemapDataImpl } = await import('./index.js');
+    const { getTreemapData: getTreemapDataImpl } = await import('$lib/server/query/index.js');
 
     // Verify analysis exists
     const [analysis] = await db
