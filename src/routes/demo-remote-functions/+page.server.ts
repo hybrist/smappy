@@ -3,7 +3,7 @@
  * This file shows how to use remote functions from server-side code
  */
 
-import { getLatestAnalysis, getModulesByAnalysis } from '$lib/server/query/data.remote';
+import { getLatestAnalysis, getModulesByAnalysis } from '$lib/query/data.remote';
 
 export async function load() {
   // Example: Load latest analysis for a project

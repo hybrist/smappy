@@ -78,7 +78,9 @@
     "webpack": "^5.102.1"
   },
   "dependencies": {
+    "@types/d3": "^7.4.3",
     "better-sqlite3": "^12.4.1",
+    "d3": "^7.9.0",
     "valibot": "^1.1.0"
   }
 }

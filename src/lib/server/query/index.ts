@@ -10,7 +10,7 @@ import type {
   AnalysisRun,
   Module,
   Symbol,
-  Dependency,
+  Dependency as _Dependency,
   DependencyNode,
   DependencyEdge,
   AnalysisComparison,
@@ -667,6 +667,177 @@ export async function getChunksByAnalysis(analysisId: number): Promise<Chunk[]> 
 }
 
 // ============================================================================
+// Treemap Data Queries
+// ============================================================================
+
+/**
+ * Get hierarchical treemap data for an analysis run
+ * Organizes modules by directory structure with symbols as leaf nodes
+ *
+ * @param analysisId - Analysis run ID
+ * @param options - Query options for filtering
+ * @returns Hierarchical treemap data
+ */
+export async function getTreemapData(
+  analysisId: number,
+  options: {
+    includeSymbols?: boolean;
+    maxModules?: number;
+  } = {},
+): Promise<import('./types.js').TreemapNode> {
+  const { includeSymbols = false, maxModules = 1000 } = options;
+
+  // Get modules for the analysis
+  const modules = await db
+    .select({
+      id: schema.module.id,
+      filePath: schema.module.filePath,
+      fileType: schema.module.fileType,
+      originalSize: schema.module.originalSize,
+      bundledSize: schema.module.bundledSize,
+      isThirdParty: schema.module.isThirdParty,
+      packageName: schema.module.packageName,
+    })
+    .from(schema.module)
+    .where(eq(schema.module.analysisRunId, analysisId))
+    .orderBy(desc(schema.module.bundledSize))
+    .limit(maxModules);
+
+  // Build directory tree structure
+  const root: import('./types.js').TreemapNode = {
+    name: 'root',
+    children: [],
+  };
+
+  // Load all symbols if needed (batch query to avoid N+1)
+  const symbolsByModule: Map<number, Symbol[]> = new Map();
+  if (includeSymbols) {
+    const moduleIds = modules.map((m) => m.id);
+
+    // Only query if there are modules to avoid empty IN clause
+    let allSymbols: Symbol[] = [];
+    if (moduleIds.length > 0) {
+      allSymbols = await db
+        .select({
+          id: schema.symbol.id,
+          moduleId: schema.symbol.moduleId,
+          name: schema.symbol.name,
+          type: schema.symbol.type,
+          sourceStartLine: schema.symbol.sourceStartLine,
+          sourceStartCol: schema.symbol.sourceStartCol,
+          sourceEndLine: schema.symbol.sourceEndLine,
+          sourceEndCol: schema.symbol.sourceEndCol,
+          astHash: schema.symbol.astHash,
+          isExported: schema.symbol.isExported,
+          computedBundledSize: schema.symbol.computedBundledSize,
+          computedGzipSize: schema.symbol.computedGzipSize,
+        })
+        .from(schema.symbol)
+        .where(sql`${schema.symbol.moduleId} IN ${moduleIds}`)
+        .orderBy(asc(schema.symbol.sourceStartLine), asc(schema.symbol.sourceStartCol));
+    }
+
+    // Group symbols by module ID
+    for (const symbol of allSymbols) {
+      if (!symbolsByModule.has(symbol.moduleId)) {
+        symbolsByModule.set(symbol.moduleId, []);
+      }
+      symbolsByModule.get(symbol.moduleId)!.push({
+        ...symbol,
+        astHash: symbol.astHash ?? null,
+      });
+    }
+  }
+
+  // Organize modules into directory structure
+  for (const module of modules) {
+    const pathParts = module.filePath.split('/').filter((p) => p.length > 0);
+    let currentNode = root;
+
+    // Navigate/create directory structure
+    for (let i = 0; i < pathParts.length - 1; i++) {
+      const part = pathParts[i];
+      let childNode = currentNode.children?.find((c) => c.name === part && !c.moduleId);
+
+      if (!childNode) {
+        childNode = {
+          name: part,
+          children: [],
+        };
+        currentNode.children = currentNode.children || [];
+        currentNode.children.push(childNode);
+      }
+
+      currentNode = childNode;
+    }
+
+    // Add module as leaf or parent of symbols
+    const fileName = pathParts[pathParts.length - 1] || module.filePath;
+
+    if (includeSymbols) {
+      // Get symbols for this module from the pre-loaded map
+      const symbols = symbolsByModule.get(module.id) || [];
+
+      if (symbols.length > 0) {
+        // Module with symbols - create a node with symbol children
+        const moduleNode: import('./types.js').TreemapNode = {
+          name: fileName,
+          moduleId: module.id,
+          fileType: module.fileType,
+          isThirdParty: module.isThirdParty,
+          packageName: module.packageName,
+          filePath: module.filePath,
+          originalSize: module.originalSize,
+          bundledSize: module.bundledSize,
+          children: symbols.map((symbol) => ({
+            name: symbol.name,
+            value: symbol.computedBundledSize,
+            symbolId: symbol.id,
+            moduleId: module.id,
+            fileType: module.fileType,
+            gzipSize: symbol.computedGzipSize,
+          })),
+        };
+        currentNode.children = currentNode.children || [];
+        currentNode.children.push(moduleNode);
+      } else {
+        // Module without symbols - leaf node
+        const moduleNode: import('./types.js').TreemapNode = {
+          name: fileName,
+          value: module.bundledSize,
+          moduleId: module.id,
+          fileType: module.fileType,
+          isThirdParty: module.isThirdParty,
+          packageName: module.packageName,
+          filePath: module.filePath,
+          originalSize: module.originalSize,
+          bundledSize: module.bundledSize,
+        };
+        currentNode.children = currentNode.children || [];
+        currentNode.children.push(moduleNode);
+      }
+    } else {
+      // Simple module leaf node
+      const moduleNode: import('./types.js').TreemapNode = {
+        name: fileName,
+        value: module.bundledSize,
+        moduleId: module.id,
+        fileType: module.fileType,
+        isThirdParty: module.isThirdParty,
+        packageName: module.packageName,
+        filePath: module.filePath,
+        originalSize: module.originalSize,
+        bundledSize: module.bundledSize,
+      };
+      currentNode.children = currentNode.children || [];
+      currentNode.children.push(moduleNode);
+    }
+  }
+
+  return root;
+}
+
+// ============================================================================
 // Re-exports
 // ============================================================================
 
@@ -682,4 +853,5 @@ export type {
   PaginatedResult,
   Bundle,
   Chunk,
-};
+  TreemapNode,
+} from './types.js';

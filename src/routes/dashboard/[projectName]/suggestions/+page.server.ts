@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { getSuggestionsByAnalysis } from '$lib/server/query/data.remote';
+import { getSuggestionsByAnalysis } from '$lib/query/data.remote';
 import type { SuggestionWithLinks } from '$lib/server/query/types';
 import { getAllProjects, getAnalysisHistory, getLatestAnalysis } from '$lib/server/query/index.js';
 

@@ -6,7 +6,7 @@
 import * as v from 'valibot';
 import { query } from '$app/server';
 import { error } from '@sveltejs/kit';
-import { db } from '../db';
+import { db } from '$lib/server/db';
 import {
   analysisRun,
   module,
@@ -16,7 +16,7 @@ import {
   bundle,
   suggestion,
   suggestionLink,
-} from '../db/schema';
+} from '$lib/server/db/schema';
 import { eq, desc, asc, and, gte, lte, sql, count } from 'drizzle-orm';
 import type {
   AnalysisSummary,
@@ -26,7 +26,7 @@ import type {
   Module,
   Symbol,
   SuggestionWithLinks,
-} from './types';
+} from '$lib/server/query/types';
 
 // Validation schemas
 const projectNameSchema = v.pipe(v.string(), v.nonEmpty('Project name is required'));
@@ -523,10 +523,10 @@ export const getSuggestionsByAnalysis = query(
       .where(where)
       .orderBy(
         // Order by severity (critical > warning > info), then by id
-        sql`CASE ${suggestion.severity} 
-            WHEN 'critical' THEN 1 
-            WHEN 'warning' THEN 2 
-            WHEN 'info' THEN 3 
+        sql`CASE ${suggestion.severity}
+            WHEN 'critical' THEN 1
+            WHEN 'warning' THEN 2
+            WHEN 'info' THEN 3
             END`,
         asc(suggestion.id),
       )
@@ -583,5 +583,36 @@ export const getSuggestionsByAnalysis = query(
     };
 
     return result;
+  },
+);
+
+/**
+ * Get hierarchical treemap data for visualization
+ */
+export const getTreemapData = query(
+  v.object({
+    analysisId: analysisIdSchema,
+    includeSymbols: v.optional(v.boolean(), false),
+    maxModules: v.optional(v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(10000)), 1000),
+  }),
+  async ({ analysisId, includeSymbols, maxModules }) => {
+    // Import the getTreemapData function from index.ts
+    const { getTreemapData: getTreemapDataImpl } = await import('$lib/server/query/index.js');
+
+    // Verify analysis exists
+    const [analysis] = await db
+      .select()
+      .from(analysisRun)
+      .where(eq(analysisRun.id, analysisId))
+      .limit(1);
+
+    if (!analysis) {
+      error(404, `Analysis with ID ${analysisId} not found`);
+    }
+
+    return await getTreemapDataImpl(analysisId, {
+      includeSymbols,
+      maxModules,
+    });
   },
 );
