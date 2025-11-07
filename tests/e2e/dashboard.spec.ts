@@ -60,20 +60,22 @@ test.describe('Project Dashboard Page', () => {
     await expect(page.getByText('Bundle Analysis')).toBeVisible({ timeout: 5000 });
 
     // Check stats section is visible
-    await expect(page.locator('.stat-card').first()).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId('stat-card-total-size')).toBeVisible({ timeout: 5000 });
 
-    // Should have stat cards
-    await expect(page.locator('.stat-card')).toHaveCount(3, { timeout: 5000 });
+    // Should have all stat cards visible
+    await expect(page.getByTestId('stat-card-total-size')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId('stat-card-modules')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId('stat-card-bundler')).toBeVisible({ timeout: 5000 });
   });
 
   test('should display correct module count in statistics', async ({ page }) => {
     await page.goto(`/dashboard/${projectName}`, { waitUntil: 'networkidle' });
 
     // Wait for stats to load
-    await page.waitForSelector('.stat-card', { timeout: 10000 });
+    await page.waitForSelector('[data-testid="stat-card-modules"]', { timeout: 10000 });
 
     // Verify module count (we have 3 modules)
-    const modulesCard = page.locator('.stat-card:has(h3:has-text("Modules"))');
+    const modulesCard = page.getByTestId('stat-card-modules');
     await expect(modulesCard).toContainText('3', { timeout: 5000 });
   });
 
@@ -81,7 +83,7 @@ test.describe('Project Dashboard Page', () => {
     await page.goto(`/dashboard/${projectName}`, { waitUntil: 'networkidle' });
 
     // Verify bundler is displayed
-    const bundlerCard = page.locator('.stat-card:has(h3:has-text("Bundler"))');
+    const bundlerCard = page.getByTestId('stat-card-bundler');
     await expect(bundlerCard).toContainText('vite', { timeout: 5000 });
   });
 
@@ -101,6 +103,6 @@ test.describe('Project Dashboard Page', () => {
     await expect(page.getByText('Bundle Analysis')).toBeVisible({ timeout: 5000 });
 
     // Should show no analysis message
-    await expect(page.getByText(/No analysis data found/)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId('empty-state-no-analysis')).toBeVisible({ timeout: 5000 });
   });
 });
