@@ -24,10 +24,10 @@
       <li>
         <a
           href="/dashboard/{$page.params.projectName}"
-          class="text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white {currentPath ===
-          `/dashboard/${$page.params.projectName}`
-            ? 'font-semibold text-primary-600 dark:text-primary-400'
-            : ''}"
+          class="text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+          class:font-semibold={currentPath === `/dashboard/${$page.params.projectName}`}
+          class:text-primary-600={currentPath === `/dashboard/${$page.params.projectName}`}
+          class:dark:text-primary-400={currentPath === `/dashboard/${$page.params.projectName}`}
           aria-current={currentPath === `/dashboard/${$page.params.projectName}`
             ? 'page'
             : undefined}
@@ -38,11 +38,16 @@
       <li>
         <a
           href="/dashboard/{$page.params.projectName}/modules"
-          class="text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white {currentPath.startsWith(
+          class="text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+          class:font-semibold={currentPath.startsWith(
             `/dashboard/${$page.params.projectName}/modules`,
-          )
-            ? 'font-semibold text-primary-600 dark:text-primary-400'
-            : ''}"
+          )}
+          class:text-primary-600={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/modules`,
+          )}
+          class:dark:text-primary-400={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/modules`,
+          )}
           aria-current={currentPath.startsWith(`/dashboard/${$page.params.projectName}/modules`)
             ? 'page'
             : undefined}
@@ -53,11 +58,16 @@
       <li>
         <a
           href="/dashboard/{$page.params.projectName}/dependencies"
-          class="text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white {currentPath.startsWith(
+          class="text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+          class:font-semibold={currentPath.startsWith(
             `/dashboard/${$page.params.projectName}/dependencies`,
-          )
-            ? 'font-semibold text-primary-600 dark:text-primary-400'
-            : ''}"
+          )}
+          class:text-primary-600={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/dependencies`,
+          )}
+          class:dark:text-primary-400={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/dependencies`,
+          )}
           aria-current={currentPath.startsWith(
             `/dashboard/${$page.params.projectName}/dependencies`,
           )
@@ -70,11 +80,16 @@
       <li>
         <a
           href="/dashboard/{$page.params.projectName}/compare"
-          class="text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white {currentPath.startsWith(
+          class="text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+          class:font-semibold={currentPath.startsWith(
             `/dashboard/${$page.params.projectName}/compare`,
-          )
-            ? 'font-semibold text-primary-600 dark:text-primary-400'
-            : ''}"
+          )}
+          class:text-primary-600={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/compare`,
+          )}
+          class:dark:text-primary-400={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/compare`,
+          )}
           aria-current={currentPath.startsWith(`/dashboard/${$page.params.projectName}/compare`)
             ? 'page'
             : undefined}
@@ -85,11 +100,16 @@
       <li>
         <a
           href="/dashboard/{$page.params.projectName}/suggestions"
-          class="text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white {currentPath.startsWith(
+          class="text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+          class:font-semibold={currentPath.startsWith(
             `/dashboard/${$page.params.projectName}/suggestions`,
-          )
-            ? 'font-semibold text-primary-600 dark:text-primary-400'
-            : ''}"
+          )}
+          class:text-primary-600={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/suggestions`,
+          )}
+          class:dark:text-primary-400={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/suggestions`,
+          )}
           aria-current={currentPath.startsWith(`/dashboard/${$page.params.projectName}/suggestions`)
             ? 'page'
             : undefined}

@@ -34,12 +34,13 @@ Our colors are inspired by crocodiles in their natural habitat:
 These represent the crocodile itself - vibrant, natural, and distinctive.
 
 ```css
---color-primary-300: #6ee7b7 /* Light emerald - highlights, hover states */
-  --color-primary-400: #34d399 /* Emerald - hover states */ --color-primary-500: #10b981
-  /* Vibrant emerald - main brand color */ --color-primary-600: #059669
-  /* Rich emerald - primary actions, links */ --color-primary-700: #047857
-  /* Deep emerald - dark mode primary */ --color-primary-800: #065f46 /* Forest - accents */
-  --color-primary-900: #064e3b /* Darkest - text on light backgrounds */;
+--color-primary-300: #6ee7b7; /* Light emerald - highlights, hover states */
+--color-primary-400: #34d399; /* Emerald - hover states */
+--color-primary-500: #10b981; /* Vibrant emerald - main brand color */
+--color-primary-600: #059669; /* Rich emerald - primary actions, links */
+--color-primary-700: #047857; /* Deep emerald - dark mode primary */
+--color-primary-800: #065f46; /* Forest - accents */
+--color-primary-900: #064e3b; /* Darkest - text on light backgrounds */
 ```
 
 **Use Cases**:
@@ -54,9 +55,9 @@ These represent the crocodile itself - vibrant, natural, and distinctive.
 Warm sandy tones representing the riverbank and sun - used sparingly for emphasis.
 
 ```css
---color-accent-400: #fbbf24 /* Golden - hover states */ --color-accent-500: #f59e0b
-  /* Amber - CTAs, important highlights */ --color-accent-600: #d97706
-  /* Deep amber - pressed states */;
+--color-accent-400: #fbbf24; /* Golden - hover states */
+--color-accent-500: #f59e0b; /* Amber - CTAs, important highlights */
+--color-accent-600: #d97706; /* Deep amber - pressed states */
 ```
 
 **Use Cases**:
