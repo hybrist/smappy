@@ -1,5 +1,6 @@
 import type { SuggestionRule, SuggestionContext } from '../../suggestions/types.js';
 import type { SuggestionData } from '../db/writer.js';
+import type { BundleInput } from '../types/index.js';
 import {
   loadLLMConfig,
   type LLMIntegrationConfig,
