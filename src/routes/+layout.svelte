@@ -6,7 +6,7 @@
 </script>
 
 <svelte:head>
-  <title>SvelteKit</title>
+  <title>Smappy - Bundle Analysis Dashboard</title>
   <link rel="icon" href={favicon} />
 </svelte:head>
 
