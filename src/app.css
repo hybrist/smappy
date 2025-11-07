@@ -4,11 +4,16 @@
  * Smappy Design System
  * Tailwind CSS 4 Theme Configuration
  *
+ * Brand Identity: 🐊 Friendly Crocodile Theme
+ * - Emerald greens (efficient, memorable, distinctive)
+ * - Warm amber accents (friendly, approachable)
+ * - "Snappy" like a croc's snap - fast bundle analysis!
+ *
  * This file defines the design tokens (colors, spacing, typography, etc.)
  * used throughout the application. These tokens ensure visual consistency
  * and make it easy to update the design system globally.
  *
- * Related: #96 - Tailwind CSS audit and setup
+ * Related: #96 - Tailwind CSS audit, #91 - Brand identity
  */
 
 @theme {
@@ -33,17 +38,28 @@
   --color-gray-900: #111827;
   --color-gray-950: #030712;
 
-  /* Blue - Current link/accent color */
+  /* Blue - Kept for reference */
   --color-blue-400: #60a5fa;
   --color-blue-500: #3b82f6;
   --color-blue-600: #2563eb;
   --color-blue-700: #1d4ed8;
 
-  /* Brand Colors - Placeholders (update in #91) */
-  --color-primary-400: var(--color-blue-400);
-  --color-primary-500: var(--color-blue-500);
-  --color-primary-600: var(--color-blue-600);
-  --color-primary-700: var(--color-blue-700);
+  /* Crocodile Brand Colors - Smappy's distinctive identity
+   * Inspired by crocodiles: emerald greens with earthy accents
+   * Friendly, memorable, and efficient (like a croc's snap!)
+   */
+  --color-primary-300: #6ee7b7; /* Light emerald - highlights */
+  --color-primary-400: #34d399; /* Emerald - hover states */
+  --color-primary-500: #10b981; /* Vibrant emerald - main brand */
+  --color-primary-600: #059669; /* Rich emerald - primary actions */
+  --color-primary-700: #047857; /* Deep emerald - dark mode */
+  --color-primary-800: #065f46; /* Forest - accents */
+  --color-primary-900: #064e3b; /* Darkest - text on light bg */
+
+  /* Accent Colors - Warm sandy tones (riverbank & sun) */
+  --color-accent-400: #fbbf24; /* Golden - hover */
+  --color-accent-500: #f59e0b; /* Amber - CTAs */
+  --color-accent-600: #d97706; /* Deep amber - pressed */
 
   /* Semantic Colors - For badges and states */
   --color-success-500: #10b981; /* Green */
