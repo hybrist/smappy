@@ -292,6 +292,8 @@
 
     const links: GraphLinkDatum[] = filteredEdges.map((edge) => ({
       ...edge,
+      source: edge.from,
+      target: edge.to,
     }));
 
     simulation.nodes(nodes);
@@ -379,14 +381,15 @@
   const hoveredEdgeInfo = $derived(
     (() => {
       if (!hoveredEdge) return null;
-      const source = nodeIndex[hoveredEdge.from];
-      const target = nodeIndex[hoveredEdge.to];
+      const currentHoveredEdge: { from: number; to: number } = hoveredEdge;
+      const source = nodeIndex[currentHoveredEdge.from];
+      const target = nodeIndex[currentHoveredEdge.to];
       if (!source || !target) return null;
       return {
         source,
         target,
         edge: graph.edges.find(
-          (edge) => edge.from === hoveredEdge.from && edge.to === hoveredEdge.to,
+          (edge) => edge.from === currentHoveredEdge.from && edge.to === currentHoveredEdge.to,
         ),
       };
     })(),
@@ -685,33 +688,33 @@
     height: 100%;
   }
 
-  .graph-link {
+  :global(.graph-link) {
     stroke-opacity: 0.6;
   }
 
-  .graph-link.cycle-edge {
+  :global(.graph-link.cycle-edge) {
     stroke: #ef4444;
     stroke-width: 2.5px;
   }
 
-  .graph-node circle {
+  :global(.graph-node circle) {
     cursor: pointer;
     transition:
       transform 0.15s ease,
       stroke-width 0.15s ease;
   }
 
-  .graph-node:hover circle {
+  :global(.graph-node:hover circle) {
     transform: scale(1.1);
     stroke-width: 2px;
   }
 
-  .graph-node circle.selected {
+  :global(.graph-node circle.selected) {
     stroke: #facc15;
     stroke-width: 2.5px;
   }
 
-  .node-label {
+  :global(.node-label) {
     pointer-events: none;
     font-size: 0.7rem;
     font-weight: 500;
@@ -723,7 +726,7 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .node-label {
+    :global(.node-label) {
       fill: #f9fafb;
       stroke: #0f172a;
     }
