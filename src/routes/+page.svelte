@@ -77,12 +77,12 @@
       <div class="installation-step">
         <h3 class="step-title">2. Configure your bundler</h3>
         <pre class="code-block"><code
-            >// vite.config.js
-import &#123; smappyPlugin &#125; from 'smappy-plugin';
+            >{`// vite.config.js
+import { smappyPlugin } from 'smappy-plugin';
 
-export default &#123;
+export default {
   plugins: [smappyPlugin()]
-&#125;;</code
+};`}</code
           ></pre>
       </div>
 
