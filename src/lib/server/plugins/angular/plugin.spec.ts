@@ -35,8 +35,16 @@ describe('angularBundleAnalysisBuilder', () => {
     vi.mocked(fs.existsSync).mockReturnValue(true);
     vi.mocked(ingestion.ingestBundle).mockResolvedValue({
       analysisRunId: 1,
-      projectName: 'test-app',
-      timestamp: new Date(),
+      stats: {
+        modulesWritten: 0,
+        symbolsWritten: 0,
+        dependenciesWritten: 0,
+        chunksWritten: 0,
+        bundlesWritten: 0,
+        sourceMapEntriesWritten: 0,
+        suggestionsWritten: 0,
+      },
+      errors: [],
     });
   });
 
