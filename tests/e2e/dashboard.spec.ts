@@ -27,14 +27,14 @@ test.describe('Dashboard Landing Page', () => {
     await expect(page.locator('h1')).toContainText('Bundle Analysis Dashboard', { timeout: 5000 });
 
     // Verify project cards are displayed
-    await expect(page.locator('.project-card')).toHaveCount(2, { timeout: 5000 });
+    await expect(page.getByTestId('project-card')).toHaveCount(2, { timeout: 5000 });
   });
 
   test('should navigate to project dashboard when clicking project card', async ({ page }) => {
     await page.goto('/dashboard', { waitUntil: 'networkidle' });
 
     // Click on a project card
-    await page.locator('.project-card').first().click();
+    await page.getByTestId('project-card').first().click();
 
     // Should navigate to project dashboard
     await expect(page).toHaveURL(/\/dashboard\/test-project-/);

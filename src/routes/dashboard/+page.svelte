@@ -1,5 +1,8 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import PageHeader from '$lib/components/ui/PageHeader.svelte';
+  import Card from '$lib/components/ui/Card.svelte';
+  import EmptyState from '$lib/components/ui/EmptyState.svelte';
 
   let { data } = $props();
 
@@ -12,22 +15,36 @@
 
 <div class="dashboard-landing">
   <div class="landing-content">
-    <h1 class="landing-title">Bundle Analysis Dashboard</h1>
-    <p class="landing-description">Select a project to view its analysis data</p>
+    <PageHeader
+      title="Bundle Analysis Dashboard"
+      description="Select a project to view its analysis data"
+    />
 
     {#if projects.length > 0}
       <div class="project-list" role="list">
         {#each projects as project (project)}
-          <button class="project-card" onclick={() => handleProjectSelect(project)}>
-            <h2 class="project-name">{project}</h2>
-            <p class="project-action">View Analysis →</p>
+          <button
+            class="project-card-button"
+            onclick={() => handleProjectSelect(project)}
+            data-testid="project-card"
+          >
+            <Card class="h-full transition-shadow hover:shadow-lg">
+              <div class="flex flex-col gap-2">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                  {project}
+                </h2>
+                <p class="text-sm text-primary-600 dark:text-primary-400">View Analysis →</p>
+              </div>
+            </Card>
           </button>
         {/each}
       </div>
     {:else}
-      <div class="empty-state" role="alert">
-        <p>No projects found. Run an analysis to get started.</p>
-      </div>
+      <EmptyState
+        data-testid="empty-state-no-projects"
+        title="No projects found"
+        description="Run an analysis to get started."
+      />
     {/if}
   </div>
 </div>
@@ -53,36 +70,11 @@
     max-width: 56rem;
   }
 
-  .landing-title {
-    margin-bottom: 0.5rem;
-    text-align: center;
-    font-size: 1.875rem;
-    font-weight: bold;
-    color: #111827;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .landing-title {
-      color: #ffffff;
-    }
-  }
-
-  .landing-description {
-    margin-bottom: 2rem;
-    text-align: center;
-    color: #4b5563;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .landing-description {
-      color: #9ca3af;
-    }
-  }
-
   .project-list {
     display: grid;
     grid-template-columns: 1fr;
     gap: 1rem;
+    margin-top: 2rem;
   }
 
   @media (min-width: 640px) {
@@ -97,76 +89,10 @@
     }
   }
 
-  .project-card {
-    width: 100%;
+  .project-card-button {
+    all: unset;
     cursor: pointer;
-    border-radius: 0.5rem;
-    border: 1px solid #e5e7eb;
-    background-color: #ffffff;
-    padding: 1.5rem;
-    text-align: left;
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-    transition: box-shadow 0.2s;
-  }
-
-  .project-card:hover {
-    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .project-card {
-      border-color: #374151;
-      background-color: #1f2937;
-    }
-  }
-
-  .project-name {
-    margin-bottom: 0.5rem;
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #111827;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .project-name {
-      color: #ffffff;
-    }
-  }
-
-  .project-action {
-    font-size: 0.875rem;
-    color: #2563eb;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .project-action {
-      color: #60a5fa;
-    }
-  }
-
-  .empty-state {
-    border-radius: 0.5rem;
-    border: 1px solid #e5e7eb;
-    background-color: #ffffff;
-    padding: 2rem;
-    text-align: center;
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .empty-state {
-      border-color: #374151;
-      background-color: #1f2937;
-    }
-  }
-
-  .empty-state p {
-    color: #4b5563;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .empty-state p {
-      color: #9ca3af;
-    }
+    width: 100%;
+    display: block;
   }
 </style>
