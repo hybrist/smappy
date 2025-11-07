@@ -40,3 +40,19 @@ export type { AdapterFactory } from './adapters.js';
 // Re-export Angular plugin
 export { AngularAdapter, angularBundleAnalysisBuilder } from './angular/index.js';
 export type { AngularBuilderOptions } from './angular/index.js';
+
+// Re-export Next.js plugin
+export {
+  NextJsBundleAnalysisPlugin,
+  nextJsBundleAnalysisPlugin,
+  withNextBundleAnalysis,
+} from './nextjs/index.js';
+export type {
+  NextJsPluginOptions,
+  WithNextBundleAnalysisOptions,
+  NextConfig as NextBundleAnalysisConfig,
+  NextWebpackBuildContext,
+  NextJsBuildTarget,
+  NextJsRuntime,
+} from './nextjs/index.js';
+export { NextJsAdapter } from './nextjs/index.js';

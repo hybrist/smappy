@@ -2,6 +2,29 @@
 
 This document describes how to integrate bundle analysis with Next.js using webpack configuration.
 
+## Smappy Next.js Plugin
+
+We provide a helper that wires the bundle analysis plugin into Next.js builds for both client and server targets:
+
+```javascript
+// next.config.js
+import { withNextBundleAnalysis } from '../src/lib/server/plugins/nextjs/index.js';
+
+export default withNextBundleAnalysis(
+  {
+    reactStrictMode: true,
+  },
+  {
+    projectName: 'my-nextjs-app',
+    extractSourceMaps: true,
+    analyzeClient: true,
+    analyzeServer: true,
+  },
+);
+```
+
+The helper automatically detects the build target (`client`, `server`, `edge`, or `middleware`) and attaches the correct plugin instance. For finer-grained control you can instantiate `NextJsBundleAnalysisPlugin` directly inside the `webpack` override.
+
 ## Next.js Webpack Configuration
 
 Next.js allows customizing webpack configuration via `next.config.js`.
