@@ -4,12 +4,11 @@ import { render } from 'vitest-browser-svelte';
 import Page from './+page.svelte';
 
 describe('/+page.svelte', () => {
-  it('should render hero title', async () => {
+  it('should render Smappy logo', async () => {
     render(Page);
 
-    const heading = page.getByRole('heading', { level: 1 });
-    await expect.element(heading).toBeInTheDocument();
-    await expect.element(heading).toHaveTextContent('Smappy');
+    const logo = page.getByAltText('Smappy - Bundle Analyzer');
+    await expect.element(logo).toBeInTheDocument();
   });
 
   it('should render tagline', async () => {
