@@ -39,7 +39,7 @@ export interface SuggestionRule {
    * @param context - Analysis context with modules, dependencies, etc.
    * @returns Array of suggestions (may be empty)
    */
-  execute(context: SuggestionContext): SuggestionData[];
+  execute(context: SuggestionContext): SuggestionData[] | Promise<SuggestionData[]>;
 }
 
 /**
