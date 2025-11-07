@@ -30,13 +30,13 @@ export class SuggestionAnalyzer {
    * @param context - Analysis context
    * @returns Array of all suggestions from all rules
    */
-  analyze(context: SuggestionContext): SuggestionData[] {
+  async analyze(context: SuggestionContext): Promise<SuggestionData[]> {
     const rules = this.registry.getAllRules();
     const allSuggestions: SuggestionData[] = [];
 
     for (const rule of rules) {
       try {
-        const suggestions = rule.execute(context);
+        const suggestions = await rule.execute(context);
         allSuggestions.push(...suggestions);
       } catch (error) {
         // Log error but continue with other rules

@@ -10,6 +10,7 @@ import type {
   ModuleWithAnalysis,
   BundleWithMetadata,
   DependencyRelationship,
+  SuggestionData,
 } from './db/writer.js';
 import { extractSymbols, type SymbolWithExport } from './ast/analyzer.js';
 import {
@@ -26,6 +27,9 @@ import {
   shouldReanalyze,
   type IncrementalDiff,
 } from './incremental/index.js';
+import { createSuggestionAnalyzer } from '../suggestions/orchestrator.js';
+import type { SuggestionContext } from '../suggestions/types.js';
+import { LLMAnalyzer } from './suggestions/llm-analyzer.js';
 
 // ============================================================================
 // Main Orchestrator API
@@ -140,6 +144,11 @@ export async function ingestBundle(input: BundleIngestionInput): Promise<BundleI
       chunks: input.chunks,
       dependencies,
     };
+
+    const aiSuggestions = await generateAISuggestions(ingestionData);
+    if (aiSuggestions.length > 0) {
+      ingestionData.suggestions = aiSuggestions;
+    }
 
     // Step 5: Write to database
     console.log(`[Ingestion] Writing to database...`);
@@ -388,6 +397,25 @@ async function processBundles(
   }
 
   return processed;
+}
+
+async function generateAISuggestions(ingestionData: IngestionData): Promise<SuggestionData[]> {
+  try {
+    const analyzer = createSuggestionAnalyzer();
+    analyzer.registerRule(new LLMAnalyzer());
+
+    const context: SuggestionContext = {
+      modules: ingestionData.modules,
+      dependencies: ingestionData.dependencies,
+      chunks: ingestionData.chunks,
+      bundles: ingestionData.bundles,
+    };
+
+    return await analyzer.analyze(context);
+  } catch (error) {
+    console.error('[Ingestion] Failed to generate AI suggestions', error);
+    return [];
+  }
 }
 
 // ============================================================================

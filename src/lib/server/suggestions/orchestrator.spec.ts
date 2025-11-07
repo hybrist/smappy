@@ -23,12 +23,12 @@ describe('SuggestionAnalyzer', () => {
   });
 
   describe('analyze', () => {
-    it('should return empty array when no rules are registered', () => {
-      const suggestions = analyzer.analyze(context);
+    it('should return empty array when no rules are registered', async () => {
+      const suggestions = await analyzer.analyze(context);
       expect(suggestions).toEqual([]);
     });
 
-    it('should execute single rule and return suggestions', () => {
+    it('should execute single rule and return suggestions', async () => {
       const mockRule: SuggestionRule = {
         id: 'test-rule',
         name: 'Test Rule',
@@ -44,14 +44,14 @@ describe('SuggestionAnalyzer', () => {
       };
 
       analyzer.registerRule(mockRule);
-      const suggestions = analyzer.analyze(context);
+      const suggestions = await analyzer.analyze(context);
 
       expect(suggestions).toHaveLength(1);
       expect(suggestions[0].type).toBe('TEST');
       expect(suggestions[0].title).toBe('Test suggestion');
     });
 
-    it('should execute multiple rules and aggregate suggestions', () => {
+    it('should execute multiple rules and aggregate suggestions', async () => {
       const rule1: SuggestionRule = {
         id: 'rule-1',
         name: 'Rule 1',
@@ -83,13 +83,13 @@ describe('SuggestionAnalyzer', () => {
       analyzer.registerRule(rule1);
       analyzer.registerRule(rule2);
 
-      const suggestions = analyzer.analyze(context);
+      const suggestions = await analyzer.analyze(context);
 
       expect(suggestions).toHaveLength(2);
       expect(suggestions.map((s) => s.type)).toEqual(['TYPE_1', 'TYPE_2']);
     });
 
-    it('should handle rule that returns multiple suggestions', () => {
+    it('should handle rule that returns multiple suggestions', async () => {
       const rule: SuggestionRule = {
         id: 'multi-rule',
         name: 'Multi Rule',
@@ -111,12 +111,12 @@ describe('SuggestionAnalyzer', () => {
       };
 
       analyzer.registerRule(rule);
-      const suggestions = analyzer.analyze(context);
+      const suggestions = await analyzer.analyze(context);
 
       expect(suggestions).toHaveLength(2);
     });
 
-    it('should handle rule that returns empty array', () => {
+    it('should handle rule that returns empty array', async () => {
       const rule: SuggestionRule = {
         id: 'empty-rule',
         name: 'Empty Rule',
@@ -125,12 +125,12 @@ describe('SuggestionAnalyzer', () => {
       };
 
       analyzer.registerRule(rule);
-      const suggestions = analyzer.analyze(context);
+      const suggestions = await analyzer.analyze(context);
 
       expect(suggestions).toEqual([]);
     });
 
-    it('should continue execution if one rule throws error', () => {
+    it('should continue execution if one rule throws error', async () => {
       const goodRule: SuggestionRule = {
         id: 'good-rule',
         name: 'Good Rule',
@@ -158,13 +158,13 @@ describe('SuggestionAnalyzer', () => {
       analyzer.registerRule(badRule);
 
       // Should not throw, should continue with other rules
-      const suggestions = analyzer.analyze(context);
+      const suggestions = await analyzer.analyze(context);
 
       expect(suggestions).toHaveLength(1);
       expect(suggestions[0].type).toBe('GOOD');
     });
 
-    it('should pass correct context to rules', () => {
+    it('should pass correct context to rules', async () => {
       const module: ModuleWithAnalysis = {
         filePath: './src/test.js',
         sourceContent: 'export function test() {}',
@@ -196,7 +196,7 @@ describe('SuggestionAnalyzer', () => {
       };
 
       analyzer.registerRule(rule);
-      analyzer.analyze(testContext);
+      await analyzer.analyze(testContext);
 
       expect(receivedContext).toBeDefined();
       expect(receivedContext?.modules).toHaveLength(1);
@@ -221,7 +221,7 @@ describe('SuggestionAnalyzer', () => {
   });
 
   describe('unregisterRule', () => {
-    it('should unregister a rule', () => {
+    it('should unregister a rule', async () => {
       const rule: SuggestionRule = {
         id: 'test',
         name: 'Test',
@@ -237,10 +237,10 @@ describe('SuggestionAnalyzer', () => {
       };
 
       analyzer.registerRule(rule);
-      expect(analyzer.analyze(context)).toHaveLength(1);
+      expect(await analyzer.analyze(context)).toHaveLength(1);
 
       analyzer.unregisterRule('test');
-      expect(analyzer.analyze(context)).toHaveLength(0);
+      expect(await analyzer.analyze(context)).toHaveLength(0);
     });
   });
 

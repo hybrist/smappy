@@ -52,7 +52,7 @@ describe('Tree-shaking Detector', () => {
   });
 
   describe('execute', () => {
-    it('should return empty array when no modules have exports', () => {
+    it('should return empty array when no modules have exports', async () => {
       expect.assertions(1);
 
       const rule = createTreeShakingDetector();
@@ -61,12 +61,12 @@ describe('Tree-shaking Detector', () => {
         createModule({ exports: undefined }),
       ]);
 
-      const suggestions = rule.execute(context);
+      const suggestions = await rule.execute(context);
 
       expect(suggestions).toEqual([]);
     });
 
-    it('should return empty array when all exports are used', () => {
+    it('should return empty array when all exports are used', async () => {
       expect.assertions(1);
 
       const rule = createTreeShakingDetector();
@@ -78,12 +78,12 @@ describe('Tree-shaking Detector', () => {
         }),
       ]);
 
-      const suggestions = rule.execute(context);
+      const suggestions = await rule.execute(context);
 
       expect(suggestions).toEqual([]);
     });
 
-    it('should detect completely unused module', () => {
+    it('should detect completely unused module', async () => {
       expect.assertions(7);
 
       const rule = createTreeShakingDetector();
@@ -96,7 +96,7 @@ describe('Tree-shaking Detector', () => {
         }),
       ]);
 
-      const suggestions = rule.execute(context);
+      const suggestions = await rule.execute(context);
 
       expect(suggestions).toHaveLength(1);
       expect(suggestions[0].type).toBe('tree-shaking');
@@ -107,7 +107,7 @@ describe('Tree-shaking Detector', () => {
       expect(suggestions[0].links).toHaveLength(1);
     });
 
-    it('should detect partially unused exports', () => {
+    it('should detect partially unused exports', async () => {
       expect.assertions(7);
 
       const rule = createTreeShakingDetector();
@@ -120,7 +120,7 @@ describe('Tree-shaking Detector', () => {
         }),
       ]);
 
-      const suggestions = rule.execute(context);
+      const suggestions = await rule.execute(context);
 
       expect(suggestions).toHaveLength(1);
       expect(suggestions[0].type).toBe('tree-shaking');
@@ -131,7 +131,7 @@ describe('Tree-shaking Detector', () => {
       expect(suggestions[0].links?.length).toBeGreaterThan(1); // Module + symbols
     });
 
-    it('should skip modules below size threshold', () => {
+    it('should skip modules below size threshold', async () => {
       expect.assertions(1);
 
       const rule = createTreeShakingDetector({ minSizeThreshold: 1000 });
@@ -143,12 +143,12 @@ describe('Tree-shaking Detector', () => {
         }),
       ]);
 
-      const suggestions = rule.execute(context);
+      const suggestions = await rule.execute(context);
 
       expect(suggestions).toEqual([]);
     });
 
-    it('should calculate potential savings correctly for completely unused module', () => {
+    it('should calculate potential savings correctly for completely unused module', async () => {
       expect.assertions(2);
 
       const rule = createTreeShakingDetector();
@@ -160,13 +160,13 @@ describe('Tree-shaking Detector', () => {
         }),
       ]);
 
-      const suggestions = rule.execute(context);
+      const suggestions = await rule.execute(context);
 
       expect(suggestions).toHaveLength(1);
       expect(suggestions[0].description).toContain('2.00 KB');
     });
 
-    it('should calculate potential savings correctly for partially unused module', () => {
+    it('should calculate potential savings correctly for partially unused module', async () => {
       expect.assertions(2);
 
       const rule = createTreeShakingDetector();
@@ -178,13 +178,13 @@ describe('Tree-shaking Detector', () => {
         }),
       ]);
 
-      const suggestions = rule.execute(context);
+      const suggestions = await rule.execute(context);
 
       expect(suggestions).toHaveLength(1);
       expect(suggestions[0].description).toContain('1.95 KB'); // ~2000 bytes
     });
 
-    it('should use warning severity for completely unused modules', () => {
+    it('should use warning severity for completely unused modules', async () => {
       expect.assertions(2);
 
       const rule = createTreeShakingDetector();
@@ -196,13 +196,13 @@ describe('Tree-shaking Detector', () => {
         }),
       ]);
 
-      const suggestions = rule.execute(context);
+      const suggestions = await rule.execute(context);
 
       expect(suggestions).toHaveLength(1);
       expect(suggestions[0].severity).toBe('warning');
     });
 
-    it('should use warning severity for large partially unused modules', () => {
+    it('should use warning severity for large partially unused modules', async () => {
       expect.assertions(2);
 
       const rule = createTreeShakingDetector();
@@ -214,13 +214,13 @@ describe('Tree-shaking Detector', () => {
         }),
       ]);
 
-      const suggestions = rule.execute(context);
+      const suggestions = await rule.execute(context);
 
       expect(suggestions).toHaveLength(1);
       expect(suggestions[0].severity).toBe('warning');
     });
 
-    it('should use info severity for small partially unused modules', () => {
+    it('should use info severity for small partially unused modules', async () => {
       expect.assertions(2);
 
       const rule = createTreeShakingDetector();
@@ -232,13 +232,13 @@ describe('Tree-shaking Detector', () => {
         }),
       ]);
 
-      const suggestions = rule.execute(context);
+      const suggestions = await rule.execute(context);
 
       expect(suggestions).toHaveLength(1);
       expect(suggestions[0].severity).toBe('info');
     });
 
-    it('should handle modules with many unused exports', () => {
+    it('should handle modules with many unused exports', async () => {
       expect.assertions(3);
 
       const rule = createTreeShakingDetector();
@@ -251,14 +251,14 @@ describe('Tree-shaking Detector', () => {
         }),
       ]);
 
-      const suggestions = rule.execute(context);
+      const suggestions = await rule.execute(context);
 
       expect(suggestions).toHaveLength(1);
       expect(suggestions[0].description).toContain('exports 20 symbol(s)');
       expect(suggestions[0].links).toHaveLength(1); // Only module link (no symbol links for >10)
     });
 
-    it('should limit export names in description to 3', () => {
+    it('should limit export names in description to 3', async () => {
       expect.assertions(2);
 
       const rule = createTreeShakingDetector();
@@ -270,13 +270,13 @@ describe('Tree-shaking Detector', () => {
         }),
       ]);
 
-      const suggestions = rule.execute(context);
+      const suggestions = await rule.execute(context);
 
       expect(suggestions).toHaveLength(1);
       expect(suggestions[0].description).toContain('4 exports');
     });
 
-    it('should include symbol links for partially unused modules with ≤10 unused exports', () => {
+    it('should include symbol links for partially unused modules with ≤10 unused exports', async () => {
       expect.assertions(3);
 
       const rule = createTreeShakingDetector({ detectPartiallyUnused: true });
@@ -289,14 +289,14 @@ describe('Tree-shaking Detector', () => {
         }),
       ]);
 
-      const suggestions = rule.execute(context);
+      const suggestions = await rule.execute(context);
 
       expect(suggestions).toHaveLength(1);
       expect(suggestions[0].links).toHaveLength(3); // Module + 2 symbols
       expect(suggestions[0].links?.[1].entityType).toBe('Symbol');
     });
 
-    it('should respect detectPartiallyUnused option', () => {
+    it('should respect detectPartiallyUnused option', async () => {
       expect.assertions(2);
 
       const rule = createTreeShakingDetector({ detectPartiallyUnused: false });
@@ -308,13 +308,13 @@ describe('Tree-shaking Detector', () => {
         }),
       ]);
 
-      const suggestions = rule.execute(context);
+      const suggestions = await rule.execute(context);
 
       expect(suggestions).toHaveLength(1);
       expect(suggestions[0].links).toHaveLength(1); // Only module link
     });
 
-    it('should process multiple modules', () => {
+    it('should process multiple modules', async () => {
       expect.assertions(1);
 
       const rule = createTreeShakingDetector();
@@ -339,12 +339,12 @@ describe('Tree-shaking Detector', () => {
         }),
       ]);
 
-      const suggestions = rule.execute(context);
+      const suggestions = await rule.execute(context);
 
       expect(suggestions).toHaveLength(2); // module1 and module2
     });
 
-    it('should handle modules with undefined usedExports', () => {
+    it('should handle modules with undefined usedExports', async () => {
       expect.assertions(2);
 
       const rule = createTreeShakingDetector();
@@ -356,13 +356,13 @@ describe('Tree-shaking Detector', () => {
         }),
       ]);
 
-      const suggestions = rule.execute(context);
+      const suggestions = await rule.execute(context);
 
       expect(suggestions).toHaveLength(1);
       expect(suggestions[0].description).toContain('none are used');
     });
 
-    it('should format bytes correctly', () => {
+    it('should format bytes correctly', async () => {
       expect.assertions(3);
 
       const rule = createTreeShakingDetector();
@@ -375,7 +375,8 @@ describe('Tree-shaking Detector', () => {
           bundledSize: 500,
         }),
       ]);
-      expect(rule.execute(context1)[0].description).toContain('500 bytes');
+      const suggestions1 = await rule.execute(context1);
+      expect(suggestions1[0].description).toContain('500 bytes');
 
       // Test KB
       const context2 = createContext([
@@ -385,7 +386,8 @@ describe('Tree-shaking Detector', () => {
           bundledSize: 2048,
         }),
       ]);
-      expect(rule.execute(context2)[0].description).toContain('2.00 KB');
+      const suggestions2 = await rule.execute(context2);
+      expect(suggestions2[0].description).toContain('2.00 KB');
 
       // Test MB
       const context3 = createContext([
@@ -395,7 +397,8 @@ describe('Tree-shaking Detector', () => {
           bundledSize: 2097152, // 2 MB
         }),
       ]);
-      expect(rule.execute(context3)[0].description).toContain('2.00 MB');
+      const suggestions3 = await rule.execute(context3);
+      expect(suggestions3[0].description).toContain('2.00 MB');
     });
   });
 });
