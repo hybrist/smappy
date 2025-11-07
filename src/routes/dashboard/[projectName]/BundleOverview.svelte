@@ -304,7 +304,10 @@
       {:else if loadError}
         <EmptyState title="Error loading modules" description={loadError} />
       {:else if modules.length === 0}
-        <EmptyState title="No modules found" description="Try adjusting your search or filter criteria." />
+        <EmptyState
+          title="No modules found"
+          description="Try adjusting your search or filter criteria."
+        />
       {:else}
         <table class="data-table">
           <thead>
