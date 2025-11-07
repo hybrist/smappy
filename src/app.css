@@ -1,1 +1,141 @@
 @import 'tailwindcss';
+
+/*
+ * Smappy Design System
+ * Tailwind CSS 4 Theme Configuration
+ *
+ * This file defines the design tokens (colors, spacing, typography, etc.)
+ * used throughout the application. These tokens ensure visual consistency
+ * and make it easy to update the design system globally.
+ *
+ * Related: #96 - Tailwind CSS audit and setup
+ */
+
+@theme {
+  /* ============================================
+   * COLOR PALETTE
+   * ============================================
+   * Based on current usage (see docs/TAILWIND_AUDIT.md)
+   * Gray scale matches existing hardcoded values
+   * Brand colors are placeholders for #91 (brand identity)
+   */
+
+  /* Gray Scale - Primary neutral colors */
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  --color-gray-950: #030712;
+
+  /* Blue - Current link/accent color */
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+
+  /* Brand Colors - Placeholders (update in #91) */
+  --color-primary-400: var(--color-blue-400);
+  --color-primary-500: var(--color-blue-500);
+  --color-primary-600: var(--color-blue-600);
+  --color-primary-700: var(--color-blue-700);
+
+  /* Semantic Colors - For badges and states */
+  --color-success-500: #10b981; /* Green */
+  --color-success-600: #059669;
+  --color-warning-500: #f59e0b; /* Amber */
+  --color-warning-600: #d97706;
+  --color-error-500: #ef4444; /* Red */
+  --color-error-600: #dc2626;
+  --color-info-500: #3b82f6; /* Blue */
+  --color-info-600: #2563eb;
+
+  /* ============================================
+   * SPACING SCALE
+   * ============================================
+   * Tailwind's default spacing is perfect (4px increments)
+   * Documented here for reference
+   *
+   * Usage: p-4 (16px), gap-6 (24px), mb-2 (8px), etc.
+   */
+
+  /* Already using Tailwind defaults:
+   * 0.5 = 2px    | 3.5 = 14px  | 10 = 40px
+   * 1   = 4px    | 4   = 16px  | 12 = 48px
+   * 1.5 = 6px    | 5   = 20px  | 14 = 56px
+   * 2   = 8px    | 6   = 24px  | 16 = 64px
+   * 2.5 = 10px   | 7   = 28px  | 20 = 80px
+   * 3   = 12px   | 8   = 32px  | 24 = 96px
+   */
+
+  /* ============================================
+   * TYPOGRAPHY
+   * ============================================
+   * Font sizes match current usage
+   */
+
+  /* Font Sizes */
+  --font-size-xs: 0.75rem; /* 12px */
+  --font-size-sm: 0.875rem; /* 14px - Small text, badges */
+  --font-size-base: 1rem; /* 16px - Body text */
+  --font-size-lg: 1.125rem; /* 18px - Card titles */
+  --font-size-xl: 1.25rem; /* 20px - Section headings */
+  --font-size-2xl: 1.5rem; /* 24px */
+  --font-size-3xl: 1.875rem; /* 30px - Page titles */
+  --font-size-4xl: 2.25rem; /* 36px */
+
+  /* Font Weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Line Heights */
+  --line-height-tight: 1.25;
+  --line-height-snug: 1.375;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
+
+  /* ============================================
+   * BORDER RADIUS
+   * ============================================
+   */
+
+  --radius-sm: 0.25rem; /* 4px - Small elements */
+  --radius-DEFAULT: 0.5rem; /* 8px - Cards, buttons (current standard) */
+  --radius-md: 0.5rem; /* 8px */
+  --radius-lg: 0.75rem; /* 12px - Large cards */
+  --radius-xl: 1rem; /* 16px */
+  --radius-full: 9999px; /* Pills, badges */
+
+  /* ============================================
+   * SHADOWS
+   * ============================================
+   * Match current shadow usage
+   */
+
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  --shadow-DEFAULT: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+
+  /* ============================================
+   * BREAKPOINTS
+   * ============================================
+   * Using Tailwind defaults (documented for reference)
+   */
+
+  /* Already using Tailwind defaults:
+   * sm:  640px  - Mobile landscape
+   * md:  768px  - Tablet
+   * lg:  1024px - Desktop (current 3-column grid)
+   * xl:  1280px - Large desktop
+   * 2xl: 1536px - Extra large
+   */
+}
