@@ -18,6 +18,7 @@ Tailwind CSS 4 is **installed but completely unused**. All components use custom
 ### ✅ Installed Correctly
 
 **Vite Configuration** (`vite.config.ts:3,9`):
+
 ```typescript
 import tailwindcss from '@tailwindcss/vite';
 
@@ -31,6 +32,7 @@ export default defineConfig({
 ```
 
 **CSS Import** (`src/app.css:1`):
+
 ```css
 @import 'tailwindcss';
 ```
@@ -44,6 +46,7 @@ export default defineConfig({
 ### ❌ No Tailwind Classes Found
 
 **Pattern Analysis** (sampled 20 components):
+
 - 0% Tailwind utility classes (e.g., `class="flex items-center"`)
 - 100% custom CSS classes (e.g., `class="dashboard-landing"`)
 - 100% scoped `<style>` blocks
@@ -52,6 +55,7 @@ export default defineConfig({
 ### Example: Dashboard Landing Page
 
 **Current Code** (`src/routes/dashboard/+page.svelte`):
+
 ```svelte
 <div class="project-card">
   <h2 class="project-name">{project}</h2>
@@ -109,16 +113,17 @@ export default defineConfig({
 ```
 
 **With Tailwind** (what it should be):
+
 ```svelte
-<div class="w-full cursor-pointer rounded-lg border border-gray-200 bg-white p-6 text-left
+<div
+  class="w-full cursor-pointer rounded-lg border border-gray-200 bg-white p-6 text-left
             shadow-sm transition-shadow hover:shadow-md
-            dark:border-gray-700 dark:bg-gray-800">
+            dark:border-gray-700 dark:bg-gray-800"
+>
   <h2 class="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
     {project}
   </h2>
-  <p class="text-sm text-blue-600 dark:text-blue-400">
-    View Analysis →
-  </p>
+  <p class="text-sm text-blue-600 dark:text-blue-400">View Analysis →</p>
 </div>
 
 <!-- No <style> block needed! -->
@@ -133,6 +138,7 @@ export default defineConfig({
 **Issue:** Magic hex values scattered throughout codebase
 
 **Examples:**
+
 ```css
 /* Gray 50 */ #f9fafb
 /* Gray 900 */ #111827
@@ -143,6 +149,7 @@ export default defineConfig({
 ```
 
 **Impact:**
+
 - Cannot change brand colors easily
 - Inconsistent color usage (same intent, different values)
 - No semantic meaning
@@ -156,15 +163,17 @@ export default defineConfig({
 **Issue:** Arbitrary spacing values
 
 **Examples:**
+
 ```css
-padding: 1.5rem;     /* Some components */
-padding: 2rem;       /* Others */
+padding: 1.5rem; /* Some components */
+padding: 2rem; /* Others */
 margin-bottom: 0.5rem;
 gap: 1rem;
 gap: 1.5rem;
 ```
 
 **Impact:**
+
 - Visual inconsistency
 - Hard to maintain uniform spacing
 - No design system
@@ -178,6 +187,7 @@ gap: 1.5rem;
 **Issue:** Every component manually implements dark mode
 
 **Examples:**
+
 ```css
 @media (prefers-color-scheme: dark) {
   .landing-title {
@@ -194,6 +204,7 @@ gap: 1.5rem;
 ```
 
 **Impact:**
+
 - Duplicate media queries everywhere
 - Easy to forget dark mode for new elements
 - Cannot toggle dark mode manually
@@ -207,12 +218,14 @@ gap: 1.5rem;
 **Issue:** Same patterns copy-pasted across components
 
 **Repeated Patterns:**
+
 - Card container (border, shadow, padding, dark mode)
 - Stat cards (white bg, rounded, padding)
 - Empty states (centered, bordered, gray text)
 - Buttons (cursor, transition, hover state)
 
 **Impact:**
+
 - DRY violation
 - Inconsistent implementations
 - Hard to update globally
@@ -226,6 +239,7 @@ gap: 1.5rem;
 **Issue:** No customization of Tailwind defaults
 
 **Missing:**
+
 - Brand color palette
 - Custom spacing (if needed beyond defaults)
 - Typography scale
@@ -234,6 +248,7 @@ gap: 1.5rem;
 - Breakpoint customization
 
 **Impact:**
+
 - Cannot enforce design system
 - Defaults may not match brand
 - No single source of truth
@@ -246,49 +261,51 @@ gap: 1.5rem;
 
 ### Colors Found in Codebase
 
-| Color | Usage | Tailwind Equivalent |
-|-------|-------|-------------------|
-| `#f9fafb` | Light backgrounds | `bg-gray-50` |
-| `#111827` | Dark text, dark bg | `text-gray-900`, `bg-gray-900` |
-| `#ffffff` | White backgrounds | `bg-white` |
-| `#1f2937` | Dark mode cards | `dark:bg-gray-800` |
-| `#4b5563` | Secondary text | `text-gray-600` |
-| `#9ca3af` | Dark mode gray text | `dark:text-gray-400` |
-| `#e5e7eb` | Light borders | `border-gray-200` |
-| `#374151` | Dark mode borders | `dark:border-gray-700` |
-| `#2563eb` | Blue links/accents | `text-blue-600` |
-| `#60a5fa` | Dark mode blue | `dark:text-blue-400` |
+| Color     | Usage               | Tailwind Equivalent            |
+| --------- | ------------------- | ------------------------------ |
+| `#f9fafb` | Light backgrounds   | `bg-gray-50`                   |
+| `#111827` | Dark text, dark bg  | `text-gray-900`, `bg-gray-900` |
+| `#ffffff` | White backgrounds   | `bg-white`                     |
+| `#1f2937` | Dark mode cards     | `dark:bg-gray-800`             |
+| `#4b5563` | Secondary text      | `text-gray-600`                |
+| `#9ca3af` | Dark mode gray text | `dark:text-gray-400`           |
+| `#e5e7eb` | Light borders       | `border-gray-200`              |
+| `#374151` | Dark mode borders   | `dark:border-gray-700`         |
+| `#2563eb` | Blue links/accents  | `text-blue-600`                |
+| `#60a5fa` | Dark mode blue      | `dark:text-blue-400`           |
 
 ### Spacing Values
 
-| Value | Usage | Tailwind Equivalent |
-|-------|-------|-------------------|
-| `0.5rem` (8px) | Small margins | `mb-2`, `gap-2` |
-| `1rem` (16px) | Standard gaps | `gap-4`, `p-4` |
-| `1.5rem` (24px) | Card padding | `p-6` |
-| `2rem` (32px) | Large padding | `p-8` |
-| `3rem` (48px) | Page padding | `py-12` |
+| Value           | Usage         | Tailwind Equivalent |
+| --------------- | ------------- | ------------------- |
+| `0.5rem` (8px)  | Small margins | `mb-2`, `gap-2`     |
+| `1rem` (16px)   | Standard gaps | `gap-4`, `p-4`      |
+| `1.5rem` (24px) | Card padding  | `p-6`               |
+| `2rem` (32px)   | Large padding | `p-8`               |
+| `3rem` (48px)   | Page padding  | `py-12`             |
 
 ### Typography
 
-| Value | Usage | Tailwind Equivalent |
-|-------|-------|-------------------|
-| `0.875rem` | Small text | `text-sm` |
-| `1rem` | Body text | `text-base` |
-| `1.125rem` | Card titles | `text-lg` |
-| `1.875rem` | Page titles | `text-3xl` |
-| `600` | Semibold | `font-semibold` |
-| `bold` | Bold | `font-bold` |
+| Value      | Usage       | Tailwind Equivalent |
+| ---------- | ----------- | ------------------- |
+| `0.875rem` | Small text  | `text-sm`           |
+| `1rem`     | Body text   | `text-base`         |
+| `1.125rem` | Card titles | `text-lg`           |
+| `1.875rem` | Page titles | `text-3xl`          |
+| `600`      | Semibold    | `font-semibold`     |
+| `bold`     | Bold        | `font-bold`         |
 
 ---
 
 ## Recommendations
 
 ### Phase 1: Configure Tailwind Theme (PR #1)
+
 **Timeline:** 1-2 days
 **Deliverable:** Design tokens in `app.css`
 
 Add `@theme` block to `src/app.css`:
+
 ```css
 @import 'tailwindcss';
 
@@ -296,8 +313,7 @@ Add `@theme` block to `src/app.css`:
   /* Spacing scale (Tailwind defaults are good, but document them) */
   --spacing-*: /* 4px increments */
 
-  /* Color palette (start with grays, add brand colors later) */
-  --color-gray-50: #f9fafb;
+  /* Color palette (start with grays, add brand colors later) */ --color-gray-50: #f9fafb;
   --color-gray-100: #f3f4f6;
   /* ... */
 
@@ -319,10 +335,12 @@ Add `@theme` block to `src/app.css`:
 ---
 
 ### Phase 2: Create Utility Patterns (PR #2)
+
 **Timeline:** 1 day
 **Deliverable:** Reusable Tailwind class combinations
 
 Document common patterns:
+
 ```css
 /* In app.css or separate utilities file */
 @layer components {
@@ -341,16 +359,19 @@ Document common patterns:
 ---
 
 ### Phase 3: Migrate Components (PRs #3-6)
+
 **Timeline:** 1-2 weeks
 **Deliverable:** Components using Tailwind classes
 
 **Migration Strategy:**
+
 1. Start with simplest components (buttons, badges)
 2. Move to layouts (cards, sections)
 3. Migrate pages incrementally
 4. Remove `<style>` blocks
 
 **Split into PRs by area:**
+
 - PR #3: Dashboard landing page
 - PR #4: Overview page components
 - PR #5: Dependencies & Compare pages
@@ -359,10 +380,12 @@ Document common patterns:
 ---
 
 ### Phase 4: Documentation (PR #7)
+
 **Timeline:** 1 day
 **Deliverable:** Style guide
 
 Create `docs/STYLING_GUIDE.md`:
+
 - Tailwind-first approach
 - When to use `@apply`
 - Color palette usage
@@ -375,27 +398,32 @@ Create `docs/STYLING_GUIDE.md`:
 ## Benefits of Migration
 
 ### Code Reduction
+
 **Before:** 173 lines of CSS for dashboard page
 **After:** ~20 lines (mostly markup with utility classes)
 
 **Estimated:** 60-70% reduction in CSS code
 
 ### Consistency
+
 - Single source of truth for colors
 - Uniform spacing across all components
 - Automatic dark mode consistency
 
 ### Maintainability
+
 - Change theme colors in one place
 - No hunting for hardcoded values
 - Easier to onboard new developers
 
 ### Performance
+
 - Tailwind purges unused CSS
 - Smaller final bundle
 - Shared utility classes (less duplication)
 
 ### Developer Experience
+
 - Faster development (no writing CSS)
 - Visual feedback in markup
 - Easier to iterate on design
@@ -405,18 +433,22 @@ Create `docs/STYLING_GUIDE.md`:
 ## Migration Risks & Mitigation
 
 ### Risk: Breaking Dark Mode
+
 **Mitigation:** Test dark mode thoroughly during migration
 **Strategy:** Keep both implementations temporarily, A/B test
 
 ### Risk: Visual Regressions
+
 **Mitigation:** Take screenshots before/after
 **Strategy:** Use Percy or Chromatic for visual regression testing
 
 ### Risk: File Size During Transition
+
 **Mitigation:** Migrate file-by-file, remove old CSS immediately
 **Strategy:** Don't leave dead code
 
 ### Risk: Team Learning Curve
+
 **Mitigation:** Document patterns, provide examples
 **Strategy:** Start with easy components, build confidence
 
