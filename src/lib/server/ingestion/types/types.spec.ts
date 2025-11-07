@@ -140,6 +140,7 @@ describe('Type definitions', () => {
         'esbuild',
         'vite',
         'parcel',
+        'nextjs',
         'other',
       ];
       types.forEach((bundlerType) => {

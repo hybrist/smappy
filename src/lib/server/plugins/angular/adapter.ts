@@ -373,7 +373,7 @@ export class AngularAdapter extends BundlerAdapter {
    * Create ingestion options
    */
   protected createIngestionOptions(
-    bundlerType: 'webpack' | 'rollup' | 'esbuild' | 'vite' | 'parcel' | 'other',
+    bundlerType: 'webpack' | 'rollup' | 'esbuild' | 'vite' | 'parcel' | 'nextjs' | 'other',
   ): IngestionOptions {
     return {
       bundlerType,
