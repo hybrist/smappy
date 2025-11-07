@@ -153,8 +153,9 @@ export class LLMAnalyzer implements SuggestionRule {
     }));
 
     const bundleSummary = context.bundles.slice(0, 5).map((bundle) => {
-      const rawSize = (bundle as Record<string, unknown>).size;
-      const size = typeof rawSize === 'number' ? formatBytes(rawSize) : undefined;
+      const bundleWithSize = bundle as BundleInput & { size?: number };
+      const size =
+        typeof bundleWithSize.size === 'number' ? formatBytes(bundleWithSize.size) : undefined;
       return {
         fileName: bundle.fileName,
         type: bundle.type,
@@ -367,7 +368,7 @@ function normalizeLinks(value: unknown): SuggestionData['links'] {
 
 function normalizeEntityType(
   value: string,
-): SuggestionData['links'][number]['entityType'] | undefined {
+): NonNullable<SuggestionData['links']>[number]['entityType'] | undefined {
   const normalized = value.trim().toLowerCase();
   switch (normalized) {
     case 'module':
@@ -514,7 +515,7 @@ class AnthropicClient implements LLMClient {
     const contentSegments = Array.isArray(response?.content) ? response.content : [];
     const combined = contentSegments
       .map((segment: { text?: string }) => segment?.text)
-      .filter((text): text is string => typeof text === 'string')
+      .filter((text: unknown): text is string => typeof text === 'string')
       .join('\n');
 
     if (combined.trim().length === 0) {
