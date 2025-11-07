@@ -237,7 +237,7 @@ describe('SuggestionAnalyzer', () => {
       };
 
       analyzer.registerRule(rule);
-      expect((await analyzer.analyze(context)).length).toBe(1);
+      expect(await analyzer.analyze(context)).toHaveLength(1);
 
       analyzer.unregisterRule('test');
       expect(await analyzer.analyze(context)).toHaveLength(0);

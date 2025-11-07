@@ -180,7 +180,7 @@ export class LLMAnalyzer implements SuggestionRule {
 
 Rules:
 - Propose concrete optimizations that reference specific modules, chunks, or dependencies when possible.
-- Prefer three to five suggestions prioritised by impact.
+- Prefer three to five suggestions prioritized by impact.
 - Severity must be one of "critical", "warning", or "info".
 - The JSON response must be an array of suggestion objects with the shape:
   [{"type": string, "severity": "critical" | "warning" | "info", "title": string, "description": string, "links": [{"entityType": "Module" | "Symbol" | "Dependency" | "Chunk", "entityPath"?: string}]}]
@@ -282,7 +282,7 @@ ${JSON.stringify(payload, null, 2)}`;
 }
 
 const DEFAULT_SYSTEM_PROMPT =
-  'You are an expert front-end performance engineer. Generate concise, high impact optimisation suggestions based on the provided bundle analysis data.';
+  'You are an expert front-end performance engineer. Generate concise, high impact optimization suggestions based on the provided bundle analysis data.';
 
 class RateLimiter {
   private readonly windowMs = 60_000;
