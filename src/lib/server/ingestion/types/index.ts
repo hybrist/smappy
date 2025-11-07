@@ -55,7 +55,7 @@ export interface ModuleInput {
  */
 export interface IngestionOptions {
   /** Type of bundler that generated this bundle */
-  bundlerType: 'webpack' | 'rollup' | 'esbuild' | 'vite' | 'parcel' | 'other';
+  bundlerType: 'webpack' | 'rollup' | 'esbuild' | 'vite' | 'parcel' | 'nextjs' | 'other';
   /** Name of the project being analyzed */
   projectName: string;
   /** Whether to perform incremental analysis */

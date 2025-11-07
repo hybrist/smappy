@@ -121,7 +121,7 @@ Each seed data profile returns `BundleIngestionInput` objects that match the str
 ```typescript
 interface BundleIngestionInput {
   options: {
-    bundlerType: 'vite' | 'webpack' | 'rollup' | 'esbuild' | 'parcel';
+    bundlerType: 'vite' | 'webpack' | 'rollup' | 'esbuild' | 'parcel' | 'nextjs';
     projectName: string;
     enableIncremental: boolean;
   };
