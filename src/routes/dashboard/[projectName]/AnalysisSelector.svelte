@@ -50,15 +50,28 @@
       </option>
     {/each}
   </select>
+  {#if analysisHistory.length >= 2}
+    <a
+      href="/dashboard/{encodeURIComponent(projectName)}/compare"
+      class="compare-link"
+      aria-label="Compare analysis runs"
+    >
+      Compare
+    </a>
+  {/if}
 </div>
 
 <style>
   .analysis-selector {
     flex: 1;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
   }
 
   .analysis-select {
-    width: 100%;
+    flex: 1;
+    min-width: 0;
     border-radius: 0.5rem;
     border: 1px solid #d1d5db;
     background-color: #ffffff;
@@ -78,6 +91,33 @@
       border-color: #4b5563;
       background-color: #1f2937;
       color: #ffffff;
+    }
+  }
+
+  .compare-link {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    background-color: #2563eb;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background-color 0.2s;
+  }
+
+  .compare-link:hover {
+    background-color: #1d4ed8;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .compare-link {
+      background-color: #3b82f6;
+    }
+
+    .compare-link:hover {
+      background-color: #2563eb;
     }
   }
 
