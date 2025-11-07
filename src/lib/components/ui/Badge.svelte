@@ -49,25 +49,9 @@
   Label badge component with multiple variants for different use cases.
   Uses semantic colors from Tailwind theme for consistent styling.
 
-  @example
-  ```svelte
-  <!-- File type badge -->
-<Badge variant="filetype">tsx</Badge>
-
-<!-- Source badge -->
-<Badge variant="source">Source</Badge>
-
-<!-- Third-party badge -->
-<Badge variant="third-party">Third-party</Badge>
-
-<!-- Severity badges -->
-<Badge variant="critical">Critical</Badge>
-<Badge variant="warning">Warning</Badge>
-<Badge variant="info">Info</Badge>
-
-<!-- Entry type badge -->
-<Badge variant="entry">Entry</Badge>
-``` -->
+  Variants: filetype, source, third-party, critical, warning, info, entry
+  See Badge.stories.svelte for usage examples.
+-->
 
 <span
   class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {variantClasses[

@@ -35,23 +35,8 @@
   Content section wrapper with optional title and border.
   Provides a consistent container for grouped content.
 
-  @example
-  ```svelte
-  <!-- Basic section -->
-<Section>
-  <p>Section content</p>
-</Section>
-
-<!-- With title -->
-<Section title="Top Modules">
-  <p>Module list here</p>
-</Section>
-
-<!-- With border -->
-<Section title="Bundle Metrics" bordered>
-  <p>Metrics content</p>
-</Section>
-``` -->
+  See Section.stories.svelte for usage examples.
+-->
 
 <section class="rounded-lg bg-gray-50 p-6 dark:bg-gray-900 {borderClass} {className}" {...props}>
   {#if title}

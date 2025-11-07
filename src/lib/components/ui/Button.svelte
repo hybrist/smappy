@@ -70,20 +70,9 @@
   Button component with multiple variants and automatic type handling.
   Includes focus states and transitions using Tailwind utilities.
 
-  @example
-  ```svelte
-  <!-- Primary button (default) -->
-<Button>Click me</Button>
-<Button variant="primary">Save</Button>
-
-<!-- Other variants -->
-<Button variant="secondary">Cancel</Button>
-<Button variant="ghost">Reset</Button>
-<Button variant="link">Learn more</Button>
-
-<!-- With click handler -->
-<Button onclick={() => console.log('clicked')}>Action</Button>
-``` -->
+  Variants: primary, secondary, ghost, link
+  See Button.stories.svelte for usage examples.
+-->
 
 <button {type} {disabled} class={computedClasses} {onclick} {...props}>
   {@render children?.()}

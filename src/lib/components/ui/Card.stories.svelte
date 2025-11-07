@@ -15,10 +15,6 @@
   });
 </script>
 
-<script>
-  import { dedent } from 'ts-dedent';
-</script>
-
 <!--
   @component Card Stories
 

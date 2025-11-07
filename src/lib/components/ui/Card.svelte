@@ -25,16 +25,8 @@
   Generic card container with rounded corners, border, and shadow.
   Uses Tailwind design tokens for consistent styling across the application.
 
-  @example
-  ```svelte
-  <Card>
-    <h2>Card Title</h2>
-    <p>Card content goes here</p>
-  </Card>
-
-  <!-- With custom classes -->
-<Card class="transition-shadow hover:shadow-lg">Interactive card</Card>
-``` -->
+  See Card.stories.svelte for usage examples.
+-->
 
 <div
   class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800 {className}"
