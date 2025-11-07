@@ -139,3 +139,278 @@
    * 2xl: 1536px - Extra large
    */
 }
+
+/*
+ * Utility Component Patterns
+ * Reusable component classes using @layer components
+ *
+ * These patterns encapsulate commonly repeated styling combinations
+ * found throughout the application (see docs/TAILWIND_AUDIT.md).
+ *
+ * Usage: Apply these classes directly to elements instead of repeating
+ * the same combination of utility classes everywhere.
+ *
+ * Related: #96 - Tailwind CSS audit and setup, #97 - Component refactoring
+ */
+
+@layer components {
+  /* ============================================
+   * CARD COMPONENTS
+   * ============================================
+   * Base card styling used for project cards, stat cards, etc.
+   */
+
+  /* Base card - white background, border, rounded corners, shadow */
+  .card {
+    @apply rounded-lg border border-gray-200 bg-white p-6 shadow-sm;
+    @apply dark:border-gray-700 dark:bg-gray-800;
+  }
+
+  /* Stat card - card with hover effect for interactive stats */
+  .stat-card {
+    @apply card;
+    @apply transition-shadow hover:shadow-md;
+  }
+
+  /* Empty state card - centered content, larger padding */
+  .empty-state {
+    @apply card;
+    @apply p-8 text-center;
+  }
+
+  /* ============================================
+   * SECTION CONTAINERS
+   * ============================================
+   * Container patterns for page sections
+   */
+
+  /* Section wrapper - light background for grouped content */
+  .section {
+    @apply rounded-lg bg-gray-50 p-6;
+    @apply dark:bg-gray-900;
+  }
+
+  /* Section with border - alternative section style */
+  .section-bordered {
+    @apply section;
+    @apply border border-gray-200 dark:border-gray-700;
+  }
+
+  /* ============================================
+   * TYPOGRAPHY PATTERNS
+   * ============================================
+   * Common text styling combinations
+   */
+
+  /* Page title - large, bold, dark text */
+  .page-title {
+    @apply text-3xl font-bold text-gray-900;
+    @apply dark:text-white;
+  }
+
+  /* Section heading - medium, semibold */
+  .section-heading {
+    @apply text-2xl font-semibold text-gray-900;
+    @apply dark:text-white;
+  }
+
+  /* Card title - smaller heading for cards */
+  .card-title {
+    @apply text-lg font-semibold text-gray-900;
+    @apply dark:text-white;
+  }
+
+  /* Stat value - large number display */
+  .stat-value {
+    @apply text-2xl font-bold text-gray-900;
+    @apply dark:text-white;
+  }
+
+  /* Stat label - secondary info below stat */
+  .stat-label {
+    @apply text-sm text-gray-600;
+    @apply dark:text-gray-400;
+  }
+
+  /* Description text - muted paragraph text */
+  .description {
+    @apply text-gray-600;
+    @apply dark:text-gray-400;
+  }
+
+  /* ============================================
+   * BADGE COMPONENTS
+   * ============================================
+   * Label badges for file types, sources, severity, etc.
+   */
+
+  /* Base badge styling */
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  /* File type badges */
+  .badge-filetype {
+    @apply badge;
+    @apply bg-gray-100 text-gray-800;
+    @apply dark:bg-gray-700 dark:text-gray-300;
+  }
+
+  /* Source badge - for "Source" code */
+  .badge-source {
+    @apply badge;
+    @apply bg-success-500/10 text-success-600;
+    @apply dark:bg-success-500/20 dark:text-success-400;
+  }
+
+  /* Third-party badge */
+  .badge-third-party {
+    @apply badge;
+    @apply bg-warning-500/10 text-warning-600;
+    @apply dark:bg-warning-500/20 dark:text-warning-400;
+  }
+
+  /* Severity badges for suggestions */
+  .badge-critical {
+    @apply badge;
+    @apply bg-error-500/10 text-error-600;
+    @apply dark:bg-error-500/20 dark:text-error-400;
+  }
+
+  .badge-warning {
+    @apply badge;
+    @apply bg-warning-500/10 text-warning-600;
+    @apply dark:bg-warning-500/20 dark:text-warning-400;
+  }
+
+  .badge-info {
+    @apply badge;
+    @apply bg-info-500/10 text-info-600;
+    @apply dark:bg-info-500/20 dark:text-info-400;
+  }
+
+  /* Entry type badge */
+  .badge-entry {
+    @apply badge;
+    @apply bg-primary-500/10 text-primary-600;
+    @apply dark:bg-primary-500/20 dark:text-primary-400;
+  }
+
+  /* ============================================
+   * BUTTON COMPONENTS
+   * ============================================
+   * Button styling patterns
+   */
+
+  /* Base button */
+  .btn {
+    @apply inline-flex cursor-pointer items-center justify-center rounded-md px-4 py-2;
+    @apply text-sm font-medium transition-colors;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply btn;
+    @apply bg-primary-600 text-white hover:bg-primary-700;
+    @apply dark:bg-primary-500 dark:hover:bg-primary-600;
+  }
+
+  /* Secondary button */
+  .btn-secondary {
+    @apply btn;
+    @apply border border-gray-300 bg-white text-gray-700 hover:bg-gray-50;
+    @apply dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700;
+  }
+
+  /* Ghost button - transparent with hover */
+  .btn-ghost {
+    @apply btn;
+    @apply text-gray-700 hover:bg-gray-100;
+    @apply dark:text-gray-300 dark:hover:bg-gray-800;
+  }
+
+  /* Link button - looks like a link */
+  .btn-link {
+    @apply inline-flex cursor-pointer items-center text-sm font-medium;
+    @apply text-primary-600 hover:text-primary-700;
+    @apply dark:text-primary-400 dark:hover:text-primary-500;
+  }
+
+  /* ============================================
+   * TABLE COMPONENTS
+   * ============================================
+   * Table styling patterns
+   */
+
+  /* Table container */
+  .table-container {
+    @apply overflow-hidden rounded-lg border border-gray-200;
+    @apply dark:border-gray-700;
+  }
+
+  /* Table header cell */
+  .table-header {
+    @apply bg-gray-50 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700;
+    @apply dark:bg-gray-800 dark:text-gray-300;
+  }
+
+  /* Table data cell */
+  .table-cell {
+    @apply px-6 py-4 text-sm text-gray-900;
+    @apply dark:text-gray-100;
+  }
+
+  /* Table row */
+  .table-row {
+    @apply border-t border-gray-200;
+    @apply dark:border-gray-700;
+  }
+
+  /* Table row with hover */
+  .table-row-hover {
+    @apply table-row;
+    @apply hover:bg-gray-50 dark:hover:bg-gray-800/50;
+  }
+
+  /* ============================================
+   * FORM COMPONENTS
+   * ============================================
+   * Input and select styling
+   */
+
+  /* Text input / Select */
+  .input {
+    @apply w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm;
+    @apply focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500;
+    @apply dark:border-gray-600 dark:bg-gray-800 dark:text-white;
+  }
+
+  /* Search input with icon */
+  .search-input {
+    @apply input;
+    @apply pl-10; /* Space for search icon */
+  }
+
+  /* ============================================
+   * LAYOUT HELPERS
+   * ============================================
+   * Common layout patterns
+   */
+
+  /* Container - max width with centered content */
+  .container-dashboard {
+    @apply mx-auto w-full max-w-7xl px-4 py-6;
+  }
+
+  /* Flex center - common centering pattern */
+  .flex-center {
+    @apply flex items-center justify-center;
+  }
+
+  /* Grid auto-fit - responsive grid that auto-fills */
+  .grid-auto-fill {
+    @apply grid gap-4;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
