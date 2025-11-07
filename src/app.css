@@ -80,14 +80,14 @@
    */
 
   /* Font Sizes */
-  --font-size-xs: 0.75rem;    /* 12px */
-  --font-size-sm: 0.875rem;   /* 14px - Small text, badges */
-  --font-size-base: 1rem;     /* 16px - Body text */
-  --font-size-lg: 1.125rem;   /* 18px - Card titles */
-  --font-size-xl: 1.25rem;    /* 20px - Section headings */
-  --font-size-2xl: 1.5rem;    /* 24px */
-  --font-size-3xl: 1.875rem;  /* 30px - Page titles */
-  --font-size-4xl: 2.25rem;   /* 36px */
+  --font-size-xs: 0.75rem; /* 12px */
+  --font-size-sm: 0.875rem; /* 14px - Small text, badges */
+  --font-size-base: 1rem; /* 16px - Body text */
+  --font-size-lg: 1.125rem; /* 18px - Card titles */
+  --font-size-xl: 1.25rem; /* 20px - Section headings */
+  --font-size-2xl: 1.5rem; /* 24px */
+  --font-size-3xl: 1.875rem; /* 30px - Page titles */
+  --font-size-4xl: 2.25rem; /* 36px */
 
   /* Font Weights */
   --font-weight-normal: 400;
@@ -106,12 +106,12 @@
    * ============================================
    */
 
-  --radius-sm: 0.25rem;   /* 4px - Small elements */
-  --radius-DEFAULT: 0.5rem;  /* 8px - Cards, buttons (current standard) */
-  --radius-md: 0.5rem;    /* 8px */
-  --radius-lg: 0.75rem;   /* 12px - Large cards */
-  --radius-xl: 1rem;      /* 16px */
-  --radius-full: 9999px;  /* Pills, badges */
+  --radius-sm: 0.25rem; /* 4px - Small elements */
+  --radius-DEFAULT: 0.5rem; /* 8px - Cards, buttons (current standard) */
+  --radius-md: 0.5rem; /* 8px */
+  --radius-lg: 0.75rem; /* 12px - Large cards */
+  --radius-xl: 1rem; /* 16px */
+  --radius-full: 9999px; /* Pills, badges */
 
   /* ============================================
    * SHADOWS
