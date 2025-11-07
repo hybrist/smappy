@@ -46,13 +46,17 @@
   --color-primary-700: var(--color-blue-700);
 
   /* Semantic Colors - For badges and states */
-  --color-success-500: #10b981; /* Green */
+  --color-success-400: #34d399; /* Green */
+  --color-success-500: #10b981;
   --color-success-600: #059669;
-  --color-warning-500: #f59e0b; /* Amber */
+  --color-warning-400: #fbbf24; /* Amber */
+  --color-warning-500: #f59e0b;
   --color-warning-600: #d97706;
-  --color-error-500: #ef4444; /* Red */
+  --color-error-400: #f87171; /* Red */
+  --color-error-500: #ef4444;
   --color-error-600: #dc2626;
-  --color-info-500: #3b82f6; /* Blue */
+  --color-info-400: #60a5fa; /* Blue */
+  --color-info-500: #3b82f6;
   --color-info-600: #2563eb;
 
   /* ============================================
@@ -168,14 +172,15 @@
 
   /* Stat card - card with hover effect for interactive stats */
   .stat-card {
-    @apply card;
+    @apply rounded-lg border border-gray-200 bg-white p-6 shadow-sm;
+    @apply dark:border-gray-700 dark:bg-gray-800;
     @apply transition-shadow hover:shadow-md;
   }
 
   /* Empty state card - centered content, larger padding */
   .empty-state {
-    @apply card;
-    @apply p-8 text-center;
+    @apply rounded-lg border border-gray-200 bg-white p-8 text-center shadow-sm;
+    @apply dark:border-gray-700 dark:bg-gray-800;
   }
 
   /* ============================================
@@ -192,7 +197,8 @@
 
   /* Section with border - alternative section style */
   .section-bordered {
-    @apply section;
+    @apply rounded-lg bg-gray-50 p-6;
+    @apply dark:bg-gray-900;
     @apply border border-gray-200 dark:border-gray-700;
   }
 
@@ -251,47 +257,47 @@
 
   /* File type badges */
   .badge-filetype {
-    @apply badge;
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
     @apply bg-gray-100 text-gray-800;
     @apply dark:bg-gray-700 dark:text-gray-300;
   }
 
   /* Source badge - for "Source" code */
   .badge-source {
-    @apply badge;
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
     @apply bg-success-500/10 text-success-600;
     @apply dark:bg-success-500/20 dark:text-success-400;
   }
 
   /* Third-party badge */
   .badge-third-party {
-    @apply badge;
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
     @apply bg-warning-500/10 text-warning-600;
     @apply dark:bg-warning-500/20 dark:text-warning-400;
   }
 
   /* Severity badges for suggestions */
   .badge-critical {
-    @apply badge;
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
     @apply bg-error-500/10 text-error-600;
     @apply dark:bg-error-500/20 dark:text-error-400;
   }
 
   .badge-warning {
-    @apply badge;
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
     @apply bg-warning-500/10 text-warning-600;
     @apply dark:bg-warning-500/20 dark:text-warning-400;
   }
 
   .badge-info {
-    @apply badge;
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
     @apply bg-info-500/10 text-info-600;
     @apply dark:bg-info-500/20 dark:text-info-400;
   }
 
   /* Entry type badge */
   .badge-entry {
-    @apply badge;
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
     @apply bg-primary-500/10 text-primary-600;
     @apply dark:bg-primary-500/20 dark:text-primary-400;
   }
@@ -306,26 +312,32 @@
   .btn {
     @apply inline-flex cursor-pointer items-center justify-center rounded-md px-4 py-2;
     @apply text-sm font-medium transition-colors;
-    @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+    @apply focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none;
   }
 
   /* Primary button */
   .btn-primary {
-    @apply btn;
+    @apply inline-flex cursor-pointer items-center justify-center rounded-md px-4 py-2;
+    @apply text-sm font-medium transition-colors;
+    @apply focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none;
     @apply bg-primary-600 text-white hover:bg-primary-700;
     @apply dark:bg-primary-500 dark:hover:bg-primary-600;
   }
 
   /* Secondary button */
   .btn-secondary {
-    @apply btn;
+    @apply inline-flex cursor-pointer items-center justify-center rounded-md px-4 py-2;
+    @apply text-sm font-medium transition-colors;
+    @apply focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none;
     @apply border border-gray-300 bg-white text-gray-700 hover:bg-gray-50;
     @apply dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700;
   }
 
   /* Ghost button - transparent with hover */
   .btn-ghost {
-    @apply btn;
+    @apply inline-flex cursor-pointer items-center justify-center rounded-md px-4 py-2;
+    @apply text-sm font-medium transition-colors;
+    @apply focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none;
     @apply text-gray-700 hover:bg-gray-100;
     @apply dark:text-gray-300 dark:hover:bg-gray-800;
   }
@@ -351,7 +363,7 @@
 
   /* Table header cell */
   .table-header {
-    @apply bg-gray-50 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700;
+    @apply bg-gray-50 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase;
     @apply dark:bg-gray-800 dark:text-gray-300;
   }
 
@@ -369,7 +381,8 @@
 
   /* Table row with hover */
   .table-row-hover {
-    @apply table-row;
+    @apply border-t border-gray-200;
+    @apply dark:border-gray-700;
     @apply hover:bg-gray-50 dark:hover:bg-gray-800/50;
   }
 
@@ -382,13 +395,15 @@
   /* Text input / Select */
   .input {
     @apply w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm;
-    @apply focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500;
+    @apply focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none;
     @apply dark:border-gray-600 dark:bg-gray-800 dark:text-white;
   }
 
   /* Search input with icon */
   .search-input {
-    @apply input;
+    @apply w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm;
+    @apply focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none;
+    @apply dark:border-gray-600 dark:bg-gray-800 dark:text-white;
     @apply pl-10; /* Space for search icon */
   }
 
