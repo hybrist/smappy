@@ -84,7 +84,7 @@
       _treemapData = data;
       currentLevel = data;
       breadcrumbs = [data];
-      renderTreemap();
+      // renderTreemap() will be called by $effect when containerElement is ready
     } catch (err) {
       console.error('Error loading treemap data:', err);
       error = 'Failed to load treemap data. Please try again.';
@@ -313,7 +313,7 @@
     if (resizeTimeout) clearTimeout(resizeTimeout);
   });
 
-  // Load data and handle resize events
+  // Load data when analysisId or includeSymbols changes
   $effect(() => {
     // Access both dependencies to make effect reactive to changes
     const id = analysisId;
@@ -322,8 +322,17 @@
     if (id) {
       loadTreemapData();
     }
+  });
 
-    // Setup resize listener (only in browser and only once)
+  // Render treemap when container element is available and data is loaded
+  $effect(() => {
+    if (containerElement && _treemapData && !isLoading) {
+      renderTreemap();
+    }
+  });
+
+  // Setup resize listener (only in browser)
+  $effect(() => {
     if (browser && typeof window !== 'undefined') {
       window.addEventListener('resize', handleResize);
 
