@@ -119,6 +119,7 @@ const {
   getSymbolsByModule,
   getDependencyGraph,
   compareAnalyses,
+  getProjectSummaries,
 } = await import('./index.js');
 const { db } = await import('../db/index.js');
 
@@ -137,6 +138,104 @@ beforeEach(async () => {
 });
 
 describe('Query Functions', () => {
+  describe('getProjectSummaries', () => {
+    it('returns project metadata with trend and stale flags', async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2025-01-20T00:00:00Z'));
+
+      try {
+        const [alphaRun1] = await db
+          .insert(schema.analysisRun)
+          .values({
+            projectName: 'alpha-project',
+            bundler: 'vite',
+            createdAt: '2024-12-20T12:00:00Z',
+          })
+          .returning();
+
+        const [alphaRun2] = await db
+          .insert(schema.analysisRun)
+          .values({
+            projectName: 'alpha-project',
+            bundler: 'vite',
+            createdAt: '2025-01-05T08:00:00Z',
+          })
+          .returning();
+
+        const [betaRun] = await db
+          .insert(schema.analysisRun)
+          .values({
+            projectName: 'beta-project',
+            bundler: 'webpack',
+            createdAt: '2025-01-19T09:30:00Z',
+          })
+          .returning();
+
+        await db.insert(schema.module).values({
+          analysisRunId: alphaRun2.id,
+          filePath: 'src/index.js',
+          fileType: 'javascript',
+          originalSize: 100,
+          bundledSize: 80,
+        });
+        await db.insert(schema.bundle).values({
+          analysisRunId: alphaRun1.id,
+          fileName: 'alpha-legacy.js',
+          fileType: 'javascript',
+          size: 1000,
+          gzipSize: 600,
+        });
+        await db.insert(schema.bundle).values({
+          analysisRunId: alphaRun2.id,
+          fileName: 'alpha-main.js',
+          fileType: 'javascript',
+          size: 1500,
+          gzipSize: 900,
+        });
+
+        await db.insert(schema.module).values({
+          analysisRunId: betaRun.id,
+          filePath: 'src/app.js',
+          fileType: 'javascript',
+          originalSize: 120,
+          bundledSize: 110,
+        });
+        await db.insert(schema.bundle).values({
+          analysisRunId: betaRun.id,
+          fileName: 'beta-main.js',
+          fileType: 'javascript',
+          size: 2000,
+          gzipSize: 1200,
+        });
+
+        const summaries = await getProjectSummaries();
+
+        expect(summaries).toHaveLength(2);
+        expect(summaries[0]).toMatchObject({
+          name: 'beta-project',
+          bundler: 'webpack',
+          totalSize: 2000,
+          moduleCount: 1,
+          changePercent: null,
+          isStale: false,
+        });
+
+        expect(summaries[1]).toMatchObject({
+          name: 'alpha-project',
+          bundler: 'vite',
+          totalSize: 1500,
+          moduleCount: 1,
+          isStale: true,
+        });
+
+        expect(summaries[1].changePercent).toBeCloseTo(50, 5);
+        expect(summaries[1].lastAnalyzedAt).toBe('2025-01-05T08:00:00.000Z');
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+
   describe('getLatestAnalysis', () => {
     it('should return null for non-existent project', async () => {
       const result = await getLatestAnalysis('non-existent');

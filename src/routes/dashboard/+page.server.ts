@@ -1,8 +1,8 @@
-import { getAllProjects } from '$lib/server/query/index.js';
+import { getProjectSummaries } from '$lib/server/query/index.js';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
-  const projects = await getAllProjects();
+  const projects = await getProjectSummaries();
 
   return {
     projects,
