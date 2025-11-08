@@ -28,14 +28,14 @@ test.describe('Suggestions Page', () => {
     await page.waitForURL(`**/dashboard/${projectName}/suggestions`, { timeout: 10000 });
 
     // Verify the AI-Powered Suggestions heading is visible
-    await expect(page.getByRole('heading', { name: 'AI-Powered Suggestions', level: 3 })).toBeVisible({
+    await expect(
+      page.getByRole('heading', { name: 'AI-Powered Suggestions', level: 3 }),
+    ).toBeVisible({
       timeout: 5000,
     });
 
     // Verify explanation text is present
-    await expect(
-      page.getByText(/Suggestions are generated automatically using AI/),
-    ).toBeVisible();
+    await expect(page.getByText(/Suggestions are generated automatically using AI/)).toBeVisible();
 
     // Verify "Why don't I see suggestions?" section
     await expect(page.getByRole('heading', { name: "Why don't I see suggestions?" })).toBeVisible();
