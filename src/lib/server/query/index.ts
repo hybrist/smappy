@@ -513,7 +513,40 @@ export async function compareAnalyses(
  *
  * @returns Array of project names
  */
-export async function getAllProjects(): Promise<string[]> {
+type ProjectSummary = {
+  name: string;
+  bundler: string | null;
+  moduleCount: number | null;
+  bundleCount: number | null;
+  totalSize: number | null;
+  totalGzipSize: number | null;
+  lastAnalyzedAt: string | null;
+  changePercent: number | null;
+  isStale: boolean;
+};
+
+const STALE_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000;
+
+function toIsoString(value: unknown): string | null {
+  if (!value) {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+
+  if (typeof value === 'string' || typeof value === 'number') {
+    const date = new Date(value);
+    if (!Number.isNaN(date.getTime())) {
+      return date.toISOString();
+    }
+  }
+
+  return null;
+}
+
+async function fetchUniqueProjectNames(): Promise<string[]> {
   const projects = await db
     .select({ projectName: schema.analysisRun.projectName })
     .from(schema.analysisRun)
@@ -521,6 +554,88 @@ export async function getAllProjects(): Promise<string[]> {
 
   const uniqueProjects = [...new Set(projects.map((p) => p.projectName).filter(Boolean))];
   return uniqueProjects as string[];
+}
+
+export async function getAllProjects(): Promise<string[]> {
+  return fetchUniqueProjectNames();
+}
+
+export async function getProjectSummaries(): Promise<ProjectSummary[]> {
+  const projectNames = await fetchUniqueProjectNames();
+
+  const summaries = await Promise.all(
+    projectNames.map(async (projectName) => {
+      const latestRuns = await db
+        .select({
+          id: schema.analysisRun.id,
+          createdAt: schema.analysisRun.createdAt,
+          bundler: schema.analysisRun.bundler,
+        })
+        .from(schema.analysisRun)
+        .where(eq(schema.analysisRun.projectName, projectName))
+        .orderBy(desc(schema.analysisRun.createdAt), desc(schema.analysisRun.id))
+        .limit(2);
+
+      if (latestRuns.length === 0) {
+        return {
+          name: projectName,
+          bundler: null,
+          moduleCount: null,
+          bundleCount: null,
+          totalSize: null,
+          totalGzipSize: null,
+          lastAnalyzedAt: null,
+          changePercent: null,
+          isStale: false,
+        };
+      }
+
+      const [latestRunRecord, previousRunRecord] = latestRuns;
+      const latestRun = await getAnalysisById(latestRunRecord.id);
+      const previousRun = previousRunRecord ? await getAnalysisById(previousRunRecord.id) : null;
+
+      const latestTotalSize = latestRun?.totalSize ?? null;
+      const previousTotalSize = previousRun?.totalSize ?? null;
+
+      let changePercent: number | null = null;
+      if (
+        latestTotalSize !== null &&
+        previousTotalSize !== null &&
+        previousTotalSize > 0 &&
+        latestTotalSize !== previousTotalSize
+      ) {
+        changePercent = ((latestTotalSize - previousTotalSize) / previousTotalSize) * 100;
+      }
+
+      const lastAnalyzedAt = toIsoString(latestRun?.createdAt ?? latestRunRecord.createdAt ?? null);
+
+      const isStale =
+        lastAnalyzedAt !== null
+          ? Date.now() - new Date(lastAnalyzedAt).getTime() > STALE_THRESHOLD_MS
+          : false;
+
+      return {
+        name: projectName,
+        bundler: latestRun?.bundler ?? latestRunRecord.bundler ?? null,
+        moduleCount: latestRun?.moduleCount ?? null,
+        bundleCount: latestRun?.bundleCount ?? null,
+        totalSize: latestTotalSize,
+        totalGzipSize: latestRun?.totalGzipSize ?? null,
+        lastAnalyzedAt,
+        changePercent,
+        isStale,
+      };
+    }),
+  );
+
+  return summaries.sort((a, b) => {
+    if (a.lastAnalyzedAt === b.lastAnalyzedAt) {
+      return a.name.localeCompare(b.name);
+    }
+    if (a.lastAnalyzedAt === null) return 1;
+    if (b.lastAnalyzedAt === null) return -1;
+    return new Date(b.lastAnalyzedAt).getTime() - new Date(a.lastAnalyzedAt).getTime();
+  });
 }
 
 /**
@@ -855,3 +970,5 @@ export type {
   Chunk,
   TreemapNode,
 } from './types.js';
+
+export type { ProjectSummary };

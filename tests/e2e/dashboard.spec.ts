@@ -28,6 +28,11 @@ test.describe('Dashboard Landing Page', () => {
 
     // Verify project cards are displayed
     await expect(page.getByTestId('project-card')).toHaveCount(2, { timeout: 5000 });
+
+    const firstCard = page.getByTestId('project-card').first();
+    await expect(firstCard.getByTestId('project-card-size')).toBeVisible();
+    await expect(firstCard.getByTestId('project-card-modules')).toContainText('module');
+    await expect(firstCard.getByTestId('project-card-last-analyzed')).toBeVisible();
   });
 
   test('should navigate to project dashboard when clicking project card', async ({ page }) => {
