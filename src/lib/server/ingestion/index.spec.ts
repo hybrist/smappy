@@ -267,6 +267,71 @@ describe('Ingestion Orchestrator', () => {
       expect(JSON.parse(dep.importedSymbols || '[]')).toContain('add');
     });
 
+    it('should resolve extensionless relative imports', async () => {
+      expect.assertions(3);
+
+      const input = createTestIngestionInput();
+      input.modules = input.modules.map((module) =>
+        module.filePath === './src/index.js'
+          ? {
+              ...module,
+              sourceContent: `
+import { add } from './math';
+
+console.log(add(1, 2));
+              `.trim(),
+            }
+          : module,
+      );
+
+      const result = await ingestBundle(input);
+      const dependencies = await db.select().from(schema.dependency).execute();
+      const modules = await db.select().from(schema.module).execute();
+
+      expect(dependencies.length).toBe(1);
+      const dependency = dependencies[0];
+      const importedModule = modules.find((mod) => mod.id === dependency.importedModuleId);
+      expect(importedModule?.filePath).toBe('./src/math.js');
+      expect(result.stats.dependenciesWritten).toBe(1);
+    });
+
+    it('should resolve bare module specifiers to node_modules entries', async () => {
+      expect.assertions(4);
+
+      const input = createTestIngestionInput();
+      input.modules.push({
+        filePath: 'node_modules/react/index.js',
+        sourceContent: 'export default function React() {}',
+        fileType: 'js',
+      });
+      input.chunks[0].moduleIds.push('node_modules/react/index.js');
+
+      input.modules = input.modules.map((module) =>
+        module.filePath === './src/index.js'
+          ? {
+              ...module,
+              sourceContent: `
+import React from 'react';
+import { add } from './math.js';
+
+console.log(add(1, 2), React);
+              `.trim(),
+            }
+          : module,
+      );
+
+      const result = await ingestBundle(input);
+      const dependencies = await db.select().from(schema.dependency).execute();
+      const modules = await db.select().from(schema.module).execute();
+
+      expect(dependencies.length).toBeGreaterThanOrEqual(2);
+      const reactModule = modules.find((mod) => mod.filePath === 'node_modules/react/index.js');
+      expect(reactModule).toBeDefined();
+      const matches = dependencies.filter((dep) => dep.importedModuleId === reactModule?.id);
+      expect(matches.length).toBeGreaterThan(0);
+      expect(result.stats.dependenciesWritten).toBe(dependencies.length);
+    });
+
     it('should compute bundle sizes', async () => {
       expect.assertions(3);
 
