@@ -121,6 +121,7 @@
     {#if projects.length > 0}
       <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" role="list">
         {#each projects as project (project.name)}
+          {@const trend = getTrend(project.changePercent)}
           <button
             class="block w-full cursor-pointer"
             onclick={() => handleProjectSelect(project.name)}
@@ -150,7 +151,6 @@
                 </div>
 
                 <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
-                  {@const trend = getTrend(project.changePercent)}
                   <span
                     class="text-gray-500 dark:text-gray-400"
                     data-testid="project-card-last-analyzed"
