@@ -1,9 +1,108 @@
 <script lang="ts">
   import { page } from '$app/stores';
+  import { goto } from '$app/navigation';
+  import { onMount } from 'svelte';
+  import { setKeyboardShortcutsContext } from '$lib/utils/keyboard-shortcuts-store.svelte';
+  import KeyboardShortcutsModal from '$lib/components/ui/KeyboardShortcutsModal.svelte';
 
   let { children } = $props();
 
   const currentPath = $derived($page.url.pathname);
+  const projectName = $derived($page.params.projectName);
+
+  const manager = setKeyboardShortcutsContext();
+
+  onMount(() => {
+    // Register navigation shortcuts
+    manager.register({
+      key: '1',
+      description: 'Go to Overview',
+      category: 'Navigation',
+      handler: () => {
+        if (projectName) goto(`/dashboard/${projectName}`);
+      },
+    });
+
+    manager.register({
+      key: '2',
+      description: 'Go to Dependencies',
+      category: 'Navigation',
+      handler: () => {
+        if (projectName) goto(`/dashboard/${projectName}/dependencies`);
+      },
+    });
+
+    manager.register({
+      key: '3',
+      description: 'Go to Compare',
+      category: 'Navigation',
+      handler: () => {
+        if (projectName) goto(`/dashboard/${projectName}/compare`);
+      },
+    });
+
+    manager.register({
+      key: '4',
+      description: 'Go to Suggestions',
+      category: 'Navigation',
+      handler: () => {
+        if (projectName) goto(`/dashboard/${projectName}/suggestions`);
+      },
+    });
+
+    manager.register({
+      key: 'g+d',
+      description: 'Go to Dashboard',
+      category: 'Navigation',
+      displayKey: 'G D',
+      handler: () => {
+        goto('/dashboard');
+      },
+    });
+
+    manager.register({
+      key: 'g+h',
+      description: 'Go to Home',
+      category: 'Navigation',
+      displayKey: 'G H',
+      handler: () => {
+        goto('/');
+      },
+    });
+
+    manager.register({
+      key: '?',
+      description: 'Show keyboard shortcuts',
+      category: 'Help',
+      displayKey: '?',
+      handler: () => {
+        manager.toggleHelpModal();
+      },
+    });
+
+    manager.register({
+      key: 'esc',
+      description: 'Close modal / Clear focus',
+      category: 'General',
+      displayKey: 'Esc',
+      handler: () => {
+        if (manager.isHelpModalOpen) {
+          manager.closeHelpModal();
+        }
+      },
+    });
+
+    // Global keyboard event listener
+    const handleKeyDown = (event: KeyboardEvent) => {
+      manager.handleKeyDown(event);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  });
 </script>
 
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -128,4 +227,5 @@
       </div>
     {/if}
   </main>
+  <KeyboardShortcutsModal />
 </div>
