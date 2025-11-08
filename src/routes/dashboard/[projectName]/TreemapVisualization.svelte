@@ -113,7 +113,9 @@
       .style('font-family', 'system-ui, -apple-system, sans-serif')
       .style('font-size', '12px');
 
-    // Create hierarchy from current level
+    // Create hierarchy from current level's children
+    // If currentLevel is the root with only directories, we want to show all modules
+    // So we use leaves() to get all actual modules, not intermediate directory nodes
     const hierarchy = d3
       .hierarchy(currentLevel)
       .sum((d) => getNodeValue(d))
@@ -128,10 +130,14 @@
 
     const root = treemapLayout(hierarchy);
 
-    // Create cells for each node
+    // For the root level, show all module leaves to avoid white space from directory structure
+    // For drill-down levels, show direct children
+    const hasDirectModules = currentLevel.children?.some((c) => c.moduleId !== undefined);
+    const nodes = hasDirectModules ? root.children || [] : root.leaves();
+    // Create cells for the determined nodes
     const cell = svg
       .selectAll('g')
-      .data(root.leaves())
+      .data(nodes)
       .join('g')
       .attr('transform', (d) => `translate(${d.x0},${d.y0})`);
 
