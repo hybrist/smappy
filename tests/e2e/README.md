@@ -45,8 +45,25 @@ The tests use Playwright to:
 ## Environment Variables
 
 - `DATABASE_URL` - Set to `:memory:` for tests to use in-memory SQLite database
+- `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD` - Set to `1` to use system Chrome instead of downloading Playwright's bundled browser (useful in sandboxed environments)
+
+## Sandbox/Restricted Environments
+
+If running in a sandboxed environment where Playwright cannot download browsers:
+
+```bash
+# Use system Chrome browser instead of downloading
+PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 pnpm test:e2e
+```
+
+The configuration automatically:
+
+- Uses the system's installed Chrome browser when `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD` is set
+- Uses a list reporter in CI mode instead of opening an interactive HTML report server
+- Prevents Playwright from opening the HTML report automatically in CI environments
 
 ## Known Issues
 
 - Tests may timeout in some CI environments due to browser installation issues
-- The tests require chromium browser to be installed via `npx playwright install chromium`
+  - Solution: Set `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1` to use system Chrome
+- The tests require chromium browser to be installed via `npx playwright install chromium` (unless using system browser)
