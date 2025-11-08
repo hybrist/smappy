@@ -84,7 +84,7 @@
       _treemapData = data;
       currentLevel = data;
       breadcrumbs = [data];
-      // renderTreemap() will be called by $effect when containerElement is ready
+      // renderTreemap() will be called by $effect when container is ready and data is loaded
     } catch (err) {
       console.error('Error loading treemap data:', err);
       error = 'Failed to load treemap data. Please try again.';
