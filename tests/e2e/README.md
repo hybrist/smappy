@@ -57,6 +57,7 @@ PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 pnpm test:e2e
 ```
 
 The configuration automatically:
+
 - Uses the system's installed Chrome browser when `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD` is set
 - Uses a list reporter in CI mode instead of opening an interactive HTML report server
 - Prevents Playwright from opening the HTML report automatically in CI environments
