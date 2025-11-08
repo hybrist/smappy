@@ -90,7 +90,8 @@ export class ViteAdapter extends BundlerAdapter {
     outputDir: string,
     _errors: string[],
   ): BundlerModule[] {
-    const modules: BundlerModule[] = [];
+    // Use a Map to deduplicate modules (same module can appear in multiple chunks)
+    const moduleMap = new Map<string, BundlerModule>();
 
     for (const [id, chunkOrAsset] of Object.entries(bundle)) {
       // Only process chunks (not assets)
@@ -139,32 +140,38 @@ export class ViteAdapter extends BundlerAdapter {
             // Source not available, that's okay
           }
 
-          modules.push({
-            identifier: moduleId,
-            name: moduleId,
-            size: info.renderedLength,
-            source,
-            dependencies: [...new Set(dependencies)], // Deduplicate
-            reasons: chunk.isEntry
-              ? [{ type: 'entry', module: moduleId }]
-              : [{ type: 'import', module: moduleId }],
-          });
+          // Only add if not already in map (deduplication)
+          if (!moduleMap.has(moduleId)) {
+            moduleMap.set(moduleId, {
+              identifier: moduleId,
+              name: moduleId,
+              size: info.renderedLength,
+              source,
+              dependencies: [...new Set(dependencies)], // Deduplicate
+              reasons: chunk.isEntry
+                ? [{ type: 'entry', module: moduleId }]
+                : [{ type: 'import', module: moduleId }],
+            });
+          }
         }
       }
 
       // Also include the chunk itself as a module if it's an entry
       if (chunk.isEntry) {
-        modules.push({
-          identifier: chunk.facadeModuleId || id,
-          name: chunk.name || id,
-          size: chunk.code?.length || 0,
-          dependencies: [...(chunk.imports || []), ...(chunk.dynamicImports || [])],
-          reasons: [{ type: 'entry', module: chunk.facadeModuleId || id }],
-        });
+        const entryId = chunk.facadeModuleId || id;
+        if (!moduleMap.has(entryId)) {
+          moduleMap.set(entryId, {
+            identifier: entryId,
+            name: chunk.name || id,
+            size: chunk.code?.length || 0,
+            dependencies: [...(chunk.imports || []), ...(chunk.dynamicImports || [])],
+            reasons: [{ type: 'entry', module: entryId }],
+          });
+        }
       }
     }
 
-    return modules;
+    return Array.from(moduleMap.values());
   }
 
   /**
