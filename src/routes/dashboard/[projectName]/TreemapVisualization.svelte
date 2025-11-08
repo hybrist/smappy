@@ -84,7 +84,7 @@
       _treemapData = data;
       currentLevel = data;
       breadcrumbs = [data];
-      renderTreemap();
+      // renderTreemap() will be called by $effect when container is ready and data is loaded
     } catch (err) {
       console.error('Error loading treemap data:', err);
       error = 'Failed to load treemap data. Please try again.';
@@ -113,7 +113,9 @@
       .style('font-family', 'system-ui, -apple-system, sans-serif')
       .style('font-size', '12px');
 
-    // Create hierarchy from current level
+    // Create hierarchy from current level's children
+    // If currentLevel is the root with only directories, we want to show all modules
+    // So we use leaves() to get all actual modules, not intermediate directory nodes
     const hierarchy = d3
       .hierarchy(currentLevel)
       .sum((d) => getNodeValue(d))
@@ -128,10 +130,14 @@
 
     const root = treemapLayout(hierarchy);
 
-    // Create cells for each node
+    // For the root level, show all module leaves to avoid white space from directory structure
+    // For drill-down levels, show direct children
+    const hasDirectModules = currentLevel.children?.some((c) => c.moduleId !== undefined);
+    const nodes = hasDirectModules ? root.children || [] : root.leaves();
+    // Create cells for the determined nodes
     const cell = svg
       .selectAll('g')
-      .data(root.leaves())
+      .data(nodes)
       .join('g')
       .attr('transform', (d) => `translate(${d.x0},${d.y0})`);
 
@@ -313,7 +319,7 @@
     if (resizeTimeout) clearTimeout(resizeTimeout);
   });
 
-  // Load data and handle resize events
+  // Load data when analysisId or includeSymbols changes
   $effect(() => {
     // Access both dependencies to make effect reactive to changes
     const id = analysisId;
@@ -322,8 +328,17 @@
     if (id) {
       loadTreemapData();
     }
+  });
 
-    // Setup resize listener (only in browser and only once)
+  // Render treemap when container element is available and data is loaded
+  $effect(() => {
+    if (containerElement && _treemapData && !isLoading) {
+      renderTreemap();
+    }
+  });
+
+  // Setup resize listener (only in browser)
+  $effect(() => {
     if (browser && typeof window !== 'undefined') {
       window.addEventListener('resize', handleResize);
 
