@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { page } from '$app/stores';
 
   let { projectName, analysisHistory, selectedAnalysisId } = $props();
 
@@ -7,9 +8,7 @@
     const target = event.target as HTMLSelectElement;
     const analysisId = target.value;
     if (analysisId) {
-      goto(
-        `/dashboard/${encodeURIComponent(projectName)}?analysisId=${encodeURIComponent(analysisId)}`,
-      );
+      goto(`${$page.url.pathname}?analysisId=${encodeURIComponent(analysisId)}`);
     }
   }
 
