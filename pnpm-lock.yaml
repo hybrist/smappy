@@ -6,7 +6,9 @@ settings:
 
 importers:
 
-  .:
+  .: {}
+
+  apps/web-sv:
     dependencies:
       '@types/d3':
         specifier: ^7.4.3

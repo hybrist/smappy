@@ -5,6 +5,14 @@ yarn.lock
 bun.lock
 bun.lockb
 
+# Build Output
+.svelte-kit
+build
+
+# Generated Code
+src/lib/paraglide
+project.inlang
+
 # Miscellaneous
 /static/
 /drizzle/
