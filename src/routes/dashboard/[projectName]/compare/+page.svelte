@@ -13,6 +13,9 @@
   const analysisHistory = $derived(data.analysisHistory);
   const baseId = $derived(data.baseId);
   const compareId = $derived(data.compareId);
+  const hasEnoughAnalyses = $derived(data.hasEnoughAnalyses);
+  const requiredAnalyses = 2;
+  const missingAnalyses = $derived(Math.max(0, requiredAnalyses - analysisHistory.length));
 
   function formatBytes(bytes: number): string {
     if (bytes === 0) return '0 B';
@@ -54,45 +57,51 @@
     </div>
     <PageHeader title="Analysis Comparison" />
 
-    <div class="analysis-selector">
-      <div class="selector-group">
-        <label for="base-select">Base Analysis</label>
-        <select
-          id="base-select"
-          value={baseId}
-          onchange={(e) => handleComparisonChange(parseInt(e.currentTarget.value), compareId)}
-        >
-          {#each analysisHistory as analysis (analysis.id)}
-            <option value={analysis.id}>
-              {new Date(analysis.createdAt).toLocaleString()} - {formatBytes(
-                analysis.totalSize ?? 0,
-              )}
-            </option>
-          {/each}
-        </select>
+    {#if hasEnoughAnalyses && comparison}
+      <div class="analysis-selector">
+        <div class="selector-group">
+          <label for="base-select">Base Analysis</label>
+          <select
+            id="base-select"
+            value={baseId ?? undefined}
+            onchange={(e) => {
+              if (compareId == null) return;
+              handleComparisonChange(parseInt(e.currentTarget.value), compareId);
+            }}
+          >
+            {#each analysisHistory as analysis (analysis.id)}
+              <option value={analysis.id}>
+                {new Date(analysis.createdAt).toLocaleString()} - {formatBytes(
+                  analysis.totalSize ?? 0,
+                )}
+              </option>
+            {/each}
+          </select>
+        </div>
+
+        <div class="selector-arrow">→</div>
+
+        <div class="selector-group">
+          <label for="compare-select">Compare Analysis</label>
+          <select
+            id="compare-select"
+            value={compareId ?? undefined}
+            onchange={(e) => {
+              if (baseId == null) return;
+              handleComparisonChange(baseId, parseInt(e.currentTarget.value));
+            }}
+          >
+            {#each analysisHistory as analysis (analysis.id)}
+              <option value={analysis.id}>
+                {new Date(analysis.createdAt).toLocaleString()} - {formatBytes(
+                  analysis.totalSize ?? 0,
+                )}
+              </option>
+            {/each}
+          </select>
+        </div>
       </div>
 
-      <div class="selector-arrow">→</div>
-
-      <div class="selector-group">
-        <label for="compare-select">Compare Analysis</label>
-        <select
-          id="compare-select"
-          value={compareId}
-          onchange={(e) => handleComparisonChange(baseId, parseInt(e.currentTarget.value))}
-        >
-          {#each analysisHistory as analysis (analysis.id)}
-            <option value={analysis.id}>
-              {new Date(analysis.createdAt).toLocaleString()} - {formatBytes(
-                analysis.totalSize ?? 0,
-              )}
-            </option>
-          {/each}
-        </select>
-      </div>
-    </div>
-
-    {#if comparison}
       <!-- Summary Statistics -->
       <section class="stats-section" aria-label="Comparison summary">
         <StatCard
@@ -214,6 +223,33 @@
             </div>
           </div>
         {/if}
+      </section>
+    {:else}
+      <section class="empty-state" aria-live="polite">
+        <div class="empty-state-content">
+          <h2>
+            {hasEnoughAnalyses ? 'Comparison unavailable' : 'More analysis runs needed'}
+          </h2>
+          <p>
+            Generate more analysis runs to enable comparison.
+            {!hasEnoughAnalyses
+              ? ` (${analysisHistory.length} of ${requiredAnalyses} complete)`
+              : ''}
+          </p>
+          {#if !hasEnoughAnalyses}
+            <p class="empty-state-secondary">
+              Run Smappy {missingAnalyses === 1 ? 'one more time' : `${missingAnalyses} more times`}
+              for this project so we have something to compare.
+            </p>
+          {:else}
+            <p class="empty-state-secondary">
+              We could not load the selected comparison. Try selecting different analyses.
+            </p>
+          {/if}
+          <div class="empty-state-actions">
+            <a class="back-link" href={`/dashboard/${projectName}`}>Back to Overview</a>
+          </div>
+        </div>
       </section>
     {/if}
   </div>
@@ -482,6 +518,78 @@
   @media (prefers-color-scheme: dark) {
     .more-items {
       color: #9ca3af;
+    }
+  }
+
+  .empty-state {
+    margin-top: 2rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    background-color: #ffffff;
+    text-align: center;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .empty-state {
+      border-color: #374151;
+      background-color: #1f2937;
+    }
+  }
+
+  .empty-state-content h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.75rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .empty-state-content h2 {
+      color: #f9fafb;
+    }
+  }
+
+  .empty-state-content p {
+    color: #4b5563;
+    margin-bottom: 0.5rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .empty-state-content p {
+      color: #d1d5db;
+    }
+  }
+
+  .empty-state-secondary {
+    font-size: 0.95rem;
+  }
+
+  .empty-state-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: center;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: 9999px;
+    background-color: #0f172a;
+    color: #ffffff;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    opacity: 0.9;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .back-link {
+      background-color: #6366f1;
     }
   }
 </style>
