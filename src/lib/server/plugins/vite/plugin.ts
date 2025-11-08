@@ -24,6 +24,8 @@ export interface VitePluginOptions extends BundlerPluginOptions {
   buildOutputDir?: string;
   /** Whether to handle SSR builds separately */
   handleSSR?: boolean;
+  /** Enable debug logging */
+  debug?: boolean;
 }
 
 // ============================================================================
@@ -45,6 +47,7 @@ export function viteBundleAnalysisPlugin(
 
   let rootDir: string = process.cwd();
   let outputDir: string = 'dist';
+  let isSsrBuild: boolean = false;
 
   return {
     name: 'vite-bundle-analysis',
@@ -56,6 +59,20 @@ export function viteBundleAnalysisPlugin(
     configResolved(resolvedConfig) {
       rootDir = resolvedConfig.root;
       outputDir = buildOutputDir || resolvedConfig.build.outDir || 'dist';
+      // Detect SSR builds - check both the ssr flag and the output directory
+      // SvelteKit uses .svelte-kit/output/server for SSR builds
+      isSsrBuild =
+        resolvedConfig.build.ssr === true ||
+        outputDir.includes('/server') ||
+        outputDir.includes('\\server');
+
+      if (options.debug) {
+        console.log('[Vite Bundle Analysis] configResolved:', {
+          outputDir,
+          'build.ssr': resolvedConfig.build.ssr,
+          isSsrBuild,
+        });
+      }
     },
 
     /**
@@ -63,12 +80,29 @@ export function viteBundleAnalysisPlugin(
      * This hook is called for both client and SSR builds
      */
     async writeBundle(_options, bundle) {
+      if (options.debug) {
+        console.log('[Vite Bundle Analysis] writeBundle called:', {
+          isSsrBuild,
+          handleSSR: options.handleSSR,
+          willSkip: isSsrBuild && !options.handleSSR,
+          outputDir,
+        });
+      }
+
+      // Skip SSR builds unless explicitly enabled
+      if (isSsrBuild && !options.handleSSR) {
+        if (options.debug) {
+          console.log('[Vite Bundle Analysis] Skipping SSR build');
+        }
+        return;
+      }
+
       const currentBundle = bundle;
 
       // Vite handles SSR as a separate build, so we process each bundle independently
       // We can detect SSR builds by checking if this is called during SSR build
       // For now, we'll process all builds and let the adapter handle the distinction
-      const isSSR = false; // SSR detection would require Vite-specific context
+      const isSSR = isSsrBuild;
 
       try {
         // Create adapter instance
@@ -107,7 +141,7 @@ export function viteBundleAnalysisPlugin(
             );
           } catch (error) {
             console.error('[Vite Bundle Analysis] Failed to ingest bundles:', error);
-            if (config?.debug) {
+            if (options.debug) {
               console.error(error);
             }
           }
@@ -116,7 +150,7 @@ export function viteBundleAnalysisPlugin(
         // Extraction complete
       } catch (error) {
         console.error('[Vite Bundle Analysis] Failed to analyze bundle:', error);
-        if (config?.debug) {
+        if (options.debug) {
           console.error(error);
         }
       }

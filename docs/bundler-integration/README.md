@@ -14,9 +14,10 @@ The bundle analysis system uses a plugin-based architecture that normalizes bund
 
 ### Bundler-Specific APIs
 
-- **[WEBPACK.md](./WEBPACK.md)** - Webpack plugin API, hooks, and integration guide
+- **[SVELTEKIT.md](./SVELTEKIT.md)** - SvelteKit bundle analysis integration guide (⭐ Start here if using SvelteKit!)
 - **[VITE.md](./VITE.md)** - Vite plugin API (based on Rollup) and integration guide
 - **[ROLLUP.md](./ROLLUP.md)** - Rollup plugin API and integration guide
+- **[WEBPACK.md](./WEBPACK.md)** - Webpack plugin API, hooks, and integration guide
 - **[ANGULAR.md](./ANGULAR.md)** - Angular CLI builder API and integration guide
 - **[NEXTJS.md](./NEXTJS.md)** - Next.js webpack configuration and build hooks
 
