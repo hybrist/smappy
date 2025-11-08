@@ -194,7 +194,7 @@
       <EmptyState
         data-testid="empty-state-no-projects"
         title="No projects found"
-        description="Run an analysis to get started."
+        description="Run an analysis to get started. Press ? to view keyboard shortcuts."
       />
     {/if}
   </div>

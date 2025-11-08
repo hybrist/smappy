@@ -111,13 +111,27 @@
     aria-label="Dashboard navigation"
   >
     <div class="border-b border-gray-200 px-4 py-3 dark:border-gray-700">
-      <a
-        href="/dashboard"
-        class="inline-block transition-opacity hover:opacity-80"
-        aria-label="Smappy - Bundle Analyzer"
-      >
-        <img src="/logo.svg" alt="Smappy" class="block h-12 w-auto" />
-      </a>
+      <div class="flex items-center justify-between">
+        <a
+          href="/dashboard"
+          class="inline-block transition-opacity hover:opacity-80"
+          aria-label="Smappy - Bundle Analyzer"
+        >
+          <img src="/logo.svg" alt="Smappy" class="block h-12 w-auto" />
+        </a>
+        <button
+          class="flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+          onclick={() => manager.toggleHelpModal()}
+          type="button"
+          title="Show keyboard shortcuts"
+        >
+          <span>Shortcuts</span>
+          <kbd
+            class="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-semibold text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+            >?</kbd
+          >
+        </button>
+      </div>
     </div>
     <ul class="flex gap-6 overflow-x-auto px-4 py-2 sm:gap-6" role="list">
       <li>
@@ -130,6 +144,7 @@
           aria-current={currentPath === `/dashboard/${$page.params.projectName}`
             ? 'page'
             : undefined}
+          title="Overview (Press 1)"
         >
           Overview
         </a>
@@ -172,6 +187,7 @@
           )
             ? 'page'
             : undefined}
+          title="Dependencies (Press 2)"
         >
           Dependencies
         </a>
@@ -192,6 +208,7 @@
           aria-current={currentPath.startsWith(`/dashboard/${$page.params.projectName}/compare`)
             ? 'page'
             : undefined}
+          title="Compare (Press 3)"
         >
           Compare
         </a>
@@ -212,6 +229,7 @@
           aria-current={currentPath.startsWith(`/dashboard/${$page.params.projectName}/suggestions`)
             ? 'page'
             : undefined}
+          title="Suggestions (Press 4)"
         >
           Suggestions
         </a>
