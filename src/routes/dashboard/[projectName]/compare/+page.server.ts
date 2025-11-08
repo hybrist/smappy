@@ -14,36 +14,36 @@ export const load: PageServerLoad = async ({ params, url }) => {
 
   // Get analysis history for the project
   const analysisHistory = await getAnalysisHistory(projectName);
+  const hasEnoughAnalyses = analysisHistory.length >= 2;
 
-  if (analysisHistory.length < 2) {
-    error(400, 'At least two analysis runs are required for comparison');
-  }
+  let baseId: number | null = null;
+  let compareId: number | null = null;
+  let comparison: Awaited<ReturnType<typeof compareAnalyses>> | null = null;
 
-  // Get analysis IDs from query parameters
-  const baseIdParam = url.searchParams.get('baseId');
-  const compareIdParam = url.searchParams.get('compareId');
+  if (hasEnoughAnalyses) {
+    // Get analysis IDs from query parameters
+    const baseIdParam = url.searchParams.get('baseId');
+    const compareIdParam = url.searchParams.get('compareId');
 
-  let baseId: number;
-  let compareId: number;
+    if (baseIdParam && compareIdParam) {
+      baseId = parseInt(baseIdParam, 10);
+      compareId = parseInt(compareIdParam, 10);
 
-  if (baseIdParam && compareIdParam) {
-    baseId = parseInt(baseIdParam, 10);
-    compareId = parseInt(compareIdParam, 10);
-
-    if (isNaN(baseId) || isNaN(compareId)) {
-      error(400, 'Invalid analysis IDs');
+      if (isNaN(baseId) || isNaN(compareId)) {
+        error(400, 'Invalid analysis IDs');
+      }
+    } else {
+      // Default to comparing the two most recent analyses
+      baseId = analysisHistory[1].id; // Older analysis
+      compareId = analysisHistory[0].id; // Newer analysis
     }
-  } else {
-    // Default to comparing the two most recent analyses
-    baseId = analysisHistory[1].id; // Older analysis
-    compareId = analysisHistory[0].id; // Newer analysis
-  }
 
-  // Fetch comparison data
-  const comparison = await compareAnalyses(baseId, compareId);
+    // Fetch comparison data
+    comparison = await compareAnalyses(baseId, compareId);
 
-  if (!comparison) {
-    error(404, 'Analysis runs not found');
+    if (!comparison) {
+      error(404, 'Analysis runs not found');
+    }
   }
 
   return {
@@ -53,5 +53,6 @@ export const load: PageServerLoad = async ({ params, url }) => {
     comparison,
     baseId,
     compareId,
+    hasEnoughAnalyses,
   };
 };
