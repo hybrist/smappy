@@ -37,6 +37,26 @@ You can preview the production build with `npm run preview`.
 
 > To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
 
+## Keyboard Shortcuts
+
+Smappy includes keyboard shortcuts for power users to navigate quickly:
+
+### Navigation
+
+- `1` - Go to Overview tab
+- `2` - Go to Dependencies tab
+- `3` - Go to Compare tab
+- `4` - Go to Suggestions tab
+- `G` then `D` - Go to Dashboard home
+- `G` then `H` - Go to Home
+
+### Help
+
+- `?` - Show keyboard shortcuts help modal
+- `Esc` - Close modals / Clear focus
+
+Press `?` while using the dashboard to see all available shortcuts.
+
 ## Contributing
 
 See [`docs/CONTRIBUTING.md`](./docs/CONTRIBUTING.md) for the complete contributor workflow, tooling setup, and pull request checklist.
