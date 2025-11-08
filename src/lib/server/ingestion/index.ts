@@ -4,6 +4,7 @@
  */
 
 import type { BundleInput, ChunkInput, ModuleInput, IngestionOptions } from './types/index.js';
+import { posix as pathPosix } from 'node:path';
 import type {
   IngestionData,
   IngestionWriteResult,
@@ -298,7 +299,8 @@ async function buildDependencies(
   errors: string[],
 ): Promise<DependencyRelationship[]> {
   const dependencies: DependencyRelationship[] = [];
-  const moduleMap = new Map(modules.map((m) => [m.filePath, m]));
+  const moduleLookup = createModuleLookup(modules);
+  const importerLookup = new Map(modules.map((m) => [normalizeModulePath(m.filePath), m.filePath]));
 
   for (const module of modules) {
     try {
@@ -309,18 +311,15 @@ async function buildDependencies(
 
       // Convert graph dependencies to database format
       for (const dep of graph.dependencies) {
-        // Resolve target path relative to importing module
-        const targetPath = resolveRelativePath(module.filePath, dep.target);
-        const targetModule = moduleMap.get(targetPath);
+        const resolvedPath = resolveImportedModulePath(module.filePath, dep.target, moduleLookup);
 
-        if (!targetModule) {
-          // Skip unresolved dependencies (external modules, etc.)
+        if (!resolvedPath) {
           continue;
         }
 
         dependencies.push({
-          importerPath: module.filePath,
-          importedPath: targetPath,
+          importerPath: importerLookup.get(normalizeModulePath(module.filePath)) ?? module.filePath,
+          importedPath: resolvedPath,
           type: dep.type === 'dynamic-import' ? 'dynamic' : 'static',
           importedSymbols: dep.importedNames,
         });
@@ -334,32 +333,239 @@ async function buildDependencies(
 }
 
 /**
- * Resolve a relative import path against the importing module's path
+ * Resolve a module specifier to a module path known to ingestion
  */
-function resolveRelativePath(fromPath: string, importPath: string): string {
-  // If not a relative import, return as-is
-  if (!importPath.startsWith('./') && !importPath.startsWith('../')) {
-    return importPath;
-  }
+function resolveImportedModulePath(
+  importerPath: string,
+  rawSpecifier: string,
+  moduleLookup: Map<string, string>,
+): string | null {
+  const normalizedImporter = normalizeModulePath(importerPath);
+  const candidateKeys = createSpecifierCandidates(normalizedImporter, rawSpecifier);
 
-  // Get directory of importing file
-  const fromParts = fromPath.split('/');
-  fromParts.pop(); // Remove filename
-
-  // Process import path
-  const importParts = importPath.split('/');
-
-  for (const part of importParts) {
-    if (part === '.') {
-      continue;
-    } else if (part === '..') {
-      fromParts.pop();
-    } else {
-      fromParts.push(part);
+  for (const key of candidateKeys) {
+    const resolved = moduleLookup.get(key);
+    if (resolved) {
+      return resolved;
     }
   }
 
-  return fromParts.join('/');
+  return null;
+}
+
+const SUPPORTED_EXTENSIONS = [
+  '.js',
+  '.jsx',
+  '.ts',
+  '.tsx',
+  '.mjs',
+  '.cjs',
+  '.json',
+  '.svelte',
+  '.css',
+];
+
+function createModuleLookup(modules: ModuleInput[]): Map<string, string> {
+  const lookup = new Map<string, string>();
+
+  for (const module of modules) {
+    const normalized = normalizeModulePath(module.filePath);
+    addPathVariants(lookup, normalized, module.filePath);
+
+    if (normalized.startsWith('node_modules/')) {
+      const withoutPrefix = normalized.slice('node_modules/'.length);
+      addPathVariants(lookup, withoutPrefix, module.filePath);
+
+      const packageName = extractPackageNameFromNodeModulesPath(withoutPrefix);
+      if (packageName) {
+        addLookupKey(lookup, packageName, module.filePath);
+      }
+    }
+  }
+
+  return lookup;
+}
+
+function addPathVariants(
+  lookup: Map<string, string>,
+  normalizedPath: string,
+  actualPath: string,
+): void {
+  addLookupKey(lookup, normalizedPath, actualPath);
+
+  const withoutDot = stripLeadingDot(normalizedPath);
+  addLookupKey(lookup, withoutDot, actualPath);
+  addLookupKey(lookup, addDotPrefix(withoutDot), actualPath);
+
+  const withoutExt = stripExtension(normalizedPath);
+  addLookupKey(lookup, withoutExt, actualPath);
+
+  const withoutDotExt = stripLeadingDot(withoutExt);
+  addLookupKey(lookup, withoutDotExt, actualPath);
+  addLookupKey(lookup, addDotPrefix(withoutDotExt), actualPath);
+
+  const indexBase = removeIndexFile(normalizedPath);
+  if (indexBase) {
+    addLookupKey(lookup, indexBase, actualPath);
+    addLookupKey(lookup, stripLeadingDot(indexBase), actualPath);
+    addLookupKey(lookup, addDotPrefix(stripLeadingDot(indexBase)), actualPath);
+    const indexWithoutExt = stripExtension(indexBase);
+    addLookupKey(lookup, indexWithoutExt, actualPath);
+    addLookupKey(lookup, stripLeadingDot(indexWithoutExt), actualPath);
+    addLookupKey(lookup, addDotPrefix(stripLeadingDot(indexWithoutExt)), actualPath);
+  }
+}
+
+function addLookupKey(
+  lookup: Map<string, string>,
+  key: string | null | undefined,
+  value: string,
+): void {
+  if (!key) {
+    return;
+  }
+
+  const normalizedKey = normalizeSpecifier(key);
+  if (!normalizedKey) {
+    return;
+  }
+
+  if (!lookup.has(normalizedKey)) {
+    lookup.set(normalizedKey, value);
+  }
+}
+
+function normalizeModulePath(pathValue: string): string {
+  const normalized = normalizeSpecifier(pathValue);
+  return normalized.startsWith('../') || normalized.startsWith('./')
+    ? normalized
+    : normalized.replace(/^\.\/+/, '');
+}
+
+function normalizeSpecifier(specifier: string): string {
+  return pathPosix.normalize(specifier.replace(/\\/g, '/'));
+}
+
+function stripLeadingDot(pathValue: string): string {
+  return pathValue.startsWith('./') ? pathValue.slice(2) : pathValue;
+}
+
+function stripExtension(pathValue: string): string {
+  const ext = pathPosix.extname(pathValue);
+  if (!ext) {
+    return pathValue;
+  }
+  return pathValue.slice(0, -ext.length);
+}
+
+function addDotPrefix(pathValue: string): string | null {
+  if (
+    !pathValue ||
+    pathValue.startsWith('./') ||
+    pathValue.startsWith('../') ||
+    pathValue.startsWith('/')
+  ) {
+    return null;
+  }
+  return `./${pathValue}`;
+}
+
+function removeIndexFile(pathValue: string): string | null {
+  const match = pathValue.match(/^(.*)\/index\.[^/]+$/);
+  return match ? match[1] : null;
+}
+
+function extractPackageNameFromNodeModulesPath(pathValue: string): string | null {
+  if (!pathValue) {
+    return null;
+  }
+
+  const parts = pathValue.split('/');
+  if (parts.length === 0) {
+    return null;
+  }
+
+  if (parts[0].startsWith('@') && parts.length >= 2) {
+    return `${parts[0]}/${parts[1]}`;
+  }
+
+  return parts[0] || null;
+}
+
+function createSpecifierCandidates(importerPath: string, target: string): string[] {
+  const candidates = new Set<string>();
+  const importerDir = pathPosix.dirname(importerPath);
+  const isRelative = target.startsWith('./') || target.startsWith('../');
+  const isAbsolute = target.startsWith('/');
+  const normalizedTarget = normalizeSpecifier(target);
+
+  if (isRelative || isAbsolute) {
+    const base = isAbsolute
+      ? normalizedTarget
+      : pathPosix.normalize(pathPosix.join(importerDir, target));
+    addCandidateVariants(candidates, base);
+  } else {
+    addCandidateVariants(candidates, normalizedTarget);
+    addCandidateVariants(candidates, `node_modules/${normalizedTarget}`);
+
+    const packageName = extractPackageNameFromSpecifier(normalizedTarget);
+    if (packageName && packageName !== normalizedTarget) {
+      addCandidateVariants(candidates, packageName);
+      addCandidateVariants(candidates, `node_modules/${packageName}`);
+    }
+  }
+
+  return Array.from(candidates);
+}
+
+function addCandidateVariants(candidates: Set<string>, base: string): void {
+  if (!base) {
+    return;
+  }
+
+  const normalizedBase = normalizeSpecifier(base);
+  const hasExtension = Boolean(pathPosix.extname(normalizedBase));
+
+  candidates.add(normalizedBase);
+  candidates.add(stripLeadingDot(normalizedBase));
+
+  if (!hasExtension) {
+    for (const ext of SUPPORTED_EXTENSIONS) {
+      const withExt = `${normalizedBase}${ext}`;
+      candidates.add(withExt);
+      candidates.add(stripLeadingDot(withExt));
+    }
+  }
+
+  if (!normalizedBase.endsWith('/index')) {
+    const indexBase = `${normalizedBase}/index`;
+    candidates.add(indexBase);
+    candidates.add(stripLeadingDot(indexBase));
+
+    for (const ext of SUPPORTED_EXTENSIONS) {
+      const indexWithExt = `${indexBase}${ext}`;
+      candidates.add(indexWithExt);
+      candidates.add(stripLeadingDot(indexWithExt));
+    }
+  }
+}
+
+function extractPackageNameFromSpecifier(specifier: string): string | null {
+  const normalized = normalizeSpecifier(specifier);
+  if (!normalized) {
+    return null;
+  }
+
+  const [first, second] = normalized.split('/');
+  if (!first) {
+    return null;
+  }
+
+  if (first.startsWith('@') && second) {
+    return `${first}/${second}`;
+  }
+
+  return first;
 }
 
 // ============================================================================
