@@ -6,6 +6,7 @@
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import StatCard from '$lib/components/ui/StatCard.svelte';
   import EmptyState from '$lib/components/ui/EmptyState.svelte';
+  import CelebrationBanner from '$lib/components/animations/CelebrationBanner.svelte';
   import type { DependencyGraph } from '$lib/server/query/types.js';
   import type { DependencyCycleAnalysis } from '$lib/utils/dependency-graph.js';
 
@@ -26,6 +27,15 @@
       circularModuleCount: number;
     } | null,
   );
+
+  // Celebration for zero circular dependencies
+  let showCelebration = $state(false);
+
+  $effect(() => {
+    if (graphStats && graphStats.cycleCount === 0 && graphStats.nodeCount > 0) {
+      showCelebration = true;
+    }
+  });
 
   const nodeLookup = $derived(
     dependencyGraph
@@ -53,6 +63,14 @@
 </script>
 
 <DashboardLayout>
+  <CelebrationBanner
+    show={showCelebration}
+    message="Perfect! Zero circular dependencies detected! 🎯"
+    emoji="✨"
+    variant="achievement"
+    onDismiss={() => (showCelebration = false)}
+  />
+
   <div class="dependencies-container">
     <div class="dependencies-header">
       <ProjectSelector {projects} {projectName} />

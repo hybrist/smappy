@@ -1,5 +1,6 @@
 <script lang="ts">
   import Card from './Card.svelte';
+  import CountUp from '../animations/CountUp.svelte';
 
   interface Props {
     /**
@@ -15,6 +16,10 @@
      */
     subtitle?: string;
     /**
+     * Enable count-up animation for numeric values
+     */
+    animate?: boolean;
+    /**
      * Additional CSS classes for the card
      */
     class?: string;
@@ -24,7 +29,11 @@
     [key: string]: unknown;
   }
 
-  let { title, value, subtitle, class: className = '', ...props }: Props = $props();
+  let { title, value, subtitle, animate = true, class: className = '', ...props }: Props = $props();
+
+  // Determine if value should be animated
+  const numericValue = $derived(typeof value === 'number' ? value : null);
+  const shouldAnimate = $derived(animate && numericValue !== null);
 </script>
 
 <!--
@@ -39,7 +48,13 @@
 <Card class="transition-shadow hover:shadow-md {className}" {...props}>
   <div class="flex flex-col gap-2">
     <p class="text-sm text-gray-600 dark:text-gray-400">{title}</p>
-    <p class="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+    <p class="text-2xl font-bold text-gray-900 dark:text-white">
+      {#if shouldAnimate}
+        <CountUp value={numericValue} />
+      {:else}
+        {value}
+      {/if}
+    </p>
     {#if subtitle}
       <p class="text-sm text-gray-600 dark:text-gray-400">{subtitle}</p>
     {/if}

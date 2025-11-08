@@ -67,7 +67,7 @@
       <EmptyState
         data-testid="empty-state-no-analysis"
         title="No analysis data found"
-        description={`No analysis data found for project "${projectName}". Please run an analysis to view bundle insights.`}
+        description={`Ready to analyze your bundle! Run Smappy on "${projectName}" to get started. 💡 Tip: Regular analysis helps you catch bundle bloat early and optimize build performance.`}
       />
     {/if}
   </div>

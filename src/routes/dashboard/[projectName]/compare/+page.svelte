@@ -4,6 +4,8 @@
   import ProjectSelector from '../ProjectSelector.svelte';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import StatCard from '$lib/components/ui/StatCard.svelte';
+  import CelebrationBanner from '$lib/components/animations/CelebrationBanner.svelte';
+  import Confetti from '$lib/components/animations/Confetti.svelte';
 
   let { data } = $props();
 
@@ -16,6 +18,13 @@
   const hasEnoughAnalyses = $derived(data.hasEnoughAnalyses);
   const requiredAnalyses = 2;
   const missingAnalyses = $derived(Math.max(0, requiredAnalyses - analysisHistory.length));
+
+  // Celebration state
+  let showCelebration = $state(false);
+  let celebrationMessage = $state('');
+  let celebrationEmoji = $state('🎉');
+  let celebrationVariant = $state<'success' | 'achievement' | 'milestone'>('success');
+  let showConfetti = $state(false);
 
   function formatBytes(bytes: number): string {
     if (bytes === 0) return '0 B';
@@ -48,9 +57,65 @@
       `/dashboard/${encodeURIComponent(projectName)}/compare?baseId=${newBaseId}&compareId=${newCompareId}`,
     );
   }
+
+  // Check for achievements and show celebrations
+  $effect(() => {
+    if (comparison) {
+      const totalSizeDelta = comparison.sizeDelta.totalSize;
+      const baseSize = comparison.run1.totalSize ?? 0;
+
+      if (totalSizeDelta < 0 && baseSize > 0) {
+        const reductionPercent = Math.abs((totalSizeDelta / baseSize) * 100);
+
+        // Major win: >20% reduction
+        if (reductionPercent > 20) {
+          celebrationEmoji = '🎉';
+          celebrationMessage = `Amazing! Bundle size reduced by ${reductionPercent.toFixed(1)}%!`;
+          celebrationVariant = 'achievement';
+          showCelebration = true;
+          showConfetti = true;
+        }
+        // Good improvement: 10-20% reduction
+        else if (reductionPercent > 10) {
+          celebrationEmoji = '🎊';
+          celebrationMessage = `Great work! Bundle size reduced by ${reductionPercent.toFixed(1)}%!`;
+          celebrationVariant = 'success';
+          showCelebration = true;
+        }
+        // Any improvement
+        else if (reductionPercent > 0) {
+          celebrationEmoji = '✨';
+          celebrationMessage = `Nice! Bundle size reduced by ${reductionPercent.toFixed(1)}%`;
+          celebrationVariant = 'success';
+          showCelebration = true;
+        }
+      }
+
+      // Check for milestone: sub-1MB bundle
+      const currentSize = comparison.run2.totalSize ?? 0;
+      const previousSize = comparison.run1.totalSize ?? 0;
+      const oneMB = 1024 * 1024;
+      if (currentSize < oneMB && previousSize >= oneMB) {
+        celebrationEmoji = '🏆';
+        celebrationMessage = 'Milestone achieved: Sub-1MB bundle!';
+        celebrationVariant = 'milestone';
+        showCelebration = true;
+        showConfetti = true;
+      }
+    }
+  });
 </script>
 
 <DashboardLayout>
+  <CelebrationBanner
+    show={showCelebration}
+    message={celebrationMessage}
+    emoji={celebrationEmoji}
+    variant={celebrationVariant}
+    onDismiss={() => (showCelebration = false)}
+  />
+  <Confetti active={showConfetti} />
+
   <div class="comparison-container">
     <div class="comparison-header">
       <ProjectSelector {projects} {projectName} />
@@ -227,23 +292,23 @@
     {:else}
       <section class="empty-state" aria-live="polite">
         <div class="empty-state-content">
+          <div class="empty-state-emoji">📊</div>
           <h2>
             {hasEnoughAnalyses ? 'Comparison unavailable' : 'More analysis runs needed'}
           </h2>
           <p>
-            Generate more analysis runs to enable comparison.
-            {!hasEnoughAnalyses
-              ? ` (${analysisHistory.length} of ${requiredAnalyses} complete)`
-              : ''}
+            {#if !hasEnoughAnalyses}
+              You're on your way! Run Smappy {missingAnalyses === 1
+                ? 'one more time'
+                : `${missingAnalyses} more times`} to unlock comparison insights.
+            {:else}
+              We could not load the selected comparison. Try selecting different analyses.
+            {/if}
           </p>
           {#if !hasEnoughAnalyses}
-            <p class="empty-state-secondary">
-              Run Smappy {missingAnalyses === 1 ? 'one more time' : `${missingAnalyses} more times`}
-              for this project so we have something to compare.
-            </p>
-          {:else}
-            <p class="empty-state-secondary">
-              We could not load the selected comparison. Try selecting different analyses.
+            <p class="empty-state-tip">
+              💡 <strong>Pro tip:</strong> Regular analysis runs help you track bundle size over time
+              and catch regressions early.
             </p>
           {/if}
           <div class="empty-state-actions">
@@ -550,6 +615,22 @@
     }
   }
 
+  .empty-state-emoji {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    animation: gentle-float 3s ease-in-out infinite;
+  }
+
+  @keyframes gentle-float {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
   .empty-state-content p {
     color: #4b5563;
     margin-bottom: 0.5rem;
@@ -558,6 +639,25 @@
   @media (prefers-color-scheme: dark) {
     .empty-state-content p {
       color: #d1d5db;
+    }
+  }
+
+  .empty-state-tip {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #f3f4f6;
+    border-radius: 0.5rem;
+    border-left: 4px solid #3b82f6;
+    text-align: left;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .empty-state-tip {
+      background-color: #374151;
+      border-left-color: #60a5fa;
     }
   }
 
