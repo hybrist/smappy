@@ -866,7 +866,7 @@ export async function getTreemapData(
 
   // Organize modules into directory structure
   for (const module of modules) {
-    const pathParts = module.filePath.split('/').filter((p) => p.length > 0);
+    const pathParts = module.filePath.split('/').filter((p) => p.length > 0 && p !== '.');
     let currentNode = root;
 
     // Navigate/create directory structure

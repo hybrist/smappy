@@ -93,8 +93,11 @@
     }
   }
 
+  let previewIdCounter = 0;
+
   function renderTreemap() {
     if (!containerElement || !currentLevel) return;
+    previewIdCounter = 0;
 
     // Clear previous content
     d3.select(containerElement).selectAll('*').remove();
@@ -112,6 +115,7 @@
       .attr('preserveAspectRatio', 'xMidYMid meet')
       .style('font-family', 'system-ui, -apple-system, sans-serif')
       .style('font-size', '12px');
+    const defs = svg.append('defs');
 
     // Create hierarchy from current level's children
     // If currentLevel is the root with only directories, we want to show all modules
@@ -130,10 +134,8 @@
 
     const root = treemapLayout(hierarchy);
 
-    // For the root level, show all module leaves to avoid white space from directory structure
-    // For drill-down levels, show direct children
-    const hasDirectModules = currentLevel.children?.some((c) => c.moduleId !== undefined);
-    const nodes = hasDirectModules ? root.children || [] : root.leaves();
+    // Show directory nodes at the current level so users can drill down naturally
+    const nodes = root.children || [];
     // Create cells for the determined nodes
     const cell = svg
       .selectAll('g')
@@ -177,6 +179,46 @@
       .duration(500)
       .attr('width', (d) => d.x1 - d.x0)
       .attr('height', (d) => d.y1 - d.y0);
+
+    // Show a subtle preview of nested modules inside large folders
+    const previewCells = cell.filter((d) => {
+      const hasChildren = (d.children?.length ?? 0) > 0;
+      const isLarge = d.x1 - d.x0 > 90 && d.y1 - d.y0 > 70;
+      return hasChildren && isLarge;
+    });
+
+    previewCells.each(function (d) {
+      const clipPathId = `treemap-preview-${previewIdCounter++}`;
+
+      defs
+        .append('clipPath')
+        .attr('id', clipPathId)
+        .append('rect')
+        .attr('width', d.x1 - d.x0)
+        .attr('height', d.y1 - d.y0)
+        .attr('rx', 2)
+        .attr('ry', 2);
+
+      const previewGroup = d3
+        .select(this)
+        .append('g')
+        .attr('class', 'nested-preview')
+        .attr('clip-path', `url(#${clipPathId})`)
+        .style('pointer-events', 'none');
+
+      previewGroup
+        .selectAll('rect')
+        .data(d.children || [])
+        .join('rect')
+        .attr('x', (child) => child.x0 - d.x0 + 1)
+        .attr('y', (child) => child.y0 - d.y0 + 1)
+        .attr('width', (child) => Math.max(0, child.x1 - child.x0 - 2))
+        .attr('height', (child) => Math.max(0, child.y1 - child.y0 - 2))
+        .attr('fill', (child) => getNodeColor(child.data))
+        .attr('fill-opacity', 0.6)
+        .attr('stroke', '#ffffff')
+        .attr('stroke-width', 0.5);
+    });
 
     // Add labels for larger cells
     cell
@@ -625,6 +667,10 @@
     border: 1px solid #e5e7eb;
     border-radius: 0.5rem;
     background-color: #ffffff;
+  }
+
+  :global(.nested-preview rect) {
+    transition: opacity 0.2s ease;
   }
 
   @media (prefers-color-scheme: dark) {
