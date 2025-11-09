@@ -1,10 +1,5 @@
 <script lang="ts">
   import Chat from '$lib/components/Chat.svelte';
-  import { goto } from '$app/navigation';
-
-  function navigateBack() {
-    goto('/dashboard');
-  }
 </script>
 
 <svelte:head>
@@ -16,15 +11,21 @@
   <nav class="border-b border-gray-200 bg-white px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-4">
-        <button
-          onclick={navigateBack}
+        <a
+          href="/dashboard"
+          data-sveltekit-preload-data="hover"
           class="flex items-center gap-2 text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
         >
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
           Back to Dashboard
-        </button>
+        </a>
       </div>
 
       <div class="flex items-center gap-2">
@@ -32,7 +33,8 @@
         <span class="text-xl font-bold text-gray-900 dark:text-white">Smappy Chat</span>
       </div>
 
-      <div class="w-32"></div> <!-- Spacer for centering -->
+      <div class="w-32"></div>
+      <!-- Spacer for centering -->
     </div>
   </nav>
 
