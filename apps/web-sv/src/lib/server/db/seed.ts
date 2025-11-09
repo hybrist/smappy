@@ -4,7 +4,7 @@
  */
 
 import { ingestBundle, type BundleIngestionInput } from '../ingestion/index.js';
-import type { BundleInput, ModuleInput, ChunkInput } from '../ingestion/types/index.js';
+import type { BundleInput, ModuleInput, ChunkInput } from '@smappy/core';
 import { db } from './index.js';
 import { sql } from 'drizzle-orm';
 

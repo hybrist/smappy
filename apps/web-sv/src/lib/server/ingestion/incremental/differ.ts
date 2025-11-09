@@ -7,8 +7,7 @@ import { db } from '../../db/index.js';
 import * as schema from '../../db/schema.js';
 import { eq } from 'drizzle-orm';
 import { createHash } from 'crypto';
-import type { ModuleInput } from '../types/index.js';
-import type { SymbolWithExport } from '../ast/analyzer.js';
+import type { ModuleInput, SymbolWithExport } from '@smappy/core';
 
 // ============================================================================
 // Types

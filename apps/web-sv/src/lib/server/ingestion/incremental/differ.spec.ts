@@ -13,8 +13,7 @@ import {
   type PreviousSymbol,
   type IncrementalDiff,
 } from './differ.js';
-import type { ModuleInput } from '../types/index.js';
-import type { SymbolWithExport } from '../ast/analyzer.js';
+import type { ModuleInput, SymbolWithExport } from '@smappy/core';
 import * as schema from '../../db/schema.js';
 import { createHash } from 'crypto';
 

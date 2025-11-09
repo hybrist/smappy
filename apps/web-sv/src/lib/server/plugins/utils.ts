@@ -3,7 +3,7 @@
  * Common functions for parsing stats, extracting source maps, and normalizing data
  */
 
-import type { BundleInput, ModuleInput } from '../ingestion/types/index.js';
+import type { BundleInput, ModuleInput } from '@smappy/core';
 import { readFileSync } from 'node:fs';
 import { join, dirname, extname } from 'node:path';
 

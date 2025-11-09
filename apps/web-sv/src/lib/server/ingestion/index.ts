@@ -3,7 +3,7 @@
  * Coordinates the analysis pipeline from bundle input to database persistence
  */
 
-import type { BundleInput, ChunkInput, ModuleInput, IngestionOptions } from './types/index.js';
+import type { BundleInput, ChunkInput, ModuleInput } from '@smappy/core';
 import { posix as pathPosix } from 'node:path';
 import type {
   IngestionData,
@@ -12,16 +12,19 @@ import type {
   BundleWithMetadata,
   DependencyRelationship,
   SuggestionData,
+  IngestionOptions,
 } from './db/writer.js';
-import { extractSymbols, type SymbolWithExport } from './ast/analyzer.js';
 import {
+  extractSymbols,
+  type SymbolWithExport,
   parseSourceMap,
   mapBundleToSource,
   computeSymbolFragmentsWithContent,
   type SymbolFragment,
-} from './source-map/processor.js';
-import { buildDependencyGraph } from './graph/builder.js';
-import { computeRawSize, computeGzipSize } from './size/calculator.js';
+  buildDependencyGraph,
+  computeRawSize,
+  computeGzipSize,
+} from '@smappy/core';
 import { writeIngestionData } from './db/writer.js';
 import {
   computeIncrementalDiff,
@@ -628,8 +631,8 @@ async function generateAISuggestions(ingestionData: IngestionData): Promise<Sugg
 // Re-exports for convenience
 // ============================================================================
 
-// Re-export input types from types module
-export type { BundleInput, ChunkInput, ModuleInput, IngestionOptions } from './types/index.js';
+// Re-export input types from @smappy/core
+export type { BundleInput, ChunkInput, ModuleInput } from '@smappy/core';
 
 // Re-export result types from db writer
 export type {
@@ -638,36 +641,30 @@ export type {
   ModuleWithAnalysis,
   BundleWithMetadata,
   DependencyRelationship,
+  IngestionOptions,
 } from './db/writer.js';
 
+export { createMockIngestionOptions } from './db/writer.js';
+
+// Re-export analysis types from @smappy/core
 export type {
-  // Analysis types
   SymbolWithExport,
   AnalysisResult,
-} from './ast/analyzer.js';
-
-export type {
-  // Source map types
   SymbolFragment,
   PositionMapping,
-} from './source-map/processor.js';
-
-export type {
-  // Dependency types
   DependencyGraph,
   ResolvedModule,
-} from './graph/builder.js';
+  ParsedSymbol,
+  ParsedDependency,
+  SizeInfo,
+} from '@smappy/core';
 
-// Re-export internal types (for backwards compatibility with old tests)
-export type { ParsedSymbol, ParsedDependency, SizeInfo } from './types/index.js';
-
-// Re-export test helpers
+// Re-export test helpers from @smappy/core
 export {
   createMockBundleInput,
   createMockChunkInput,
   createMockModuleInput,
-  createMockIngestionOptions,
   createMockParsedSymbol,
   createMockParsedDependency,
   createMockSizeInfo,
-} from './types/index.js';
+} from '@smappy/core';
