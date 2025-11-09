@@ -3,12 +3,8 @@
  * Provides abstract base classes and interfaces for bundler adapters
  */
 
-import type {
-  BundleInput,
-  ChunkInput,
-  ModuleInput,
-  IngestionOptions,
-} from '../ingestion/types/index.js';
+import type { BundleInput, ChunkInput, ModuleInput } from '@smappy/core';
+import type { IngestionOptions } from '../ingestion/index.js';
 import type {
   BundlerPluginOptions,
   PluginConfig,

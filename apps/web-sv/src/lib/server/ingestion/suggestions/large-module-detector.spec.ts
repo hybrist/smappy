@@ -10,7 +10,7 @@ import {
 } from './large-module-detector.js';
 import type { SuggestionContext } from '../../suggestions/types.js';
 import type { ModuleWithAnalysis } from '../db/writer.js';
-import { createMockBundleInput, createMockChunkInput } from '../types/index.js';
+import { createMockBundleInput, createMockChunkInput } from '@smappy/core';
 
 describe('LargeModuleDetector', () => {
   let detector: LargeModuleDetector;

@@ -12,8 +12,9 @@ import type {
   ModuleWithAnalysis,
   DependencyRelationship,
 } from './writer.js';
-import type { ChunkInput, IngestionOptions } from '../types/index.js';
-import type { SymbolWithExport } from '../ast/analyzer.js';
+import type { ChunkInput } from '@smappy/core';
+import type { SymbolWithExport } from '@smappy/core';
+import type { IngestionOptions } from './writer.js';
 import * as schema from '../../db/schema.js';
 import { eq } from 'drizzle-orm';
 import Database from 'better-sqlite3';

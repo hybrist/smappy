@@ -5,7 +5,7 @@
 
 import type { SuggestionRule, SuggestionContext } from '../../suggestions/types.js';
 import type { SuggestionData } from '../db/writer.js';
-import { extractSymbols } from '../ast/analyzer.js';
+import { extractSymbols } from '@smappy/core';
 
 /**
  * Configuration for duplicate code detection

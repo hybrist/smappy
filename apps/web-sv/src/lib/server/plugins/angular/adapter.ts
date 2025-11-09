@@ -9,7 +9,7 @@ import type {
   BundlerChunk,
   BundlerBundle,
 } from '../types.js';
-import type { IngestionOptions } from '../../ingestion/types/index.js';
+import type { IngestionOptions } from '../../ingestion/index.js';
 import { BundlerAdapter } from '../adapters.js';
 import { extractSourceMap } from '../utils.js';
 import { readFileSync, readdirSync, statSync } from 'node:fs';

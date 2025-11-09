@@ -7,7 +7,7 @@ import type {
   ModuleWithAnalysis,
   DependencyRelationship,
 } from '../ingestion/db/writer.js';
-import type { ChunkInput, BundleInput } from '../ingestion/types/index.js';
+import type { ChunkInput, BundleInput } from '@smappy/core';
 
 /**
  * Context provided to suggestion rules for analysis

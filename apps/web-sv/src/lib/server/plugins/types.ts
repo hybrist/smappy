@@ -3,12 +3,8 @@
  * Defines the shared type system for all bundler plugins
  */
 
-import type {
-  BundleInput,
-  ChunkInput,
-  ModuleInput,
-  IngestionOptions,
-} from '../ingestion/types/index.js';
+import type { BundleInput, ChunkInput, ModuleInput } from '@smappy/core';
+import type { IngestionOptions } from '../ingestion/index.js';
 
 // ============================================================================
 // Plugin Options

@@ -5,13 +5,47 @@
 
 import { db } from '../../db/index.js';
 import * as schema from '../../db/schema.js';
-import type { IngestionOptions, ModuleInput, ChunkInput, BundleInput } from '../types/index.js';
-import type { SymbolWithExport } from '../ast/analyzer.js';
-import type { SymbolFragment } from '../source-map/processor.js';
+import type { ModuleInput, ChunkInput, BundleInput } from '@smappy/core';
+import type { SymbolWithExport, SymbolFragment } from '@smappy/core';
 
 // ============================================================================
 // Input Types for Writer Functions
 // ============================================================================
+
+/**
+ * Options for the ingestion process
+ * Controls how bundles are analyzed and stored
+ */
+export interface IngestionOptions {
+  /** Type of bundler that generated this bundle */
+  bundlerType: 'webpack' | 'rollup' | 'esbuild' | 'vite' | 'parcel' | 'nextjs' | 'other';
+  /** Name of the project being analyzed */
+  projectName: string;
+  /** Whether to perform incremental analysis */
+  enableIncremental?: boolean;
+  /** Whether to compare with previous analysis results */
+  compareWithPrevious?: boolean;
+  /** Maximum number of previous results to keep */
+  maxHistorySize?: number;
+}
+
+/**
+ * Create a mock IngestionOptions for testing
+ * @param overrides - Optional partial IngestionOptions to override defaults
+ * @returns A complete IngestionOptions object
+ */
+export function createMockIngestionOptions(
+  overrides?: Partial<IngestionOptions>,
+): IngestionOptions {
+  return {
+    bundlerType: 'webpack',
+    projectName: 'test-project',
+    enableIncremental: false,
+    compareWithPrevious: false,
+    maxHistorySize: 10,
+    ...overrides,
+  };
+}
 
 /**
  * Complete data payload for database ingestion

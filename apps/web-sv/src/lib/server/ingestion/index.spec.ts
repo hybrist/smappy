@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ingestBundle, type BundleIngestionInput } from './index.js';
-import type { IngestionOptions, BundleInput, ModuleInput, ChunkInput } from './types/index.js';
+import { ingestBundle, type BundleIngestionInput, type IngestionOptions } from './index.js';
+import type { BundleInput, ModuleInput, ChunkInput } from '@smappy/core';
 
 // Mock the db module to use test database
 vi.mock('../db/index.js', async () => {
