@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LLMAnalyzer } from './llm-analyzer.js';
 import type { SuggestionContext } from '../../suggestions/types.js';
 import type { LLMIntegrationConfig } from '../../config/llm.js';
+import type { GenerateTextResult } from 'ai';
 
 // Mock the AI SDK
 vi.mock('ai', () => ({
@@ -103,7 +104,7 @@ describe('LLMAnalyzer', () => {
       finishReason: 'stop',
       usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
       experimental_providerMetadata: undefined,
-    } as any);
+    } as Partial<GenerateTextResult<never>> as GenerateTextResult<never>);
 
     const analyzer = new LLMAnalyzer({ config: baseConfig });
     const suggestions = await analyzer.execute(baseContext);
@@ -128,7 +129,7 @@ describe('LLMAnalyzer', () => {
       finishReason: 'stop',
       usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
       experimental_providerMetadata: undefined,
-    } as any);
+    } as Partial<GenerateTextResult<never>> as GenerateTextResult<never>);
 
     let currentTime = 0;
     const analyzer = new LLMAnalyzer({
@@ -159,7 +160,7 @@ describe('LLMAnalyzer', () => {
       finishReason: 'stop',
       usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
       experimental_providerMetadata: undefined,
-    } as any);
+    } as Partial<GenerateTextResult<never>> as GenerateTextResult<never>);
 
     const analyzer = new LLMAnalyzer({ config: baseConfig });
 
