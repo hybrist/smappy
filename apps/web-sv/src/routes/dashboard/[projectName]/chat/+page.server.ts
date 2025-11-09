@@ -1,6 +1,7 @@
-import { getLatestAnalysis } from '$lib/query/data.remote';
+import { getLatestAnalysis } from '$lib/server/query/index.js';
+import type { PageServerLoad } from './$types';
 
-export async function load({ params }) {
+export const load: PageServerLoad = async ({ params }) => {
   const { projectName } = params;
 
   try {
@@ -18,4 +19,4 @@ export async function load({ params }) {
       error: error instanceof Error ? error.message : 'Failed to load analysis',
     };
   }
-}
+};

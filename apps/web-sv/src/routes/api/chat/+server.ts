@@ -46,9 +46,37 @@ When answering questions:
 The user can see the full bundle visualization in the dashboard, so you can reference specific modules or dependencies they might be looking at.`;
 }
 
+const ALLOWED_MODELS = [
+  'qwen2.5-coder:3b',
+  'llama3.2:3b',
+  'phi3:3.8b',
+  'mistral:7b',
+  'codellama:7b',
+];
+
 export const POST: RequestHandler = async ({ request }) => {
   try {
-    const { messages, model = 'qwen2.5-coder:3b', context } = await request.json();
+    const body = await request.json();
+    const { messages, model: requestedModel = 'qwen2.5-coder:3b', context } = body;
+
+    // Validate messages format
+    if (
+      !Array.isArray(messages) ||
+      messages.some(
+        (msg) =>
+          typeof msg !== 'object' ||
+          typeof msg.role !== 'string' ||
+          typeof msg.content !== 'string',
+      )
+    ) {
+      return new Response(JSON.stringify({ error: 'Invalid messages format' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Validate and sanitize model selection
+    const model = ALLOWED_MODELS.includes(requestedModel) ? requestedModel : 'qwen2.5-coder:3b';
 
     // Create system prompt with context
     const systemPrompt = createSystemPrompt(context);
