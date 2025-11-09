@@ -32,12 +32,6 @@
           View Dashboard
         </button>
         <a
-          href="/chat"
-          class="rounded-lg border-2 border-white bg-transparent px-8 py-3 text-lg font-semibold text-white transition-all hover:bg-white/10"
-        >
-          AI Chat Assistant
-        </a>
-        <a
           href="#quick-start"
           class="rounded-lg border-2 border-white bg-transparent px-8 py-3 text-lg font-semibold text-white transition-all hover:bg-white/10"
         >

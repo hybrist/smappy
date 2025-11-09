@@ -117,6 +117,26 @@
           Suggestions
         </a>
       </li>
+      <li>
+        <a
+          href="/dashboard/{$page.params.projectName}/chat"
+          class="text-gray-700 transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+          class:font-semibold={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/chat`,
+          )}
+          class:text-primary-600={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/chat`,
+          )}
+          class:dark:text-primary-400={currentPath.startsWith(
+            `/dashboard/${$page.params.projectName}/chat`,
+          )}
+          aria-current={currentPath.startsWith(`/dashboard/${$page.params.projectName}/chat`)
+            ? 'page'
+            : undefined}
+        >
+          AI Chat
+        </a>
+      </li>
     </ul>
   </nav>
   <main class="flex-1">

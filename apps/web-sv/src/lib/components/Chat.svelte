@@ -1,15 +1,21 @@
 <script lang="ts">
+  import type { AnalysisSummary } from '$lib/server/query/types';
+
   interface Message {
     role: 'user' | 'assistant';
     content: string;
   }
 
   interface Props {
+    projectName?: string;
+    analysis?: AnalysisSummary;
     defaultModel?: string;
     availableModels?: string[];
   }
 
   let {
+    projectName,
+    analysis,
     defaultModel = 'qwen2.5-coder:3b',
     availableModels = [
       'qwen2.5-coder:3b',
@@ -62,6 +68,10 @@
         body: JSON.stringify({
           messages: messages,
           model: selectedModel,
+          context: {
+            projectName,
+            analysis,
+          },
         }),
       });
 
