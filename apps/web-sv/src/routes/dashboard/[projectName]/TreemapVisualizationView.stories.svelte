@@ -245,108 +245,94 @@
   };
 </script>
 
-<!--
-  @component TreemapVisualizationView Stories
+<Story
+  name="Default with Mock Data"
+  args={{
+    data: mockTreemapData,
+  }}
+/>
 
-  Showcases the TreemapVisualizationView component with various data states.
-  This component is a pure UI component that accepts treemap data as props,
-  making it easy to test and demonstrate without network requests.
--->
+<Story
+  name="Small Dataset"
+  args={{
+    data: smallTreemapData,
+  }}
+/>
 
-<Story name="Default with Mock Data">
-  <div class="h-[700px] w-full">
-    <TreemapVisualizationView data={mockTreemapData} width={1200} height={600} />
-  </div>
-</Story>
+<Story
+  name="Loading State"
+  args={{
+    isLoading: true,
+    data: null,
+  }}
+/>
 
-<Story name="Small Dataset">
-  <div class="h-[700px] w-full">
-    <TreemapVisualizationView data={smallTreemapData} width={1200} height={600} />
-  </div>
-</Story>
+<Story
+  name="Error State"
+  args={{
+    data: null,
+    isLoading: false,
+    error: 'Failed to load treemap data. Please try again.',
+    onRetry: () => console.log('Retry clicked'),
+  }}
+/>
 
-<Story name="Loading State">
-  <div class="h-[700px] w-full">
-    <TreemapVisualizationView data={null} width={1200} height={600} isLoading={true} />
-  </div>
-</Story>
+<Story
+  name="Custom Dimensions"
+  args={{
+    data: smallTreemapData,
+    width: 800,
+    height: 400,
+  }}
+/>
 
-<Story name="Error State">
-  <div class="h-[700px] w-full">
-    <TreemapVisualizationView
-      data={null}
-      width={1200}
-      height={600}
-      isLoading={false}
-      error="Failed to load treemap data. Please try again."
-      onRetry={() => console.log('Retry clicked')}
-    />
-  </div>
-</Story>
+<Story
+  name="Empty Data"
+  args={{
+    data: { name: 'root', children: [] },
+  }}
+/>
 
-<Story name="Custom Dimensions">
-  <div class="h-[500px] w-full">
-    <TreemapVisualizationView data={smallTreemapData} width={800} height={400} />
-  </div>
-</Story>
-
-<Story name="Responsive Width">
-  <div class="h-[700px] w-full">
-    <div class="mx-auto max-w-4xl">
-      <TreemapVisualizationView data={mockTreemapData} height={600} />
-    </div>
-  </div>
-</Story>
-
-<Story name="Empty Data">
-  <div class="h-[700px] w-full">
-    <TreemapVisualizationView data={{ name: 'root', children: [] }} width={1200} height={600} />
-  </div>
-</Story>
-
-<Story name="Deep Hierarchy">
-  <div class="h-[700px] w-full">
-    <TreemapVisualizationView
-      data={{
-        name: 'root',
-        children: [
-          {
-            name: 'level1',
-            children: [
-              {
-                name: 'level2',
-                children: [
-                  {
-                    name: 'level3',
-                    children: [
-                      {
-                        name: 'file1.js',
-                        bundledSize: 50000,
-                        originalSize: 75000,
-                        gzipSize: 18000,
-                        fileType: 'javascript',
-                        isThirdParty: false,
-                        filePath: 'src/level1/level2/level3/file1.js',
-                      },
-                      {
-                        name: 'file2.js',
-                        bundledSize: 30000,
-                        originalSize: 45000,
-                        gzipSize: 12000,
-                        fileType: 'javascript',
-                        isThirdParty: false,
-                        filePath: 'src/level1/level2/level3/file2.js',
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      }}
-      width={1200}
-      height={600}
-    />
-  </div>
-</Story>
+<Story
+  name="Deep Hierarchy"
+  args={{
+    data: {
+      name: 'root',
+      children: [
+        {
+          name: 'level1',
+          children: [
+            {
+              name: 'level2',
+              children: [
+                {
+                  name: 'level3',
+                  children: [
+                    {
+                      name: 'file1.js',
+                      bundledSize: 50000,
+                      originalSize: 75000,
+                      gzipSize: 18000,
+                      fileType: 'javascript',
+                      isThirdParty: false,
+                      filePath: 'src/level1/level2/level3/file1.js',
+                    },
+                    {
+                      name: 'file2.js',
+                      bundledSize: 30000,
+                      originalSize: 45000,
+                      gzipSize: 12000,
+                      fileType: 'javascript',
+                      isThirdParty: false,
+                      filePath: 'src/level1/level2/level3/file2.js',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  }}
+/>
