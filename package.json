@@ -14,7 +14,11 @@
     "format:check": "pnpm --filter @smappy/web-sv format:check",
     "lint": "pnpm --filter @smappy/web-sv lint",
     "lint:eslint": "pnpm --filter @smappy/web-sv lint:eslint",
-    "test": "pnpm --filter @smappy/web-sv test",
+    "test": "pnpm test:core && pnpm test:web",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:core": "pnpm --filter @smappy/core test",
+    "test:web": "pnpm --filter @smappy/web-sv test",
     "test:unit": "pnpm --filter @smappy/web-sv test:unit",
     "test:e2e": "pnpm --filter @smappy/web-sv test:e2e",
     "test:e2e:ui": "pnpm --filter @smappy/web-sv test:e2e:ui",
@@ -26,5 +30,8 @@
     "db:seed": "pnpm --filter @smappy/web-sv db:seed",
     "storybook": "pnpm --filter @smappy/web-sv storybook",
     "build-storybook": "pnpm --filter @smappy/web-sv build-storybook"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4"
   }
 }
