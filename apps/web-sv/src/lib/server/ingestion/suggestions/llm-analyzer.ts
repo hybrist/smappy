@@ -6,6 +6,10 @@ import {
   type LLMIntegrationConfig,
   type PartialLLMIntegrationConfig,
 } from '../../config/llm.js';
+import { generateText } from 'ai';
+import { createOpenAI } from '@ai-sdk/openai';
+import { createAnthropic } from '@ai-sdk/anthropic';
+import { ollama } from 'ollama-ai-provider-v2';
 
 /**
  * Options for the LLM analyzer
@@ -13,36 +17,12 @@ import {
 export interface LLMAnalyzerOptions {
   /** Optional configuration overrides */
   config?: PartialLLMIntegrationConfig | LLMIntegrationConfig;
-  /** Custom LLM client implementation (useful for testing) */
-  client?: LLMClient;
-  /** Custom fetch implementation (node-fetch, mocks, etc.) */
-  fetchImpl?: typeof fetch;
   /** Custom time provider for rate limiting */
   now?: () => number;
 }
 
 /**
- * LLM client interface
- */
-export interface LLMClient {
-  /** Generate content from the provider */
-  generate(request: LLMGenerationRequest): Promise<string>;
-  /** Human readable provider name */
-  providerName(): string;
-}
-
-/**
- * LLM generation request
- */
-export interface LLMGenerationRequest {
-  systemPrompt: string;
-  userPrompt: string;
-  maxTokens: number;
-  temperature: number;
-}
-
-/**
- * Analyzer that delegates suggestion generation to an LLM provider
+ * Analyzer that delegates suggestion generation to an LLM provider using the AI SDK
  */
 const rateLimiterRegistry = new Map<string, RateLimiter>();
 
@@ -52,7 +32,6 @@ export class LLMAnalyzer implements SuggestionRule {
   readonly description = 'Generates contextual bundle analysis suggestions using LLM providers';
 
   private readonly config: LLMIntegrationConfig;
-  private readonly client?: LLMClient;
   private readonly rateLimiter?: RateLimiter;
   private readonly now: () => number;
 
@@ -65,19 +44,13 @@ export class LLMAnalyzer implements SuggestionRule {
     this.config = resolvedConfig;
     this.now = options.now ?? Date.now;
 
-    if (this.config.enabled) {
-      this.client = options.client ?? createLLMClient(this.config, options.fetchImpl);
-
-      if (this.config.rateLimitPerMinute > 0) {
-        this.rateLimiter = acquireRateLimiter(this.config, this.now);
-      }
-    } else {
-      this.client = undefined;
+    if (this.config.enabled && this.config.rateLimitPerMinute > 0) {
+      this.rateLimiter = acquireRateLimiter(this.config, this.now);
     }
   }
 
   async execute(context: SuggestionContext): Promise<SuggestionData[]> {
-    if (!this.config.enabled || !this.client) {
+    if (!this.config.enabled) {
       return [];
     }
 
@@ -90,16 +63,19 @@ export class LLMAnalyzer implements SuggestionRule {
       return [];
     }
 
-    const request: LLMGenerationRequest = {
-      systemPrompt: DEFAULT_SYSTEM_PROMPT,
-      userPrompt,
-      maxTokens: this.config.maxTokens,
-      temperature: this.config.temperature,
-    };
-
     try {
-      const response = await this.client.generate(request);
-      const suggestions = this.parseSuggestions(response);
+      const model = this.createModel();
+      const result = await generateText({
+        model,
+        messages: [
+          { role: 'system', content: DEFAULT_SYSTEM_PROMPT },
+          { role: 'user', content: userPrompt },
+        ],
+        maxOutputTokens: this.config.maxTokens,
+        temperature: this.config.temperature,
+      });
+
+      const suggestions = this.parseSuggestions(result.text);
 
       if (suggestions.length === 0) {
         return [
@@ -115,6 +91,31 @@ export class LLMAnalyzer implements SuggestionRule {
           `Unable to generate AI suggestions at this time. ${(error as Error).message ?? 'Unknown error.'}`,
         ),
       ];
+    }
+  }
+
+  private createModel() {
+    const { provider, model, apiKey, apiBaseUrl } = this.config;
+
+    switch (provider) {
+      case 'openai': {
+        const openai = createOpenAI({
+          apiKey,
+          baseURL: apiBaseUrl !== 'https://api.openai.com/v1' ? apiBaseUrl : undefined,
+        });
+        return openai(model);
+      }
+      case 'anthropic': {
+        const anthropic = createAnthropic({
+          apiKey,
+          baseURL: apiBaseUrl !== 'https://api.anthropic.com/v1' ? apiBaseUrl : undefined,
+        });
+        return anthropic(model);
+      }
+      case 'ollama':
+        return ollama(model);
+      default:
+        throw new Error(`Unsupported LLM provider: ${provider}`);
     }
   }
 
@@ -260,7 +261,7 @@ ${JSON.stringify(payload, null, 2)}`;
   }
 
   private buildRateLimitSuggestion(): SuggestionData {
-    const providerName = this.client?.providerName() ?? 'LLM provider';
+    const providerName = this.getProviderName();
     return {
       type: 'LLM_RATE_LIMIT',
       severity: 'info',
@@ -272,13 +273,26 @@ ${JSON.stringify(payload, null, 2)}`;
   }
 
   private buildFallbackSuggestion(reason: string): SuggestionData {
-    const providerName = this.client?.providerName() ?? 'LLM provider';
+    const providerName = this.getProviderName();
     return {
       type: 'LLM_FALLBACK',
       severity: 'info',
       title: `${providerName} suggestions unavailable`,
       description: this.appendAttribution(reason),
     };
+  }
+
+  private getProviderName(): string {
+    switch (this.config.provider) {
+      case 'openai':
+        return 'OpenAI';
+      case 'anthropic':
+        return 'Anthropic Claude';
+      case 'ollama':
+        return 'Local AI';
+      default:
+        return 'LLM provider';
+    }
   }
 }
 
@@ -398,173 +412,6 @@ function formatBytes(size: number | undefined): string {
     return `${(size / 1024).toFixed(1)}KB`;
   }
   return `${(size / (1024 * 1024)).toFixed(1)}MB`;
-}
-
-function createLLMClient(
-  config: LLMIntegrationConfig,
-  fetchImpl: typeof fetch = globalThis.fetch,
-): LLMClient {
-  if (typeof fetchImpl !== 'function') {
-    throw new Error('A fetch implementation is required for LLM integration.');
-  }
-
-  switch (config.provider) {
-    case 'openai':
-      return new OpenAIClient(config, fetchImpl);
-    case 'anthropic':
-      return new AnthropicClient(config, fetchImpl);
-    default:
-      throw new Error(`Unsupported LLM provider: ${config.provider}`);
-  }
-}
-
-class OpenAIClient implements LLMClient {
-  constructor(
-    private readonly config: LLMIntegrationConfig,
-    private readonly fetchImpl: typeof fetch,
-  ) {}
-
-  providerName(): string {
-    return 'OpenAI';
-  }
-
-  async generate(request: LLMGenerationRequest): Promise<string> {
-    const body = {
-      model: this.config.model,
-      messages: [
-        { role: 'system', content: request.systemPrompt },
-        { role: 'user', content: request.userPrompt },
-      ],
-      max_tokens: request.maxTokens,
-      temperature: request.temperature,
-    };
-
-    const response = await this.performRequest('/chat/completions', body, {
-      Authorization: `Bearer ${this.config.apiKey}`,
-    });
-
-    const content = response?.choices?.[0]?.message?.content;
-    if (typeof content !== 'string' || content.trim().length === 0) {
-      throw new Error('OpenAI response did not include content.');
-    }
-
-    return content;
-  }
-
-  private async performRequest(path: string, body: unknown, extraHeaders: Record<string, string>) {
-    const url = `${this.config.apiBaseUrl}${path}`;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), this.config.requestTimeoutMs);
-
-    try {
-      const response = await this.fetchImpl(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...extraHeaders,
-        },
-        body: JSON.stringify(body),
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const text = await safeReadText(response);
-        throw new Error(`OpenAI API error (${response.status}): ${text}`);
-      }
-
-      return response.json();
-    } catch (error) {
-      if ((error as Error).name === 'AbortError') {
-        throw new Error('OpenAI request timed out.');
-      }
-      throw error;
-    } finally {
-      clearTimeout(timeout);
-    }
-  }
-}
-
-class AnthropicClient implements LLMClient {
-  constructor(
-    private readonly config: LLMIntegrationConfig,
-    private readonly fetchImpl: typeof fetch,
-  ) {}
-
-  providerName(): string {
-    return 'Anthropic Claude';
-  }
-
-  async generate(request: LLMGenerationRequest): Promise<string> {
-    const body = {
-      model: this.config.model,
-      max_tokens: request.maxTokens,
-      temperature: request.temperature,
-      system: request.systemPrompt,
-      messages: [
-        {
-          role: 'user',
-          content: request.userPrompt,
-        },
-      ],
-    };
-
-    const response = await this.performRequest('/messages', body, {
-      'x-api-key': this.config.apiKey,
-      'anthropic-version': '2023-06-01',
-    });
-
-    const contentSegments = Array.isArray(response?.content) ? response.content : [];
-    const combined = contentSegments
-      .map((segment: { text?: string }) => segment?.text)
-      .filter((text: unknown): text is string => typeof text === 'string')
-      .join('\n');
-
-    if (combined.trim().length === 0) {
-      throw new Error('Anthropic response did not include content.');
-    }
-
-    return combined;
-  }
-
-  private async performRequest(path: string, body: unknown, extraHeaders: Record<string, string>) {
-    const url = `${this.config.apiBaseUrl}${path}`;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), this.config.requestTimeoutMs);
-
-    try {
-      const response = await this.fetchImpl(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...extraHeaders,
-        },
-        body: JSON.stringify(body),
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const text = await safeReadText(response);
-        throw new Error(`Anthropic API error (${response.status}): ${text}`);
-      }
-
-      return response.json();
-    } catch (error) {
-      if ((error as Error).name === 'AbortError') {
-        throw new Error('Anthropic request timed out.');
-      }
-      throw error;
-    } finally {
-      clearTimeout(timeout);
-    }
-  }
-}
-
-async function safeReadText(response: Response): Promise<string> {
-  try {
-    return await response.text();
-  } catch {
-    return '<failed to read response body>';
-  }
 }
 
 function acquireRateLimiter(config: LLMIntegrationConfig, now: () => number): RateLimiter {

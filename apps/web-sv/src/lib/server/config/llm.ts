@@ -3,7 +3,7 @@
  * Provides strongly typed configuration for LLM integrations
  */
 
-export type LLMProviderId = 'openai' | 'anthropic';
+export type LLMProviderId = 'openai' | 'anthropic' | 'ollama';
 
 /**
  * Resolved configuration for LLM integration
@@ -60,6 +60,16 @@ const PROVIDER_DEFAULTS: Record<LLMProviderId, Omit<LLMIntegrationConfig, 'enabl
     requestTimeoutMs: 20000,
     attribution: 'Generated with Anthropic Claude',
   },
+  ollama: {
+    provider: 'ollama',
+    apiBaseUrl: 'http://localhost:11434',
+    model: 'qwen2.5-coder:3b',
+    maxTokens: 512,
+    temperature: 0.25,
+    rateLimitPerMinute: 120,
+    requestTimeoutMs: 30000,
+    attribution: 'Generated with Local AI',
+  },
 };
 
 /**
@@ -67,14 +77,14 @@ const PROVIDER_DEFAULTS: Record<LLMProviderId, Omit<LLMIntegrationConfig, 'enabl
  *
  * Environment variables:
  * - `SMAPPY_LLM_ENABLED`: boolean (default: false)
- * - `SMAPPY_LLM_PROVIDER`: `openai` | `anthropic`
+ * - `SMAPPY_LLM_PROVIDER`: `openai` | `anthropic` | `ollama`
  * - `SMAPPY_LLM_MODEL`: model identifier override
  * - `SMAPPY_LLM_MAX_TOKENS`: integer
  * - `SMAPPY_LLM_TEMPERATURE`: float
  * - `SMAPPY_LLM_RATE_LIMIT`: integer (requests per minute)
  * - `SMAPPY_LLM_TIMEOUT_MS`: integer (milliseconds)
  * - `SMAPPY_LLM_ATTRIBUTION`: attribution string
- * - `SMAPPY_OPENAI_API_KEY` / `SMAPPY_ANTHROPIC_API_KEY`: provider specific keys
+ * - `SMAPPY_OPENAI_API_KEY` / `SMAPPY_ANTHROPIC_API_KEY`: provider specific keys (not needed for ollama)
  * - `SMAPPY_LLM_API_BASE_URL`: override API base URL
  */
 export function loadLLMConfig(
@@ -98,7 +108,8 @@ export function loadLLMConfig(
     };
   }
 
-  if (!apiKey) {
+  // Ollama doesn't require an API key for local usage
+  if (!apiKey && provider !== 'ollama') {
     throw new Error(`LLM integration enabled but API key for provider "${provider}" is missing.`);
   }
 
@@ -126,7 +137,7 @@ export function loadLLMConfig(
   return {
     enabled: true,
     provider,
-    apiKey,
+    apiKey: apiKey ?? '',
     apiBaseUrl: trimTrailingSlash(apiBaseUrl),
     model,
     maxTokens,
@@ -156,7 +167,7 @@ function resolveProvider(
 }
 
 function isSupportedProvider(provider: string): provider is LLMProviderId {
-  return provider === 'openai' || provider === 'anthropic';
+  return provider === 'openai' || provider === 'anthropic' || provider === 'ollama';
 }
 
 function parseBoolean(
