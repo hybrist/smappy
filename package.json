@@ -6,7 +6,7 @@
   "packageManager": "pnpm@10.20.0",
   "scripts": {
     "dev": "pnpm --filter @smappy/web-sv dev",
-    "build": "pnpm --filter @smappy/web-sv build",
+    "build": "pnpm --filter @smappy/core build && pnpm --filter @smappy/web-sv build",
     "preview": "pnpm --filter @smappy/web-sv preview",
     "check": "pnpm --filter @smappy/web-sv check",
     "check:watch": "pnpm --filter @smappy/web-sv check:watch",

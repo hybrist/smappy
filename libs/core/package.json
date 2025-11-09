@@ -28,7 +28,8 @@
   "scripts": {
     "build": "tsc",
     "check": "tsc --noEmit",
-    "test": "vitest"
+    "test": "vitest",
+    "prepare": "tsc"
   },
   "dependencies": {
     "@babel/parser": "^7.28.5",
