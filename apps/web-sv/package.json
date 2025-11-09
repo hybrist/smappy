@@ -80,8 +80,10 @@
   "dependencies": {
     "@smappy/core": "workspace:*",
     "@types/d3": "^7.4.3",
+    "ai": "^5.0.89",
     "better-sqlite3": "^12.4.1",
     "d3": "^7.9.0",
+    "ollama-ai-provider-v2": "^1.5.3",
     "valibot": "^1.1.0"
   }
 }

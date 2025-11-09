@@ -52,6 +52,7 @@ export default defineConfig(
     files: [
       'src/routes/dashboard/**/*.svelte',
       'src/routes/+page.svelte',
+      'src/routes/chat/**/*.svelte',
       'src/lib/components/**/*.svelte',
     ],
     rules: {
