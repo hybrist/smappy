@@ -4,6 +4,10 @@ import type { SuggestionContext } from '../../suggestions/types.js';
 import type { LLMIntegrationConfig } from '../../config/llm.js';
 import type { GenerateTextResult } from 'ai';
 
+// Type alias for cleaner test mocking - using Record<string, never> instead of any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyGenerateTextResult = GenerateTextResult<any, any>;
+
 // Mock the AI SDK
 vi.mock('ai', () => ({
   generateText: vi.fn(),
@@ -102,9 +106,15 @@ describe('LLMAnalyzer', () => {
         },
       ]),
       finishReason: 'stop',
-      usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+      usage: {
+        promptTokens: 0,
+        completionTokens: 0,
+        totalTokens: 0,
+        inputTokens: 0,
+        outputTokens: 0,
+      },
       experimental_providerMetadata: undefined,
-    } as Partial<GenerateTextResult<never>> as GenerateTextResult<never>);
+    } as unknown as AnyGenerateTextResult);
 
     const analyzer = new LLMAnalyzer({ config: baseConfig });
     const suggestions = await analyzer.execute(baseContext);
@@ -127,9 +137,15 @@ describe('LLMAnalyzer', () => {
         },
       ]),
       finishReason: 'stop',
-      usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+      usage: {
+        promptTokens: 0,
+        completionTokens: 0,
+        totalTokens: 0,
+        inputTokens: 0,
+        outputTokens: 0,
+      },
       experimental_providerMetadata: undefined,
-    } as Partial<GenerateTextResult<never>> as GenerateTextResult<never>);
+    } as unknown as AnyGenerateTextResult);
 
     let currentTime = 0;
     const analyzer = new LLMAnalyzer({
@@ -158,9 +174,15 @@ describe('LLMAnalyzer', () => {
     vi.mocked(generateText).mockResolvedValueOnce({
       text: 'not-json',
       finishReason: 'stop',
-      usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+      usage: {
+        promptTokens: 0,
+        completionTokens: 0,
+        totalTokens: 0,
+        inputTokens: 0,
+        outputTokens: 0,
+      },
       experimental_providerMetadata: undefined,
-    } as Partial<GenerateTextResult<never>> as GenerateTextResult<never>);
+    } as unknown as AnyGenerateTextResult);
 
     const analyzer = new LLMAnalyzer({ config: baseConfig });
 
