@@ -78,6 +78,8 @@
     "webpack": "^5.102.1"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^2.0.42",
+    "@ai-sdk/openai": "^2.0.64",
     "@smappy/core": "workspace:*",
     "@types/d3": "^7.4.3",
     "ai": "^5.0.89",
