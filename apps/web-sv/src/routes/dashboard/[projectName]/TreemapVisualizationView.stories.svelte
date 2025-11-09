@@ -300,11 +300,7 @@
 
 <Story name="Empty Data">
   <div class="h-[700px] w-full">
-    <TreemapVisualizationView
-      data={{ name: 'root', children: [] }}
-      width={1200}
-      height={600}
-    />
+    <TreemapVisualizationView data={{ name: 'root', children: [] }} width={1200} height={600} />
   </div>
 </Story>
 
