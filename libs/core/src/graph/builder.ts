@@ -4,12 +4,12 @@
  * Pure version without file system I/O
  */
 
-import { parse } from '@babel/parser';
-import traverseDefault, { type NodePath } from '@babel/traverse';
+import { parse } from "@babel/parser";
+import traverseDefault, { type NodePath } from "@babel/traverse";
 
 // Handle both default and named exports from @babel/traverse
 const traverse =
-  typeof traverseDefault === 'function'
+  typeof traverseDefault === "function"
     ? traverseDefault
     : (traverseDefault as { default: typeof traverseDefault }).default;
 import type {
@@ -18,8 +18,8 @@ import type {
   ExportAllDeclaration,
   CallExpression,
   StringLiteral,
-} from '@babel/types';
-import type { ParsedDependency } from '../types.js';
+} from "@babel/types";
+import type { ParsedDependency } from "../types.js";
 
 // ============================================================================
 // Types
@@ -100,8 +100,8 @@ export function buildDependencyGraph(
   let ast;
   try {
     ast = parse(sourceCode, {
-      sourceType: 'module',
-      plugins: ['typescript', 'jsx', 'decorators'],
+      sourceType: "module",
+      plugins: ["typescript", "jsx", "decorators"],
       errorRecovery: true,
     });
   } catch {
@@ -167,21 +167,24 @@ export function buildDependencyGraph(
 /**
  * Parse an import declaration
  */
-function parseImportDeclaration(node: ImportDeclaration, filePath: string): ParsedDependency {
+function parseImportDeclaration(
+  node: ImportDeclaration,
+  filePath: string,
+): ParsedDependency {
   const importedNames: string[] = [];
   let isDefault = false;
   let isNamespace = false;
 
   for (const specifier of node.specifiers) {
-    if (specifier.type === 'ImportDefaultSpecifier') {
+    if (specifier.type === "ImportDefaultSpecifier") {
       isDefault = true;
-      importedNames.push('default');
-    } else if (specifier.type === 'ImportNamespaceSpecifier') {
+      importedNames.push("default");
+    } else if (specifier.type === "ImportNamespaceSpecifier") {
       isNamespace = true;
-      importedNames.push('*');
-    } else if (specifier.type === 'ImportSpecifier') {
+      importedNames.push("*");
+    } else if (specifier.type === "ImportSpecifier") {
       const imported =
-        specifier.imported.type === 'Identifier'
+        specifier.imported.type === "Identifier"
           ? specifier.imported.name
           : specifier.imported.value;
       importedNames.push(imported);
@@ -191,7 +194,7 @@ function parseImportDeclaration(node: ImportDeclaration, filePath: string): Pars
   return {
     source: filePath,
     target: node.source.value,
-    type: 'import',
+    type: "import",
     importedNames: importedNames.length > 0 ? importedNames : undefined,
     isDefault,
     isNamespace,
@@ -218,9 +221,9 @@ function parseExportNamedDeclaration(
   const importedNames: string[] = [];
 
   for (const specifier of node.specifiers) {
-    if (specifier.type === 'ExportSpecifier') {
+    if (specifier.type === "ExportSpecifier") {
       const exported =
-        specifier.exported.type === 'Identifier'
+        specifier.exported.type === "Identifier"
           ? specifier.exported.name
           : specifier.exported.value;
       importedNames.push(exported);
@@ -230,7 +233,7 @@ function parseExportNamedDeclaration(
   return {
     source: filePath,
     target: node.source.value,
-    type: 're-export',
+    type: "re-export",
     importedNames: importedNames.length > 0 ? importedNames : undefined,
     location: node.loc
       ? {
@@ -244,11 +247,14 @@ function parseExportNamedDeclaration(
 /**
  * Parse an export all declaration
  */
-function parseExportAllDeclaration(node: ExportAllDeclaration, filePath: string): ParsedDependency {
+function parseExportAllDeclaration(
+  node: ExportAllDeclaration,
+  filePath: string,
+): ParsedDependency {
   return {
     source: filePath,
     target: node.source.value,
-    type: 're-export',
+    type: "re-export",
     isNamespace: true,
     location: node.loc
       ? {
@@ -262,22 +268,25 @@ function parseExportAllDeclaration(node: ExportAllDeclaration, filePath: string)
 /**
  * Parse a dynamic import (import())
  */
-function parseDynamicImport(node: CallExpression, filePath: string): ParsedDependency | null {
+function parseDynamicImport(
+  node: CallExpression,
+  filePath: string,
+): ParsedDependency | null {
   // Check if this is import()
-  if (node.callee.type !== 'Import') {
+  if (node.callee.type !== "Import") {
     return null;
   }
 
   // Extract the module path (only support string literals for now)
   const arg = node.arguments[0];
-  if (!arg || arg.type !== 'StringLiteral') {
+  if (!arg || arg.type !== "StringLiteral") {
     return null;
   }
 
   return {
     source: filePath,
     target: (arg as StringLiteral).value,
-    type: 'dynamic-import',
+    type: "dynamic-import",
     location: node.loc
       ? {
           start: { line: node.loc.start.line, column: node.loc.start.column },
@@ -321,8 +330,10 @@ export function resolveModule(
   if (options.aliases) {
     for (const [alias, aliasPath] of Object.entries(options.aliases)) {
       if (importPath.startsWith(alias)) {
-        const baseDir = options.baseDir || '';
-        const pathAfterAlias = importPath.slice(alias.length).replace(/^\//, '');
+        const baseDir = options.baseDir || "";
+        const pathAfterAlias = importPath
+          .slice(alias.length)
+          .replace(/^\//, "");
         const resolvedAlias = joinPaths(baseDir, aliasPath, pathAfterAlias);
         return {
           originalPath: importPath,
@@ -334,7 +345,8 @@ export function resolveModule(
   }
 
   // Check if it's a third-party module
-  const isThirdParty = !importPath.startsWith('.') && !importPath.startsWith('/');
+  const isThirdParty =
+    !importPath.startsWith(".") && !importPath.startsWith("/");
 
   if (isThirdParty) {
     return resolveThirdPartyModule(importPath, options);
@@ -342,7 +354,7 @@ export function resolveModule(
 
   // Resolve relative path (pure string manipulation)
   const fromDir = getDirectoryName(fromFile);
-  const resolvedPath = importPath.startsWith('/')
+  const resolvedPath = importPath.startsWith("/")
     ? importPath
     : joinPaths(fromDir, importPath);
 
@@ -356,16 +368,19 @@ export function resolveModule(
 /**
  * Resolve a third-party module (pure, uses pre-loaded metadata)
  */
-function resolveThirdPartyModule(importPath: string, options: BuilderOptions): ResolvedModule {
+function resolveThirdPartyModule(
+  importPath: string,
+  options: BuilderOptions,
+): ResolvedModule {
   // Extract package name (handle scoped packages)
   let packageName: string;
-  if (importPath.startsWith('@')) {
+  if (importPath.startsWith("@")) {
     // Scoped package: @scope/package
-    const parts = importPath.split('/');
-    packageName = parts.slice(0, 2).join('/');
+    const parts = importPath.split("/");
+    packageName = parts.slice(0, 2).join("/");
   } else {
     // Regular package: package or package/subpath
-    packageName = importPath.split('/')[0];
+    packageName = importPath.split("/")[0];
   }
 
   // Get version from pre-loaded metadata (no file I/O)
@@ -374,7 +389,7 @@ function resolveThirdPartyModule(importPath: string, options: BuilderOptions): R
     packageVersion = options.packageMetadata[packageName].version;
     // Clean up version string (remove ^, ~, etc.)
     if (packageVersion) {
-      packageVersion = packageVersion.replace(/^[\^~]/, '');
+      packageVersion = packageVersion.replace(/^[\^~]/, "");
     }
   }
 
@@ -394,7 +409,9 @@ function resolveThirdPartyModule(importPath: string, options: BuilderOptions): R
 /**
  * Find circular dependencies in the dependency graph
  */
-export function findCircularDependencies(dependencies: ParsedDependency[]): string[][] {
+export function findCircularDependencies(
+  dependencies: ParsedDependency[],
+): string[][] {
   // Build adjacency list
   const graph = new Map<string, Set<string>>();
 
@@ -454,7 +471,7 @@ export function findCircularDependencies(dependencies: ParsedDependency[]): stri
  * Check if a module is a third-party dependency
  */
 export function isThirdPartyModule(importPath: string): boolean {
-  return !importPath.startsWith('.') && !importPath.startsWith('/');
+  return !importPath.startsWith(".") && !importPath.startsWith("/");
 }
 
 /**
@@ -465,49 +482,46 @@ export function extractPackageName(importPath: string): string | null {
     return null;
   }
 
-  if (importPath.startsWith('@')) {
+  if (importPath.startsWith("@")) {
     // Scoped package
-    const parts = importPath.split('/');
-    return parts.slice(0, 2).join('/');
+    const parts = importPath.split("/");
+    return parts.slice(0, 2).join("/");
   }
 
   // Regular package
-  return importPath.split('/')[0];
+  return importPath.split("/")[0];
 }
 
 /**
  * Get directory name from a file path (pure string manipulation)
  */
 function getDirectoryName(filePath: string): string {
-  const normalized = filePath.replace(/\\/g, '/');
-  const lastSlash = normalized.lastIndexOf('/');
-  return lastSlash === -1 ? '.' : normalized.slice(0, lastSlash) || '/';
+  const normalized = filePath.replace(/\\/g, "/");
+  const lastSlash = normalized.lastIndexOf("/");
+  return lastSlash === -1 ? "." : normalized.slice(0, lastSlash) || "/";
 }
 
 /**
  * Join path segments (pure string manipulation)
  */
 function joinPaths(...segments: string[]): string {
-  return segments
-    .filter(Boolean)
-    .join('/')
-    .replace(/\/+/g, '/');
+  return segments.filter(Boolean).join("/").replace(/\/+/g, "/");
 }
 
 /**
  * Normalize a path (pure string manipulation)
  */
 function normalizePath(path: string): string {
-  const parts = path.split('/').filter(Boolean);
+  const parts = path.split("/").filter(Boolean);
   const normalized: string[] = [];
 
   for (const part of parts) {
-    if (part === '..') {
+    if (part === "..") {
       normalized.pop();
-    } else if (part !== '.') {
+    } else if (part !== ".") {
       normalized.push(part);
     }
   }
 
-  return (path.startsWith('/') ? '/' : '') + normalized.join('/');
+  return (path.startsWith("/") ? "/" : "") + normalized.join("/");
 }

@@ -4,15 +4,15 @@
  * Uses Babel parser and traverse for robust parsing of modern JS/TS syntax.
  */
 
-import { parse, type ParseResult } from '@babel/parser';
-import traverseDefault, { type NodePath } from '@babel/traverse';
-import * as t from '@babel/types';
-import { createHash } from 'node:crypto';
-import type { ParsedSymbol } from '../types.js';
+import { parse, type ParseResult } from "@babel/parser";
+import traverseDefault, { type NodePath } from "@babel/traverse";
+import * as t from "@babel/types";
+import { createHash } from "node:crypto";
+import type { ParsedSymbol } from "../types.js";
 
 // Handle both default and named exports from @babel/traverse
 const traverse =
-  typeof traverseDefault === 'function'
+  typeof traverseDefault === "function"
     ? traverseDefault
     : (traverseDefault as { default: typeof traverseDefault }).default;
 
@@ -21,7 +21,7 @@ const traverse =
  */
 export interface SymbolWithExport extends ParsedSymbol {
   /** Export type if this symbol is exported */
-  exportType?: 'named' | 'default' | 'namespace';
+  exportType?: "named" | "default" | "namespace";
   /** Whether this is a re-export */
   isReExport?: boolean;
   /** Original name if exported with alias */
@@ -45,7 +45,7 @@ export interface AnalysisResult {
  */
 export interface AnalyzerOptions {
   /** Source file type */
-  sourceType?: 'module' | 'script' | 'unambiguous';
+  sourceType?: "module" | "script" | "unambiguous";
   /** Whether to include nested symbols */
   includeNested?: boolean;
   /** File path for better error messages */
@@ -58,8 +58,15 @@ export interface AnalyzerOptions {
  * @param options - Analysis options
  * @returns Analysis result with extracted symbols and metadata
  */
-export function extractSymbols(code: string, options: AnalyzerOptions = {}): AnalysisResult {
-  const { sourceType = 'module', includeNested = true, filePath = 'unknown' } = options;
+export function extractSymbols(
+  code: string,
+  options: AnalyzerOptions = {},
+): AnalysisResult {
+  const {
+    sourceType = "module",
+    includeNested = true,
+    filePath = "unknown",
+  } = options;
 
   const symbols: SymbolWithExport[] = [];
   const errors: string[] = [];
@@ -69,18 +76,18 @@ export function extractSymbols(code: string, options: AnalyzerOptions = {}): Ana
     const ast = parse(code, {
       sourceType,
       plugins: [
-        'typescript',
-        'jsx',
-        'decorators',
-        'classProperties',
-        'classPrivateProperties',
-        'classPrivateMethods',
-        'exportDefaultFrom',
-        'exportNamespaceFrom',
-        'dynamicImport',
-        'nullishCoalescingOperator',
-        'optionalChaining',
-        'topLevelAwait',
+        "typescript",
+        "jsx",
+        "decorators",
+        "classProperties",
+        "classPrivateProperties",
+        "classPrivateMethods",
+        "exportDefaultFrom",
+        "exportNamespaceFrom",
+        "dynamicImport",
+        "nullishCoalescingOperator",
+        "optionalChaining",
+        "topLevelAwait",
       ],
       errorRecovery: false,
     });
@@ -88,7 +95,7 @@ export function extractSymbols(code: string, options: AnalyzerOptions = {}): Ana
     // Track exports for later association
     const exportMap = new Map<
       string,
-      { type: 'named' | 'default' | 'namespace'; exportedAs?: string }
+      { type: "named" | "default" | "namespace"; exportedAs?: string }
     >();
 
     // First pass: collect export information
@@ -97,28 +104,36 @@ export function extractSymbols(code: string, options: AnalyzerOptions = {}): Ana
         if (path.node.declaration) {
           // export const x = 1; export function f() {}
           const declaration = path.node.declaration;
-          if (declaration.type === 'VariableDeclaration') {
+          if (declaration.type === "VariableDeclaration") {
             declaration.declarations.forEach((decl: t.VariableDeclarator) => {
-              if (decl.id.type === 'Identifier') {
-                exportMap.set(decl.id.name, { type: 'named' });
+              if (decl.id.type === "Identifier") {
+                exportMap.set(decl.id.name, { type: "named" });
               }
             });
           } else if (
-            declaration.type === 'FunctionDeclaration' ||
-            declaration.type === 'ClassDeclaration'
+            declaration.type === "FunctionDeclaration" ||
+            declaration.type === "ClassDeclaration"
           ) {
             if (declaration.id) {
-              exportMap.set(declaration.id.name, { type: 'named' });
+              exportMap.set(declaration.id.name, { type: "named" });
             }
           }
         } else if (path.node.specifiers) {
           // export { x, y as z }
           path.node.specifiers.forEach(
-            (spec: t.ExportSpecifier | t.ExportDefaultSpecifier | t.ExportNamespaceSpecifier) => {
-              if (spec.type === 'ExportSpecifier') {
+            (
+              spec:
+                | t.ExportSpecifier
+                | t.ExportDefaultSpecifier
+                | t.ExportNamespaceSpecifier,
+            ) => {
+              if (spec.type === "ExportSpecifier") {
                 exportMap.set(spec.local.name, {
-                  type: 'named',
-                  exportedAs: spec.exported.type === 'Identifier' ? spec.exported.name : undefined,
+                  type: "named",
+                  exportedAs:
+                    spec.exported.type === "Identifier"
+                      ? spec.exported.name
+                      : undefined,
                 });
               }
             },
@@ -129,10 +144,11 @@ export function extractSymbols(code: string, options: AnalyzerOptions = {}): Ana
       ExportDefaultDeclaration(path: NodePath<t.ExportDefaultDeclaration>) {
         const declaration = path.node.declaration;
         if (
-          (declaration.type === 'FunctionDeclaration' || declaration.type === 'ClassDeclaration') &&
+          (declaration.type === "FunctionDeclaration" ||
+            declaration.type === "ClassDeclaration") &&
           declaration.id
         ) {
-          exportMap.set(declaration.id.name, { type: 'default' });
+          exportMap.set(declaration.id.name, { type: "default" });
         }
       },
 
@@ -148,7 +164,12 @@ export function extractSymbols(code: string, options: AnalyzerOptions = {}): Ana
       FunctionDeclaration(path: NodePath<t.FunctionDeclaration>) {
         if (path.node.id && (!isNested(path) || includeNested)) {
           const scope = determineScope(path);
-          const symbol = createFunctionSymbol(path.node, path, scope, exportMap);
+          const symbol = createFunctionSymbol(
+            path.node,
+            path,
+            scope,
+            exportMap,
+          );
           if (symbol) symbols.push(symbol);
         }
       },
@@ -158,7 +179,7 @@ export function extractSymbols(code: string, options: AnalyzerOptions = {}): Ana
         // Only top-level or class-level variables
         if (!isNested(path) || includeNested) {
           path.node.declarations.forEach((declarator: t.VariableDeclarator) => {
-            if (declarator.id.type === 'Identifier') {
+            if (declarator.id.type === "Identifier") {
               const scope = determineScope(path);
               const symbol = createVariableSymbol(
                 declarator,
@@ -176,7 +197,12 @@ export function extractSymbols(code: string, options: AnalyzerOptions = {}): Ana
       // Class declarations: class Foo {}
       ClassDeclaration(path: NodePath<t.ClassDeclaration>) {
         if (path.node.id) {
-          const symbol = createClassSymbol(path.node, path, 'module', exportMap);
+          const symbol = createClassSymbol(
+            path.node,
+            path,
+            "module",
+            exportMap,
+          );
           if (symbol) symbols.push(symbol);
 
           // Extract class methods if includeNested
@@ -205,7 +231,7 @@ export function extractSymbols(code: string, options: AnalyzerOptions = {}): Ana
     );
     return {
       symbols,
-      astHash: '',
+      astHash: "",
       errors,
     };
   }
@@ -234,11 +260,13 @@ function isNested(path: NodePath): boolean {
 /**
  * Determine the scope of a symbol
  */
-function determineScope(path: NodePath): 'global' | 'module' | 'function' | 'block' {
+function determineScope(
+  path: NodePath,
+): "global" | "module" | "function" | "block" {
   if (isNested(path)) {
-    return 'function';
+    return "function";
   }
-  return 'module';
+  return "module";
 }
 
 /**
@@ -247,8 +275,11 @@ function determineScope(path: NodePath): 'global' | 'module' | 'function' | 'blo
 function createFunctionSymbol(
   node: t.FunctionDeclaration,
   path: NodePath,
-  scope: 'global' | 'module' | 'function' | 'block',
-  exportMap: Map<string, { type: 'named' | 'default' | 'namespace'; exportedAs?: string }>,
+  scope: "global" | "module" | "function" | "block",
+  exportMap: Map<
+    string,
+    { type: "named" | "default" | "namespace"; exportedAs?: string }
+  >,
 ): SymbolWithExport | null {
   if (!node.id || !node.loc) return null;
 
@@ -258,7 +289,7 @@ function createFunctionSymbol(
 
   return {
     name,
-    type: 'function',
+    type: "function",
     location: {
       start: { line: node.loc.start.line, column: node.loc.start.column },
       end: { line: node.loc.end.line, column: node.loc.end.column },
@@ -275,26 +306,30 @@ function createFunctionSymbol(
  */
 function createVariableSymbol(
   node: t.VariableDeclarator,
-  kind: t.VariableDeclaration['kind'],
+  kind: t.VariableDeclaration["kind"],
   path: NodePath,
-  scope: 'global' | 'module' | 'function' | 'block',
-  exportMap: Map<string, { type: 'named' | 'default' | 'namespace'; exportedAs?: string }>,
+  scope: "global" | "module" | "function" | "block",
+  exportMap: Map<
+    string,
+    { type: "named" | "default" | "namespace"; exportedAs?: string }
+  >,
 ): SymbolWithExport | null {
-  if (node.id.type !== 'Identifier' || !node.loc) return null;
+  if (node.id.type !== "Identifier" || !node.loc) return null;
 
   const name = node.id.name;
   const exportInfo = exportMap.get(name);
   const size = estimateSize(node);
 
   // Determine if this is a function expression or arrow function
-  let symbolType: ParsedSymbol['type'] =
-    kind === 'const' ? 'const' : kind === 'let' ? 'let' : 'variable';
+  let symbolType: ParsedSymbol["type"] =
+    kind === "const" ? "const" : kind === "let" ? "let" : "variable";
 
   if (
     node.init &&
-    (node.init.type === 'FunctionExpression' || node.init.type === 'ArrowFunctionExpression')
+    (node.init.type === "FunctionExpression" ||
+      node.init.type === "ArrowFunctionExpression")
   ) {
-    symbolType = 'function';
+    symbolType = "function";
   }
 
   return {
@@ -317,8 +352,11 @@ function createVariableSymbol(
 function createClassSymbol(
   node: t.ClassDeclaration,
   _path: NodePath,
-  scope: 'global' | 'module' | 'function' | 'block',
-  exportMap: Map<string, { type: 'named' | 'default' | 'namespace'; exportedAs?: string }>,
+  scope: "global" | "module" | "function" | "block",
+  exportMap: Map<
+    string,
+    { type: "named" | "default" | "namespace"; exportedAs?: string }
+  >,
 ): SymbolWithExport | null {
   if (!node.id || !node.loc) return null;
 
@@ -328,7 +366,7 @@ function createClassSymbol(
 
   return {
     name,
-    type: 'class',
+    type: "class",
     location: {
       start: { line: node.loc.start.line, column: node.loc.start.column },
       end: { line: node.loc.end.line, column: node.loc.end.column },
@@ -343,7 +381,10 @@ function createClassSymbol(
 /**
  * Extract methods from a class
  */
-function extractClassMethods(node: t.ClassDeclaration, _path: NodePath): SymbolWithExport[] {
+function extractClassMethods(
+  node: t.ClassDeclaration,
+  _path: NodePath,
+): SymbolWithExport[] {
   const methods: SymbolWithExport[] = [];
 
   node.body.body.forEach(
@@ -359,35 +400,39 @@ function extractClassMethods(node: t.ClassDeclaration, _path: NodePath): SymbolW
         | t.StaticBlock,
     ) => {
       if (
-        (member.type === 'ClassMethod' || member.type === 'ClassPrivateMethod') &&
-        member.kind === 'method' &&
+        (member.type === "ClassMethod" ||
+          member.type === "ClassPrivateMethod") &&
+        member.kind === "method" &&
         member.loc
       ) {
-        const isPrivate = member.type === 'ClassPrivateMethod';
-        const isStatic = 'static' in member && member.static;
+        const isPrivate = member.type === "ClassPrivateMethod";
+        const isStatic = "static" in member && member.static;
 
         let name: string;
-        if (isPrivate && member.key.type === 'PrivateName') {
+        if (isPrivate && member.key.type === "PrivateName") {
           name = `#${member.key.id.name}`;
-        } else if (member.key.type === 'Identifier') {
+        } else if (member.key.type === "Identifier") {
           name = member.key.name;
         } else {
           return; // Skip computed property names
         }
 
         // Add prefix to indicate method type
-        const prefix = isStatic ? 'static ' : isPrivate ? 'private ' : '';
+        const prefix = isStatic ? "static " : isPrivate ? "private " : "";
         const fullName = node.id ? `${node.id.name}.${prefix}${name}` : name;
 
         methods.push({
           name: fullName,
-          type: 'function',
+          type: "function",
           location: {
-            start: { line: member.loc.start.line, column: member.loc.start.column },
+            start: {
+              line: member.loc.start.line,
+              column: member.loc.start.column,
+            },
             end: { line: member.loc.end.line, column: member.loc.end.column },
           },
           size: estimateSize(member),
-          scope: 'function',
+          scope: "function",
         });
       }
     },
@@ -426,18 +471,18 @@ function generateASTHash(ast: ParseResult<t.File>): string {
   const astStructure = JSON.stringify(ast, (key, value) => {
     // Exclude location info and other metadata that doesn't affect structure
     if (
-      key === 'loc' ||
-      key === 'start' ||
-      key === 'end' ||
-      key === 'extra' ||
-      key === 'comments'
+      key === "loc" ||
+      key === "start" ||
+      key === "end" ||
+      key === "extra" ||
+      key === "comments"
     ) {
       return undefined;
     }
     return value;
   });
 
-  return createHash('sha256').update(astStructure).digest('hex');
+  return createHash("sha256").update(astStructure).digest("hex");
 }
 
 /**
@@ -447,7 +492,7 @@ function generateASTHash(ast: ParseResult<t.File>): string {
  */
 export function analyzeFunctions(code: string): SymbolWithExport[] {
   const result = extractSymbols(code, { includeNested: false });
-  return result.symbols.filter((s) => s.type === 'function');
+  return result.symbols.filter((s) => s.type === "function");
 }
 
 /**
@@ -457,5 +502,5 @@ export function analyzeFunctions(code: string): SymbolWithExport[] {
  */
 export function analyzeClasses(code: string): SymbolWithExport[] {
   const result = extractSymbols(code, { includeNested: true });
-  return result.symbols.filter((s) => s.type === 'class');
+  return result.symbols.filter((s) => s.type === "class");
 }

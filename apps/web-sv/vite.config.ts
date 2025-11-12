@@ -3,7 +3,6 @@ import devtoolsJson from 'vite-plugin-devtools-json';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vitest/config';
 import { sveltekit } from '@sveltejs/kit/vite';
-import { viteBundleAnalysisPlugin } from './src/lib/server/plugins/vite/plugin.js';
 
 export default defineConfig({
   plugins: [
@@ -13,14 +12,6 @@ export default defineConfig({
     paraglideVitePlugin({
       project: './project.inlang',
       outdir: './src/lib/paraglide',
-    }),
-
-    // Analyze Smappy's own bundle (dogfooding!)
-    // The plugin automatically skips SSR builds to avoid duplicate module errors
-    viteBundleAnalysisPlugin({
-      projectName: 'smappy',
-      autoIngest: true,
-      debug: false,
     }),
   ],
   test: {

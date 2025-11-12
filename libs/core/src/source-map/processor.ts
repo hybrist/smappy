@@ -4,9 +4,9 @@
  * Pure version with no file I/O (uses dependency injection for external source maps)
  */
 
-import { SourceMapConsumer } from '@jridgewell/source-map';
-import type { SourceMapInput } from '@jridgewell/source-map';
-import type { SourceMap } from '../types.js';
+import { SourceMapConsumer } from "@jridgewell/source-map";
+import type { SourceMapInput } from "@jridgewell/source-map";
+import type { SourceMap } from "../types.js";
 
 /**
  * Position in source code
@@ -61,17 +61,21 @@ export function parseSourceMap(content: string): SourceMap {
     let jsonContent = content;
 
     // Handle inline source maps (data URLs)
-    if (content.startsWith('data:')) {
-      const match = content.match(/^data:application\/json;(?:charset=utf-8;)?base64,(.+)$/);
+    if (content.startsWith("data:")) {
+      const match = content.match(
+        /^data:application\/json;(?:charset=utf-8;)?base64,(.+)$/,
+      );
       if (match) {
-        jsonContent = Buffer.from(match[1], 'base64').toString('utf-8');
+        jsonContent = Buffer.from(match[1], "base64").toString("utf-8");
       } else {
         // Try URL-encoded data URL
-        const urlMatch = content.match(/^data:application\/json;charset=utf-8,(.+)$/);
+        const urlMatch = content.match(
+          /^data:application\/json;charset=utf-8,(.+)$/,
+        );
         if (urlMatch) {
           jsonContent = decodeURIComponent(urlMatch[1]);
         } else {
-          throw new Error('Invalid data URL format for source map');
+          throw new Error("Invalid data URL format for source map");
         }
       }
     }
@@ -89,7 +93,7 @@ export function parseSourceMap(content: string): SourceMap {
       throw new Error('Source map must have a "sources" array');
     }
 
-    if (typeof parsed.mappings !== 'string') {
+    if (typeof parsed.mappings !== "string") {
       throw new Error('Source map must have a "mappings" string');
     }
 
@@ -116,7 +120,10 @@ export function parseSourceMap(content: string): SourceMap {
  * @param sourceMap - Parsed source map object
  * @returns Array of position mappings
  */
-export function mapBundleToSource(bundleContent: string, sourceMap: SourceMap): PositionMapping[] {
+export function mapBundleToSource(
+  bundleContent: string,
+  sourceMap: SourceMap,
+): PositionMapping[] {
   try {
     // Cast to SourceMapInput to work around type incompatibility between our SourceMap type
     // and the @jridgewell/source-map SourceMapInput type
@@ -151,21 +158,25 @@ export function mapBundleToSource(bundleContent: string, sourceMap: SourceMap): 
  * @param column - Column number (0-indexed)
  * @returns Byte offset in the content
  */
-function calculateByteOffset(content: string, line: number, column: number): number {
-  const lines = content.split('\n');
+function calculateByteOffset(
+  content: string,
+  line: number,
+  column: number,
+): number {
+  const lines = content.split("\n");
   let offset = 0;
 
   // Add bytes from all previous lines (including newline characters)
   for (let i = 0; i < line - 1; i++) {
     if (i < lines.length) {
-      offset += Buffer.byteLength(lines[i], 'utf-8') + 1; // +1 for newline
+      offset += Buffer.byteLength(lines[i], "utf-8") + 1; // +1 for newline
     }
   }
 
   // Add bytes from current line up to the column
   if (line - 1 < lines.length) {
     const lineContent = lines[line - 1].substring(0, column);
-    offset += Buffer.byteLength(lineContent, 'utf-8');
+    offset += Buffer.byteLength(lineContent, "utf-8");
   }
 
   return offset;
@@ -273,7 +284,11 @@ export function computeSymbolFragmentsWithContent(
     fragment.start.line,
     fragment.start.column,
   );
-  fragment.byteEnd = calculateByteOffset(bundleContent, fragment.end.line, fragment.end.column);
+  fragment.byteEnd = calculateByteOffset(
+    bundleContent,
+    fragment.end.line,
+    fragment.end.column,
+  );
   fragment.size = fragment.byteEnd - fragment.byteStart;
 
   return fragment;

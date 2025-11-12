@@ -1,35 +1,22 @@
 {
   "name": "@smappy/core",
-  "version": "0.0.1",
-  "private": true,
+  "version": "0.0.0",
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./ast": {
-      "types": "./dist/ast/index.d.ts",
-      "default": "./dist/ast/index.js"
-    },
-    "./graph": {
-      "types": "./dist/graph/index.d.ts",
-      "default": "./dist/graph/index.js"
-    },
-    "./size": {
-      "types": "./dist/size/index.d.ts",
-      "default": "./dist/size/index.js"
-    },
-    "./source-map": {
-      "types": "./dist/source-map/index.d.ts",
-      "default": "./dist/source-map/index.js"
-    }
+    ".": "./src/index.ts",
+    "./ast": "./src/ast/index.ts",
+    "./graph": "./src/graph/index.ts",
+    "./size": "./src/size/index.ts",
+    "./source-map": "./src/source-map/index.ts",
+    "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsc",
-    "check": "tsc --noEmit",
-    "test": "vitest",
-    "prepare": "tsc"
+    "build": "tsdown",
+    "check": "tsdown --no-clean --report false && prettier --check . && tsc",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "test": "vitest --run",
+    "prepare": "tsdown"
   },
   "dependencies": {
     "@babel/parser": "^7.28.5",
@@ -42,7 +29,22 @@
     "@types/babel__traverse": "^7.28.0",
     "@types/node": "^22.19.0",
     "@types/pako": "^2.0.4",
-    "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
+    "prettier": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "publishConfig": {
+    "exports": {
+      ".": "./dist/index.mjs",
+      "./ast": "./dist/ast/index.mjs",
+      "./graph": "./dist/graph/index.mjs",
+      "./size": "./dist/size/index.mjs",
+      "./source-map": "./dist/source-map/index.mjs",
+      "./package.json": "./package.json"
+    }
   }
 }

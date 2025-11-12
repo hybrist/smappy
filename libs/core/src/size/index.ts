@@ -7,4 +7,4 @@ export {
   computeGzipSize,
   aggregateChunkSizes,
   aggregateBundleSizes,
-} from './calculator.js';
+} from "./calculator.js";

@@ -5,12 +5,12 @@
  * Pure version using only in-memory operations (no file I/O)
  */
 
-import { gzip } from 'pako';
+import { gzip } from "pako";
 
 /**
  * Supported encodings for byte length calculation
  */
-type Encoding = 'utf-8' | 'ascii' | 'latin1' | 'base64' | 'hex';
+type Encoding = "utf-8" | "ascii" | "latin1" | "base64" | "hex";
 
 /**
  * Calculate raw byte length of content
@@ -19,25 +19,28 @@ type Encoding = 'utf-8' | 'ascii' | 'latin1' | 'base64' | 'hex';
  * @param encoding - Encoding to use (default: 'utf-8')
  * @returns Size in bytes
  */
-export function computeRawSize(content: string, encoding: Encoding = 'utf-8'): number {
+export function computeRawSize(
+  content: string,
+  encoding: Encoding = "utf-8",
+): number {
   if (!content) {
     return 0;
   }
 
   switch (encoding) {
-    case 'utf-8':
-      return Buffer.byteLength(content, 'utf-8');
-    case 'ascii':
-      return Buffer.byteLength(content, 'ascii');
-    case 'latin1':
-      return Buffer.byteLength(content, 'latin1');
-    case 'base64':
-      return Buffer.byteLength(content, 'base64');
-    case 'hex':
-      return Buffer.byteLength(content, 'hex');
+    case "utf-8":
+      return Buffer.byteLength(content, "utf-8");
+    case "ascii":
+      return Buffer.byteLength(content, "ascii");
+    case "latin1":
+      return Buffer.byteLength(content, "latin1");
+    case "base64":
+      return Buffer.byteLength(content, "base64");
+    case "hex":
+      return Buffer.byteLength(content, "hex");
     default:
       // Fallback to UTF-8
-      return Buffer.byteLength(content, 'utf-8');
+      return Buffer.byteLength(content, "utf-8");
   }
 }
 
@@ -59,7 +62,7 @@ export function computeGzipSize(content: string): number {
     return compressed.length;
   } catch (error) {
     // Fallback to raw size if compression fails
-    console.warn('Gzip compression failed, using raw size:', error);
+    console.warn("Gzip compression failed, using raw size:", error);
     return computeRawSize(content);
   }
 }
@@ -70,13 +73,18 @@ export function computeGzipSize(content: string): number {
  * @param chunkSizes - Array of size objects for chunks
  * @returns Aggregated size information
  */
-export function aggregateChunkSizes(chunkSizes: Array<{ raw: number; gzipped: number }>): {
+export function aggregateChunkSizes(
+  chunkSizes: Array<{ raw: number; gzipped: number }>,
+): {
   totalRaw: number;
   totalGzipped: number;
   chunks: Array<{ raw: number; gzipped: number }>;
 } {
   const totalRaw = chunkSizes.reduce((sum, chunk) => sum + chunk.raw, 0);
-  const totalGzipped = chunkSizes.reduce((sum, chunk) => sum + chunk.gzipped, 0);
+  const totalGzipped = chunkSizes.reduce(
+    (sum, chunk) => sum + chunk.gzipped,
+    0,
+  );
 
   return {
     totalRaw,
@@ -91,13 +99,18 @@ export function aggregateChunkSizes(chunkSizes: Array<{ raw: number; gzipped: nu
  * @param bundleSizes - Array of size objects for bundles
  * @returns Aggregated size information
  */
-export function aggregateBundleSizes(bundleSizes: Array<{ raw: number; gzipped: number }>): {
+export function aggregateBundleSizes(
+  bundleSizes: Array<{ raw: number; gzipped: number }>,
+): {
   totalRaw: number;
   totalGzipped: number;
   bundles: Array<{ raw: number; gzipped: number }>;
 } {
   const totalRaw = bundleSizes.reduce((sum, bundle) => sum + bundle.raw, 0);
-  const totalGzipped = bundleSizes.reduce((sum, bundle) => sum + bundle.gzipped, 0);
+  const totalGzipped = bundleSizes.reduce(
+    (sum, bundle) => sum + bundle.gzipped,
+    0,
+  );
 
   return {
     totalRaw,
