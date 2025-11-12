@@ -29,6 +29,7 @@
     "build-storybook": "pnpm --filter @smappy/web-sv build-storybook"
   },
   "devDependencies": {
+    "@smappy/cli": "workspace:*",
     "prettier": "catalog:",
     "vitest": "catalog:"
   }
