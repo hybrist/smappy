@@ -10,12 +10,18 @@
     "test": "vitest --run",
     "prepare": "tsdown"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@smappy/core": "workspace:*"
+  },
   "devDependencies": {
+    "@types/webpack": "^5.28.5",
     "prettier": "catalog:",
+    "rollup": "^4.52.5",
     "tsdown": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vite": "^7.1.12",
+    "vitest": "catalog:",
+    "webpack": "^5.102.1"
   },
   "exports": [],
   "files": [
