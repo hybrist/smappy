@@ -1,0 +1,32 @@
+{
+  "name": "@smappy/cli",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsdown",
+    "check": "tsdown --no-clean --report false && prettier --check . && tsc",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "test": "vitest --run",
+    "prepare": "tsdown"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "prettier": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "exports": [],
+  "files": [
+    "dist"
+  ],
+  "bin": {
+    "smappy": "./src/main.ts"
+  },
+  "publishConfig": {
+    "bin": {
+      "smappy": "./dist/main.mjs"
+    }
+  }
+}
