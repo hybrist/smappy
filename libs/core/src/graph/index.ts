@@ -12,4 +12,4 @@ export {
   type ResolvedModule,
   type DependencyGraph,
   type PackageMetadata,
-} from './builder.js';
+} from "./builder.js";
