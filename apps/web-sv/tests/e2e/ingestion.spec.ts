@@ -5,19 +5,15 @@
 
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
 import { ingestBundle, type BundleIngestionInput } from '../../src/lib/server/ingestion/index.js';
-import type {
-  BundleInput,
-  ModuleInput,
-  ChunkInput,
-} from '../../src/lib/server/ingestion/types/index.js';
+import type { BundleInput, ModuleInput, ChunkInput } from '@smappy/core';
 
 test.describe('Bundle Ingestion E2E', () => {
   test('should ingest example bundle with source map', async () => {
     // Read the example bundle and source map from test fixtures
-    const bundlePath = join(process.cwd(), 'test-fixtures', 'bundles', 'example-bundle.js');
-    const sourceMapPath = join(process.cwd(), 'test-fixtures', 'bundles', 'example-bundle.js.map');
+    const exampleBundlesPath = new URL('../../../../examples/bundles/', import.meta.url);
+    const bundlePath = new URL('example-bundle.js', exampleBundlesPath);
+    const sourceMapPath = new URL('example-bundle.js.map', exampleBundlesPath);
 
     const bundleContent = await readFile(bundlePath, 'utf-8');
     let sourceMapContent: string | undefined;

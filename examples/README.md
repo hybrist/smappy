@@ -6,7 +6,7 @@ This directory contains realistic test fixture projects for validating bundler p
 
 Each fixture project represents a real-world project structure and can be built to generate bundles with source maps. These fixtures are used to:
 
-- Test bundler plugin integration (Webpack, Vite, Next.js)
+- Test bundler plugin integration
 - Validate bundle ingestion pipeline
 - Test source map parsing and symbol extraction
 - Verify dependency graph building
@@ -38,9 +38,7 @@ A Webpack 5 project with realistic bundle structure including:
 **Build:**
 
 ```bash
-cd webpack-app
-npm install
-npm run build
+pnpm --filter webpack-fixture-app build
 ```
 
 **Output:** `dist/` directory with bundles and source maps
@@ -65,9 +63,7 @@ A Vite 5 project with React and code splitting:
 **Build:**
 
 ```bash
-cd vite-app
-npm install
-npm run build
+pnpm --filter vite-fixture-app build
 ```
 
 **Output:** `dist/` directory with chunks and source maps
@@ -93,9 +89,7 @@ A Next.js 15 project with App Router:
 **Build:**
 
 ```bash
-cd nextjs-app
-npm install
-npm run build
+pnpm --filter nextjs-fixture-app build
 ```
 
 **Output:** `.next/` directory with production build and source maps
@@ -105,14 +99,7 @@ npm run build
 To rebuild all fixtures:
 
 ```bash
-# Webpack fixture
-cd test-fixtures/webpack-app && npm install && npm run build
-
-# Vite fixture
-cd test-fixtures/vite-app && npm install && npm run build
-
-# Next.js fixture
-cd test-fixtures/nextjs-app && npm install && npm run build
+pnpm --filter '*-fixture-app' build
 ```
 
 ## Usage in Tests

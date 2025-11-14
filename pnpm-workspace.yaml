@@ -1,6 +1,7 @@
 packages:
   - "apps/*"
   - "libs/*"
+  - "examples/*"
 
 catalog:
   prettier: ^3.6.2
