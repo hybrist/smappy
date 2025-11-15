@@ -2,7 +2,7 @@
  * Utility functions for path expansion and other helpers
  */
 
-import { homedir } from 'node:os';
+import { homedir } from "node:os";
 
 /**
  * Expand a path, resolving ~ to home directory
@@ -10,9 +10,8 @@ import { homedir } from 'node:os';
  * @returns Expanded path
  */
 export function expandPath(path: string): string {
-  if (path.startsWith('~')) {
+  if (path.startsWith("~")) {
     return path.replace(/^~/, homedir());
   }
   return path;
 }
-

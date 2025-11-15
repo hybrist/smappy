@@ -3,9 +3,9 @@
  * Provides CRUD operations and utility queries for stored analysis data
  */
 
-import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import * as schema from './schema.js';
-import { eq, desc, and, gte, sql } from 'drizzle-orm';
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+import * as schema from "./schema.js";
+import { eq, desc, and, gte, sql } from "drizzle-orm";
 
 /**
  * Options for listing analysis runs
@@ -51,7 +51,14 @@ export interface SaveAnalysisRunInput {
   /** Project name */
   projectName: string;
   /** Bundler type */
-  bundler: 'webpack' | 'rollup' | 'esbuild' | 'vite' | 'parcel' | 'nextjs' | 'other';
+  bundler:
+    | "webpack"
+    | "rollup"
+    | "esbuild"
+    | "vite"
+    | "parcel"
+    | "nextjs"
+    | "other";
   /** Bundle files */
   bundles?: Array<{
     fileName: string;
@@ -116,10 +123,15 @@ export function listAnalysisRuns(
     .from(schema.analysisRun);
 
   if (projectName) {
-    query = query.where(eq(schema.analysisRun.projectName, projectName)) as typeof query;
+    query = query.where(
+      eq(schema.analysisRun.projectName, projectName),
+    ) as typeof query;
   }
 
-  query = query.orderBy(desc(schema.analysisRun.createdAt), desc(schema.analysisRun.id)) as typeof query;
+  query = query.orderBy(
+    desc(schema.analysisRun.createdAt),
+    desc(schema.analysisRun.id),
+  ) as typeof query;
 
   if (limit) {
     query = query.limit(limit) as typeof query;
@@ -134,7 +146,7 @@ export function listAnalysisRuns(
   return runs.map((run) => {
     const moduleStats = db
       .select({
-        moduleCount: sql<number>`count(*)`.as('moduleCount'),
+        moduleCount: sql<number>`count(*)`.as("moduleCount"),
       })
       .from(schema.module)
       .where(eq(schema.module.analysisRunId, run.id))
@@ -142,9 +154,13 @@ export function listAnalysisRuns(
 
     const bundleStats = db
       .select({
-        bundleCount: sql<number>`count(*)`.as('bundleCount'),
-        totalSize: sql<number>`coalesce(sum(${schema.bundle.size}), 0)`.as('totalSize'),
-        totalGzipSize: sql<number>`sum(${schema.bundle.gzipSize})`.as('totalGzipSize'),
+        bundleCount: sql<number>`count(*)`.as("bundleCount"),
+        totalSize: sql<number>`coalesce(sum(${schema.bundle.size}), 0)`.as(
+          "totalSize",
+        ),
+        totalGzipSize: sql<number>`sum(${schema.bundle.gzipSize})`.as(
+          "totalGzipSize",
+        ),
       })
       .from(schema.bundle)
       .where(eq(schema.bundle.analysisRunId, run.id))
@@ -158,7 +174,9 @@ export function listAnalysisRuns(
       moduleCount: moduleStats?.moduleCount ?? 0,
       bundleCount: bundleStats?.bundleCount ?? 0,
       totalSize: Number(bundleStats?.totalSize ?? 0),
-      totalGzipSize: bundleStats?.totalGzipSize ? Number(bundleStats.totalGzipSize) : null,
+      totalGzipSize: bundleStats?.totalGzipSize
+        ? Number(bundleStats.totalGzipSize)
+        : null,
     };
   });
 }
@@ -204,7 +222,7 @@ export function getAnalysisRunById(
 
   const moduleStats = db
     .select({
-      moduleCount: sql<number>`count(*)`.as('moduleCount'),
+      moduleCount: sql<number>`count(*)`.as("moduleCount"),
     })
     .from(schema.module)
     .where(eq(schema.module.analysisRunId, run.id))
@@ -212,9 +230,13 @@ export function getAnalysisRunById(
 
   const bundleStats = db
     .select({
-      bundleCount: sql<number>`count(*)`.as('bundleCount'),
-      totalSize: sql<number>`coalesce(sum(${schema.bundle.size}), 0)`.as('totalSize'),
-      totalGzipSize: sql<number>`sum(${schema.bundle.gzipSize})`.as('totalGzipSize'),
+      bundleCount: sql<number>`count(*)`.as("bundleCount"),
+      totalSize: sql<number>`coalesce(sum(${schema.bundle.size}), 0)`.as(
+        "totalSize",
+      ),
+      totalGzipSize: sql<number>`sum(${schema.bundle.gzipSize})`.as(
+        "totalGzipSize",
+      ),
     })
     .from(schema.bundle)
     .where(eq(schema.bundle.analysisRunId, run.id))
@@ -228,7 +250,9 @@ export function getAnalysisRunById(
     moduleCount: moduleStats?.moduleCount ?? 0,
     bundleCount: bundleStats?.bundleCount ?? 0,
     totalSize: Number(bundleStats?.totalSize ?? 0),
-    totalGzipSize: bundleStats?.totalGzipSize ? Number(bundleStats.totalGzipSize) : null,
+    totalGzipSize: bundleStats?.totalGzipSize
+      ? Number(bundleStats.totalGzipSize)
+      : null,
   };
 }
 
@@ -263,48 +287,56 @@ export function saveAnalysisRun(
 
     // Step 2: Insert bundles
     if (data.bundles && data.bundles.length > 0) {
-      tx.insert(schema.bundle).values(
-        data.bundles.map((bundle) => ({
-          analysisRunId,
-          fileName: bundle.fileName,
-          fileType: bundle.fileType,
-          size: bundle.size,
-          gzipSize: bundle.gzipSize ?? null,
-        })),
-      ).run();
+      tx.insert(schema.bundle)
+        .values(
+          data.bundles.map((bundle) => ({
+            analysisRunId,
+            fileName: bundle.fileName,
+            fileType: bundle.fileType,
+            size: bundle.size,
+            gzipSize: bundle.gzipSize ?? null,
+          })),
+        )
+        .run();
       stats.bundlesWritten = data.bundles.length;
     }
 
     // Step 3: Insert modules
     if (data.modules && data.modules.length > 0) {
-      tx.insert(schema.module).values(
-        data.modules.map((module) => ({
-          analysisRunId,
-          filePath: module.filePath,
-          fileType: module.fileType,
-          originalSize: module.originalSize,
-          bundledSize: module.bundledSize,
-          isThirdParty: module.isThirdParty,
-          packageName: module.packageName ?? null,
-          packageVersion: module.packageVersion ?? null,
-          exports: module.exports ? JSON.stringify(module.exports) : null,
-          usedExports: module.usedExports ? JSON.stringify(module.usedExports) : null,
-        })),
-      ).run();
+      tx.insert(schema.module)
+        .values(
+          data.modules.map((module) => ({
+            analysisRunId,
+            filePath: module.filePath,
+            fileType: module.fileType,
+            originalSize: module.originalSize,
+            bundledSize: module.bundledSize,
+            isThirdParty: module.isThirdParty,
+            packageName: module.packageName ?? null,
+            packageVersion: module.packageVersion ?? null,
+            exports: module.exports ? JSON.stringify(module.exports) : null,
+            usedExports: module.usedExports
+              ? JSON.stringify(module.usedExports)
+              : null,
+          })),
+        )
+        .run();
       stats.modulesWritten = data.modules.length;
     }
 
     // Step 4: Insert chunks
     if (data.chunks && data.chunks.length > 0) {
-      tx.insert(schema.chunk).values(
-        data.chunks.map((chunk) => ({
-          analysisRunId,
-          name: chunk.name ?? null,
-          totalSize: chunk.totalSize,
-          isEntry: chunk.isEntry,
-          isAsync: chunk.isAsync,
-        })),
-      ).run();
+      tx.insert(schema.chunk)
+        .values(
+          data.chunks.map((chunk) => ({
+            analysisRunId,
+            name: chunk.name ?? null,
+            totalSize: chunk.totalSize,
+            isEntry: chunk.isEntry,
+            isAsync: chunk.isAsync,
+          })),
+        )
+        .run();
       stats.chunksWritten = data.chunks.length;
     }
 
@@ -373,13 +405,17 @@ export function pruneAnalysisRuns(
 
         // Delete old runs (cascading deletes will handle related data)
         for (const run of oldRuns) {
-          tx.delete(schema.analysisRun).where(eq(schema.analysisRun.id, run.id)).run();
+          tx.delete(schema.analysisRun)
+            .where(eq(schema.analysisRun.id, run.id))
+            .run();
           totalDeleted++;
         }
       } else {
         // Delete all runs beyond the minimum
         for (const run of runsToDelete) {
-          tx.delete(schema.analysisRun).where(eq(schema.analysisRun.id, run.id)).run();
+          tx.delete(schema.analysisRun)
+            .where(eq(schema.analysisRun.id, run.id))
+            .run();
           totalDeleted++;
         }
       }
@@ -388,4 +424,3 @@ export function pruneAnalysisRuns(
     return totalDeleted;
   });
 }
-

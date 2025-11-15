@@ -3,14 +3,14 @@
  * Handles SQLite database connection with automatic schema initialization
  */
 
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import Database from 'better-sqlite3';
-import * as schema from './schema.js';
-import { applyMigrations } from './migrations.js';
-import { existsSync, mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { homedir } from 'node:os';
-import { expandPath } from './utils.js';
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import Database from "better-sqlite3";
+import * as schema from "./schema.js";
+import { applyMigrations } from "./migrations.js";
+import { existsSync, mkdirSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { homedir } from "node:os";
+import { expandPath } from "./utils.js";
 
 /**
  * Options for creating a database connection
@@ -34,7 +34,7 @@ function resolveDatabasePath(options?: DatabaseOptions): string {
   }
 
   // Use provided path or default to ~/.smappy/analysis.db
-  const dbPath = options?.dbPath || join(homedir(), '.smappy', 'analysis.db');
+  const dbPath = options?.dbPath || join(homedir(), ".smappy", "analysis.db");
   return expandPath(dbPath);
 }
 
@@ -48,7 +48,7 @@ export function createDatabase(options?: DatabaseOptions): {
   client: Database.Database;
 } {
   const dbPath = resolveDatabasePath(options);
-  
+
   // Ensure directory exists
   const dbDir = dirname(dbPath);
   if (!existsSync(dbDir)) {
@@ -59,19 +59,24 @@ export function createDatabase(options?: DatabaseOptions): {
   const client = new Database(dbPath);
 
   // Check if database is empty (no tables)
-  const tables = client.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
+  const tables = client
+    .prepare("SELECT name FROM sqlite_master WHERE type='table'")
+    .all();
   const isEmpty = tables.length === 0;
 
   // Apply migrations if needed
   const shouldAutoMigrate = options?.autoMigrate !== false;
-  if (shouldAutoMigrate && (dbPath === ':memory:' || isEmpty)) {
+  if (shouldAutoMigrate && (dbPath === ":memory:" || isEmpty)) {
     try {
       applyMigrations(client);
     } catch (error) {
       // Log warning but don't fail - migrations might not be available in all contexts
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.warn('Could not auto-apply migrations:', errorMessage);
-      console.warn('In production, run migrations manually via drizzle-kit migrate');
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.warn("Could not auto-apply migrations:", errorMessage);
+      console.warn(
+        "In production, run migrations manually via drizzle-kit migrate",
+      );
     }
   }
 
@@ -79,4 +84,3 @@ export function createDatabase(options?: DatabaseOptions): {
 
   return { db, client };
 }
-

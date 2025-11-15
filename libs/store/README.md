@@ -18,27 +18,27 @@ This package is part of the Smappy monorepo and is automatically available to ot
 ## Usage
 
 ```typescript
-import { createStore } from '@smappy/store';
+import { createStore } from "@smappy/store";
 
 // Create a store instance (defaults to ~/.smappy/analysis.db)
 const store = createStore();
 
 // Save analysis results
 const result = store.saveAnalysisRun({
-  projectName: 'my-app',
-  bundler: 'vite',
+  projectName: "my-app",
+  bundler: "vite",
   bundles: [
     {
-      fileName: 'main.js',
-      fileType: 'javascript',
+      fileName: "main.js",
+      fileType: "javascript",
       size: 1024,
       gzipSize: 512,
     },
   ],
   modules: [
     {
-      filePath: 'src/index.ts',
-      fileType: 'javascript',
+      filePath: "src/index.ts",
+      fileType: "javascript",
       originalSize: 512,
       bundledSize: 256,
       isThirdParty: false,
@@ -46,7 +46,7 @@ const result = store.saveAnalysisRun({
   ],
   chunks: [
     {
-      name: 'main',
+      name: "main",
       totalSize: 1024,
       isEntry: true,
       isAsync: false,
@@ -57,18 +57,18 @@ const result = store.saveAnalysisRun({
 console.log(`Saved analysis run with ID: ${result.analysisRunId}`);
 
 // Query historical data
-const runs = store.listAnalysisRuns({ 
-  projectName: 'my-app', 
-  limit: 10 
+const runs = store.listAnalysisRuns({
+  projectName: "my-app",
+  limit: 10,
 });
 
-const latest = store.getLatestAnalysisRun('my-app');
+const latest = store.getLatestAnalysisRun("my-app");
 console.log(`Latest run has ${latest?.bundleCount} bundles`);
 
 // Cleanup old runs
-const deleted = store.pruneAnalysisRuns({ 
-  olderThanDays: 30, 
-  keepMinimum: 5 
+const deleted = store.pruneAnalysisRuns({
+  olderThanDays: 30,
+  keepMinimum: 5,
 });
 console.log(`Deleted ${deleted} old runs`);
 
@@ -83,14 +83,16 @@ store.close();
 The database path can be configured via:
 
 1. **Environment variable** (highest priority):
+
    ```bash
    export SMAPPY_DB_PATH=/custom/path/to/analysis.db
    ```
 
 2. **Constructor option**:
+
    ```typescript
    const store = createStore({
-     dbPath: '~/.smappy/custom-analysis.db',
+     dbPath: "~/.smappy/custom-analysis.db",
    });
    ```
 
@@ -117,6 +119,7 @@ In production, it's recommended to run migrations manually via `drizzle-kit migr
 Creates a new store instance.
 
 **Options:**
+
 - `dbPath?: string` - Path to the database file (defaults to `~/.smappy/analysis.db`)
 - `autoMigrate?: boolean` - Whether to auto-apply migrations (defaults to `true`)
 
@@ -127,6 +130,7 @@ Creates a new store instance.
 Saves a new analysis run with full data.
 
 **Parameters:**
+
 - `data: SaveAnalysisRunInput` - Analysis run data including bundles, modules, and chunks
 
 **Returns:** `SaveAnalysisRunResult` with analysis run ID and statistics
@@ -136,6 +140,7 @@ Saves a new analysis run with full data.
 Lists analysis runs with optional filtering.
 
 **Options:**
+
 - `projectName?: string` - Filter by project name
 - `limit?: number` - Maximum number of results
 - `offset?: number` - Offset for pagination
@@ -147,6 +152,7 @@ Lists analysis runs with optional filtering.
 Gets the latest analysis run for a project.
 
 **Parameters:**
+
 - `projectName: string` - Project name
 
 **Returns:** `AnalysisRunData | null`
@@ -156,6 +162,7 @@ Gets the latest analysis run for a project.
 Gets an analysis run by ID.
 
 **Parameters:**
+
 - `id: number` - Analysis run ID
 
 **Returns:** `AnalysisRunData | null`
@@ -165,6 +172,7 @@ Gets an analysis run by ID.
 Prunes old analysis runs, keeping a minimum per project.
 
 **Options:**
+
 - `olderThanDays?: number` - Delete runs older than this many days
 - `keepMinimum?: number` - Keep at least this many runs per project (defaults to 5)
 
@@ -227,4 +235,3 @@ pnpm db:migrate
 
 - [`@smappy/web-sv`](../web-sv/README.md) - Web application using the same schema
 - [`@smappy/cli`](../cli/README.md) - CLI tool that uses this package for persistence
-
