@@ -56,7 +56,7 @@ describe("WebpackConfigGenerator", () => {
       tempDirs.push(result.tempDir);
 
       expect(existsSync(result.configPath)).toBe(true);
-      expect(result.configPath).toContain("webpack.config.temp.js");
+      expect(result.configPath).toContain("webpack.config.temp.mjs");
       expect(result.tempDir).toContain("smappy-webpack-");
     });
 
@@ -103,7 +103,7 @@ describe("WebpackConfigGenerator", () => {
       const { readFileSync } = await import("node:fs");
       const configContent = readFileSync(result.configPath, "utf-8");
 
-      expect(configContent).toContain("require");
+      expect(configContent).toContain("import");
       expect(configContent).toContain("webpackBundleAnalysisPlugin");
       expect(configContent).toContain("projectName: 'test-project'");
     });

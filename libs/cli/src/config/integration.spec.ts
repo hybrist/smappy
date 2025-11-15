@@ -93,7 +93,7 @@ export default defineConfig({
 
       // Verify config was generated
       expect(existsSync(result.configPath)).toBe(true);
-      expect(result.configPath).toContain("webpack.config.temp.js");
+      expect(result.configPath).toContain("webpack.config.temp.mjs");
 
       // Verify config content
       const { readFileSync } = await import("node:fs");

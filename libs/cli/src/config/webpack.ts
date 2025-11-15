@@ -5,6 +5,8 @@
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { createRequire } from "node:module";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import type {
   ConfigGenerator,
   TempConfigOptions,
@@ -43,10 +45,10 @@ export class WebpackConfigGenerator implements ConfigGenerator {
       debug,
     );
 
-    // Write the config file (use .js for compatibility)
+    // Write the config file (use .mjs for ESM compatibility)
     const configPath = await writeTempConfig(
       tempDir,
-      "webpack.config.temp.js",
+      "webpack.config.temp.mjs",
       configContent,
       debug,
     );
@@ -86,6 +88,20 @@ export class WebpackConfigGenerator implements ConfigGenerator {
     outputDir: string,
     debug = false,
   ): string {
+    let pluginPath: string;
+
+    // Resolve the absolute path to the plugin
+    // Workaround for Vitest:
+    if (
+      typeof import.meta.resolve !== "function" &&
+      process.env.VITEST === "true"
+    ) {
+      const cliRequire = createRequire(fileURLToPath(import.meta.url));
+      pluginPath = cliRequire.resolve("@smappy/cli/plugins/webpack");
+    } else {
+      pluginPath = import.meta.resolve("@smappy/cli/plugins/webpack");
+    }
+
     // If user has a config, extend it; otherwise create minimal config
     if (userConfigPath) {
       return this.generateExtendingConfig(
@@ -93,10 +109,16 @@ export class WebpackConfigGenerator implements ConfigGenerator {
         projectName,
         userConfigPath,
         outputDir,
+        pluginPath,
         debug,
       );
     } else {
-      return this.generateMinimalConfig(projectName, outputDir, debug);
+      return this.generateMinimalConfig(
+        projectName,
+        outputDir,
+        pluginPath,
+        debug,
+      );
     }
   }
 
@@ -108,54 +130,60 @@ export class WebpackConfigGenerator implements ConfigGenerator {
     projectName: string,
     userConfigPath: string,
     _outputDir: string,
+    pluginPath: string,
     debug = false,
   ): string {
-    // Use dynamic import for ESM compatibility and webpack-merge for extending config
-    return `const { webpackBundleAnalysisPlugin } = require('@smappy/cli/plugins/webpack');
+    // Use dynamic import for ESM compatibility
+    return `import { webpackBundleAnalysisPlugin } from '${pluginPath}';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Import user's existing config
-let userConfig;
-try {
-  userConfig = require('${userConfigPath.replace(/\\/g, "/")}');
+async function loadConfig() {
+  let userConfig;
+  try {
+    const imported = await import('${userConfigPath.replace(/\\/g, "/")}');
+    userConfig = imported.default || imported;
 
-  // Handle default exports from ESM modules
-  if (userConfig.default) {
-    userConfig = userConfig.default;
+    // If config is a function, call it with environment
+    if (typeof userConfig === 'function') {
+      userConfig = await userConfig({ mode: 'production' }, {});
+    }
+  } catch (error) {
+    console.warn('[Smappy] Could not load user config, using minimal config:', error.message);
+    userConfig = {
+      mode: 'production',
+      entry: './src/index.js',
+      output: {
+        path: resolve(__dirname, 'dist'),
+        filename: '[name].[contenthash].js',
+      },
+    };
   }
 
-  // If config is a function, call it with environment
-  if (typeof userConfig === 'function') {
-    userConfig = userConfig({ mode: 'production' }, {});
+  // Ensure plugins array exists
+  if (!userConfig.plugins) {
+    userConfig.plugins = [];
   }
-} catch (error) {
-  console.warn('[Smappy] Could not load user config, using minimal config:', error.message);
-  userConfig = {
-    mode: 'production',
-    entry: './src/index.js',
-    output: {
-      path: require('path').resolve(__dirname, 'dist'),
-      filename: '[name].[contenthash].js',
-    },
-  };
+
+  // Add Smappy plugin
+  userConfig.plugins.push(
+    webpackBundleAnalysisPlugin({
+      projectName: '${projectName}',
+      autoIngest: true,
+      productionOnly: false,
+    }, {
+      debug: ${debug},
+    })
+  );
+
+  return userConfig;
 }
 
-// Ensure plugins array exists
-if (!userConfig.plugins) {
-  userConfig.plugins = [];
-}
-
-// Add Smappy plugin
-userConfig.plugins.push(
-  webpackBundleAnalysisPlugin({
-    projectName: '${projectName}',
-    autoIngest: true,
-    productionOnly: false,
-  }, {
-    debug: ${debug},
-  })
-);
-
-module.exports = userConfig;
+export default loadConfig();
 `;
   }
 
@@ -165,16 +193,21 @@ module.exports = userConfig;
   private generateMinimalConfig(
     projectName: string,
     outputDir: string,
+    pluginPath: string,
     debug = false,
   ): string {
-    return `const { webpackBundleAnalysisPlugin } = require('@smappy/cli/plugins/webpack');
-const path = require('path');
+    return `import { webpackBundleAnalysisPlugin } from '${pluginPath}';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
 
-module.exports = {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+export default {
   mode: 'production',
   entry: './src/index.js',
   output: {
-    path: path.resolve(__dirname, '${outputDir.replace(/\\/g, "/")}'),
+    path: resolve(__dirname, '${outputDir.replace(/\\/g, "/")}'),
     filename: '[name].[contenthash].js',
     clean: true,
   },

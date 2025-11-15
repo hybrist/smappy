@@ -27,18 +27,18 @@
     "webpack": "^5.102.1"
   },
   "exports": {
-    "./main": "./src/main.ts",
-    "./plugins/angular": "./src/plugins/angular/index.ts",
-    "./plugins/nextjs": "./src/plugins/nextjs/index.ts",
-    "./plugins/vite": "./src/plugins/vite/index.ts",
-    "./plugins/webpack": "./src/plugins/webpack/index.ts",
+    "./main": "./dist/main.mjs",
+    "./plugins/angular": "./dist/plugins/angular/index.mjs",
+    "./plugins/nextjs": "./dist/plugins/nextjs/index.mjs",
+    "./plugins/vite": "./dist/plugins/vite/index.mjs",
+    "./plugins/webpack": "./dist/plugins/webpack/index.mjs",
     "./package.json": "./package.json"
   },
   "files": [
     "dist"
   ],
   "bin": {
-    "smappy": "./src/main.ts"
+    "smappy": "./dist/main.mjs"
   },
   "publishConfig": {
     "bin": {
