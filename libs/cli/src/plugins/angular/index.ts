@@ -3,6 +3,6 @@
  * Main entry point for Angular integration
  */
 
-export { AngularAdapter } from "./adapter.js";
-export { angularBundleAnalysisBuilder } from "./plugin.js";
-export type { AngularBuilderOptions } from "./plugin.js";
+export { AngularAdapter } from "./adapter.ts";
+export { angularBundleAnalysisBuilder } from "./plugin.ts";
+export type { AngularBuilderOptions } from "./plugin.ts";

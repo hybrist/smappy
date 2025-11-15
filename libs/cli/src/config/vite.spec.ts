@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { ViteConfigGenerator } from "./vite.js";
+import { ViteConfigGenerator } from "./vite.ts";
 
 describe("ViteConfigGenerator", () => {
   let testDir: string;

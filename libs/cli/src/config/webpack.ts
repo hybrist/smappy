@@ -9,13 +9,13 @@ import type {
   ConfigGenerator,
   TempConfigOptions,
   TempConfigResult,
-} from "./types.js";
-import type { DetectionResult } from "../detection/index.js";
+} from "./types.ts";
+import type { DetectionResult } from "../detection/index.ts";
 import {
   createTempDir,
   writeTempConfig,
   createTempConfigResult,
-} from "./utils.js";
+} from "./utils.ts";
 
 /**
  * Webpack config generator
@@ -117,12 +117,12 @@ export class WebpackConfigGenerator implements ConfigGenerator {
 let userConfig;
 try {
   userConfig = require('${userConfigPath.replace(/\\/g, "/")}');
-  
+
   // Handle default exports from ESM modules
   if (userConfig.default) {
     userConfig = userConfig.default;
   }
-  
+
   // If config is a function, call it with environment
   if (typeof userConfig === 'function') {
     userConfig = userConfig({ mode: 'production' }, {});

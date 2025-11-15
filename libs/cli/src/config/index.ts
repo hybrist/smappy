@@ -7,20 +7,20 @@ export type {
   ConfigGenerator,
   TempConfigOptions,
   TempConfigResult,
-} from "./types.js";
-export { ViteConfigGenerator } from "./vite.js";
-export { WebpackConfigGenerator } from "./webpack.js";
-export { NextjsConfigGenerator } from "./nextjs.js";
-export { RollupConfigGenerator } from "./rollup.js";
+} from "./types.ts";
+export { ViteConfigGenerator } from "./vite.ts";
+export { WebpackConfigGenerator } from "./webpack.ts";
+export { NextjsConfigGenerator } from "./nextjs.ts";
+export { RollupConfigGenerator } from "./rollup.ts";
 export {
   getConfigGenerator,
   generateTempConfig,
   isBundlerSupported,
-} from "./factory.js";
+} from "./factory.ts";
 export {
   createTempDir,
   createCleanup,
   writeTempConfig,
   registerCleanupHandlers,
   createTempConfigResult,
-} from "./utils.js";
+} from "./utils.ts";

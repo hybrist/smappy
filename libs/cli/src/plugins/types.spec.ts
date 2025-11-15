@@ -10,8 +10,8 @@ import type {
   BundlerModule,
   BundlerChunk,
   BundlerBundle,
-} from "./types.js";
-import { isBundlerPlugin, isBundlerModule, isBundlerChunk } from "./types.js";
+} from "./types.ts";
+import { isBundlerPlugin, isBundlerModule, isBundlerChunk } from "./types.ts";
 
 describe("Plugin Types", () => {
   describe("BundlerPluginOptions", () => {

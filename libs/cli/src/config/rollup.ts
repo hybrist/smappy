@@ -9,13 +9,13 @@ import type {
   ConfigGenerator,
   TempConfigOptions,
   TempConfigResult,
-} from "./types.js";
-import type { DetectionResult } from "../detection/index.js";
+} from "./types.ts";
+import type { DetectionResult } from "../detection/index.ts";
 import {
   createTempDir,
   writeTempConfig,
   createTempConfigResult,
-} from "./utils.js";
+} from "./utils.ts";
 
 /**
  * Rollup config generator

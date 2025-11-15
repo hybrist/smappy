@@ -5,8 +5,8 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve, isAbsolute } from "node:path";
-import { detectBundler, type BundlerDetection } from "./bundler.js";
-import { detectFramework, type FrameworkDetection } from "./framework.js";
+import { detectBundler, type BundlerDetection } from "./bundler.ts";
+import { detectFramework, type FrameworkDetection } from "./framework.ts";
 
 export interface DetectionResult {
   bundler: BundlerDetection["bundler"];

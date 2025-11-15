@@ -16,6 +16,7 @@
     "commander": "^14.0.2"
   },
   "devDependencies": {
+    "@types/node": "^22.19.0",
     "@types/webpack": "^5.28.5",
     "prettier": "catalog:",
     "rollup": "^4.52.5",

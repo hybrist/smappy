@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { generateTempConfig } from "./factory.js";
+import { generateTempConfig } from "./factory.ts";
 
 describe("config/integration", () => {
   let testDir: string;

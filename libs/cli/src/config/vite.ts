@@ -9,13 +9,13 @@ import type {
   ConfigGenerator,
   TempConfigOptions,
   TempConfigResult,
-} from "./types.js";
-import type { DetectionResult } from "../detection/index.js";
+} from "./types.ts";
+import type { DetectionResult } from "../detection/index.ts";
 import {
   createTempDir,
   writeTempConfig,
   createTempConfigResult,
-} from "./utils.js";
+} from "./utils.ts";
 
 /**
  * Vite config generator
@@ -121,7 +121,7 @@ export default defineConfig(async () => {
   try {
     const imported = await import('${userConfigPath.replace(/\\/g, "/")}');
     userConfig = imported.default || imported;
-    
+
     // If config is a function, call it
     if (typeof userConfig === 'function') {
       userConfig = await userConfig({ command: 'build', mode: 'production' });

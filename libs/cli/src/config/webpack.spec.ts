@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { WebpackConfigGenerator } from "./webpack.js";
+import { WebpackConfigGenerator } from "./webpack.ts";
 
 describe("WebpackConfigGenerator", () => {
   let testDir: string;

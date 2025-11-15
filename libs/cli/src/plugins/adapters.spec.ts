@@ -7,9 +7,9 @@ import {
   AdapterRegistry,
   createDefaultAdapter,
   type AdapterFactory,
-} from "./adapters.js";
-import type { BundlerPluginOptions, PluginConfig } from "./types.js";
-import type { PluginExtractionResult } from "./types.js";
+} from "./adapters.ts";
+import type { BundlerPluginOptions, PluginConfig } from "./types.ts";
+import type { PluginExtractionResult } from "./types.ts";
 
 describe("BundlerAdapter", () => {
   const baseDir = "/project";

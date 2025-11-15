@@ -2,8 +2,8 @@
  * Tests for Vite plugin
  */
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { viteBundleAnalysisPlugin } from "./plugin.js";
-import type { VitePluginOptions } from "./plugin.js";
+import { viteBundleAnalysisPlugin } from "./plugin.ts";
+import type { VitePluginOptions } from "./plugin.ts";
 import type { Plugin } from "vite";
 
 // Mock the ingestion module

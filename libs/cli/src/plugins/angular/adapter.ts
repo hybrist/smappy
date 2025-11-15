@@ -8,10 +8,10 @@ import type {
   BundlerModule,
   BundlerChunk,
   BundlerBundle,
-} from "../types.js";
-import type { IngestionOptions } from "../../ingestion/index.js";
-import { BundlerAdapter } from "../adapters.js";
-import { extractSourceMap } from "../utils.js";
+} from "../types.ts";
+import type { IngestionOptions } from "../../ingestion/index.ts";
+import { BundlerAdapter } from "../adapters.ts";
+import { extractSourceMap } from "../utils.ts";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, extname } from "node:path";
 

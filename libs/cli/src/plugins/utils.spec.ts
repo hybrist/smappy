@@ -19,7 +19,7 @@ import {
   readFileContentSafe,
   shouldExcludeFile,
   shouldIncludeFile,
-} from "./utils.js";
+} from "./utils.ts";
 
 describe("Source Map Utilities", () => {
   let testDir: string;

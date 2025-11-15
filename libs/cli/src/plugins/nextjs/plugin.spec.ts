@@ -9,8 +9,8 @@ import {
   nextJsBundleAnalysisPlugin,
   withNextBundleAnalysis,
   type NextWebpackBuildContext,
-} from "./plugin.js";
-import type { NextJsPluginOptions } from "./plugin.js";
+} from "./plugin.ts";
+import type { NextJsPluginOptions } from "./plugin.ts";
 
 // Mock ingestion to avoid touching the database layer
 vi.mock("../../ingestion/index.js", () => ({

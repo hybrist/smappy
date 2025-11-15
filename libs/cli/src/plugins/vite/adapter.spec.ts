@@ -2,8 +2,8 @@
  * Tests for Vite adapter
  */
 import { describe, it, expect } from "vitest";
-import { ViteAdapter } from "./adapter.js";
-import type { BundlerPluginOptions } from "../types.js";
+import { ViteAdapter } from "./adapter.ts";
+import type { BundlerPluginOptions } from "../types.ts";
 import type { OutputBundle, OutputChunk } from "rollup";
 
 describe("ViteAdapter", () => {

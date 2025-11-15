@@ -2,8 +2,8 @@
  * Tests for Webpack adapter
  */
 import { describe, it, expect, vi } from "vitest";
-import { WebpackAdapter } from "./adapter.js";
-import type { BundlerPluginOptions } from "../types.js";
+import { WebpackAdapter } from "./adapter.ts";
+import type { BundlerPluginOptions } from "../types.ts";
 import type { Stats, Compilation } from "webpack";
 
 // Mock file reading utilities

@@ -6,7 +6,7 @@
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import type { BuildOptions, BuildResult } from "./types.js";
+import type { BuildOptions, BuildResult } from "./types.ts";
 
 /**
  * Get the build command for a specific bundler

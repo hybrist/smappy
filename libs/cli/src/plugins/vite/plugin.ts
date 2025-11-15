@@ -4,10 +4,10 @@
  */
 
 import type { Plugin } from "vite";
-import type { BundlerPluginOptions, PluginConfig } from "../types.js";
-import { ViteAdapter } from "./adapter.js";
-import { ingestBundle } from "../../ingestion/index.js";
-import type { BundleIngestionInput } from "../../ingestion/index.js";
+import type { BundlerPluginOptions, PluginConfig } from "../types.ts";
+import { ViteAdapter } from "./adapter.ts";
+import { ingestBundle } from "../../ingestion/index.ts";
+import type { BundleIngestionInput } from "../../ingestion/index.ts";
 import { resolve } from "node:path";
 
 // ============================================================================

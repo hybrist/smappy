@@ -6,7 +6,7 @@ import {
   createCleanup,
   writeTempConfig,
   createTempConfigResult,
-} from "./utils.js";
+} from "./utils.ts";
 
 describe("config/utils", () => {
   let tempDirs: string[] = [];

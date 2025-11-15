@@ -2,7 +2,7 @@
  * Types for temporary config generation
  */
 
-import type { DetectionResult } from "../detection/index.js";
+import type { DetectionResult } from "../detection/index.ts";
 
 /**
  * Options for generating temporary configs

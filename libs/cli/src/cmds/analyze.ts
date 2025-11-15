@@ -8,13 +8,13 @@ import { resolve } from "node:path";
 import {
   detectBundlerAndFramework,
   type DetectionResult,
-} from "../detection/index.js";
+} from "../detection/index.ts";
 import {
   generateTempConfig,
   isBundlerSupported,
   type TempConfigResult,
-} from "../config/index.js";
-import { runBuild } from "../runner/index.js";
+} from "../config/index.ts";
+import { runBuild } from "../runner/index.ts";
 
 export interface AnalyzeOptions {
   projectPath?: string;
@@ -224,7 +224,7 @@ async function runBundleAnalysis(
 export async function analyzeCommand(
   projectPath: string = process.cwd(),
   options: Omit<AnalyzeOptions, "projectPath"> = {},
-): Promise<void> {
+): Promise<number> {
   // Resolve and validate project path
   const resolvedPath = resolve(projectPath);
 
@@ -301,16 +301,10 @@ export async function analyzeCommand(
       "⚠️  Could not detect bundler. Make sure you have a valid project configuration.",
     );
     console.error("Supported bundlers: webpack, vite, rollup, nextjs, angular");
+    return 1;
   }
 
   // Integrate with plugin system to extract bundle information
-  if (detection.bundler) {
-    await runBundleAnalysis(resolvedPath, projectName, detection, options);
-  } else {
-    console.log("\n✅ Project analysis complete!");
-    console.log("\nNote: Cannot run bundle analysis without detected bundler.");
-    console.log(
-      `Detected ${detection.bundler ?? "unknown"} bundler for ${detection.framework ?? "unknown"} project.`,
-    );
-  }
+  await runBundleAnalysis(resolvedPath, projectName, detection, options);
+  return 0;
 }
