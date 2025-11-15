@@ -133,9 +133,7 @@ async function runBundleAnalysis(
     console.warn(
       `\n⚠️  Bundler '${bundler}' is not yet supported for automatic analysis.`,
     );
-    console.log(
-      "Supported bundlers: vite, webpack, nextjs, rollup",
-    );
+    console.log("Supported bundlers: vite, webpack, nextjs, rollup");
     return;
   }
 
@@ -161,9 +159,7 @@ async function runBundleAnalysis(
     // Skip build if requested (for testing or dry-run)
     if (skipBuild) {
       console.log("\n✅ Configuration generated successfully!");
-      console.log(
-        `\nSkipping build execution (skipBuild option enabled).`,
-      );
+      console.log(`\nSkipping build execution (skipBuild option enabled).`);
       console.log(`Temporary config: ${tempConfig.configPath}`);
       return;
     }
@@ -199,9 +195,7 @@ async function runBundleAnalysis(
     }
   } catch (error) {
     console.error("\n❌ Failed to run bundle analysis:");
-    console.error(
-      error instanceof Error ? error.message : String(error),
-    );
+    console.error(error instanceof Error ? error.message : String(error));
     if (verbose && error instanceof Error && error.stack) {
       console.error("\nStack trace:");
       console.error(error.stack);
@@ -314,9 +308,7 @@ export async function analyzeCommand(
     await runBundleAnalysis(resolvedPath, projectName, detection, options);
   } else {
     console.log("\n✅ Project analysis complete!");
-    console.log(
-      "\nNote: Cannot run bundle analysis without detected bundler.",
-    );
+    console.log("\nNote: Cannot run bundle analysis without detected bundler.");
     console.log(
       `Detected ${detection.bundler ?? "unknown"} bundler for ${detection.framework ?? "unknown"} project.`,
     );

@@ -11,7 +11,10 @@ import type { TempConfigResult } from "./types.js";
  * Create a temporary directory for config files
  */
 export async function createTempDir(prefix = "smappy"): Promise<string> {
-  const tempDir = join(tmpdir(), `${prefix}-${Date.now()}-${Math.random().toString(36).substring(7)}`);
+  const tempDir = join(
+    tmpdir(),
+    `${prefix}-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+  );
   await mkdir(tempDir, { recursive: true });
   return tempDir;
 }
@@ -63,11 +66,11 @@ export async function writeTempConfig(
 ): Promise<string> {
   const configPath = join(tempDir, fileName);
   await writeFile(configPath, content, "utf-8");
-  
+
   if (debug) {
     console.log(`[Config] Created temporary config: ${configPath}`);
   }
-  
+
   return configPath;
 }
 
@@ -131,7 +134,7 @@ export async function createTempConfigResult(
   debug = false,
 ): Promise<TempConfigResult> {
   const cleanup = createCleanup(tempDir, keepTemp, debug);
-  
+
   // Register cleanup handlers
   registerCleanupHandlers(cleanup, debug);
 

@@ -3,7 +3,11 @@
  * Generates temporary bundler configs to inject Smappy analysis plugins
  */
 
-export type { ConfigGenerator, TempConfigOptions, TempConfigResult } from "./types.js";
+export type {
+  ConfigGenerator,
+  TempConfigOptions,
+  TempConfigResult,
+} from "./types.js";
 export { ViteConfigGenerator } from "./vite.js";
 export { WebpackConfigGenerator } from "./webpack.js";
 export { NextjsConfigGenerator } from "./nextjs.js";

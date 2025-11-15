@@ -5,7 +5,11 @@
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import type { ConfigGenerator, TempConfigOptions, TempConfigResult } from "./types.js";
+import type {
+  ConfigGenerator,
+  TempConfigOptions,
+  TempConfigResult,
+} from "./types.js";
 import type { DetectionResult } from "../detection/index.js";
 import {
   createTempDir,
@@ -55,11 +59,7 @@ export class NextjsConfigGenerator implements ConfigGenerator {
    * Find user's existing Next.js config
    */
   private findUserConfig(projectPath: string): string | null {
-    const configNames = [
-      "next.config.js",
-      "next.config.mjs",
-      "next.config.ts",
-    ];
+    const configNames = ["next.config.js", "next.config.mjs", "next.config.ts"];
 
     for (const configName of configNames) {
       const configPath = join(projectPath, configName);

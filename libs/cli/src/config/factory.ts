@@ -3,7 +3,11 @@
  * Creates appropriate config generator based on detected bundler
  */
 
-import type { ConfigGenerator, TempConfigOptions, TempConfigResult } from "./types.js";
+import type {
+  ConfigGenerator,
+  TempConfigOptions,
+  TempConfigResult,
+} from "./types.js";
 import type { DetectionResult } from "../detection/index.js";
 import { ViteConfigGenerator } from "./vite.js";
 import { WebpackConfigGenerator } from "./webpack.js";

@@ -5,7 +5,11 @@
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import type { ConfigGenerator, TempConfigOptions, TempConfigResult } from "./types.js";
+import type {
+  ConfigGenerator,
+  TempConfigOptions,
+  TempConfigResult,
+} from "./types.js";
 import type { DetectionResult } from "../detection/index.js";
 import {
   createTempDir,
