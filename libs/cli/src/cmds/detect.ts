@@ -37,10 +37,12 @@ export function detectBundler(projectPath: string): ProjectInfo["bundler"] {
     };
 
     // Check for bundler-specific config files first
-    if (existsSync(join(projectPath, "next.config.js")) ||
-        existsSync(join(projectPath, "next.config.ts")) ||
-        existsSync(join(projectPath, "next.config.mjs")) ||
-        existsSync(join(projectPath, "next.config.cjs"))) {
+    if (
+      existsSync(join(projectPath, "next.config.js")) ||
+      existsSync(join(projectPath, "next.config.ts")) ||
+      existsSync(join(projectPath, "next.config.mjs")) ||
+      existsSync(join(projectPath, "next.config.cjs"))
+    ) {
       return "nextjs";
     }
 
@@ -48,17 +50,21 @@ export function detectBundler(projectPath: string): ProjectInfo["bundler"] {
       return "angular";
     }
 
-    if (existsSync(join(projectPath, "vite.config.js")) ||
-        existsSync(join(projectPath, "vite.config.ts")) ||
-        existsSync(join(projectPath, "vite.config.mjs")) ||
-        existsSync(join(projectPath, "vite.config.cjs"))) {
+    if (
+      existsSync(join(projectPath, "vite.config.js")) ||
+      existsSync(join(projectPath, "vite.config.ts")) ||
+      existsSync(join(projectPath, "vite.config.mjs")) ||
+      existsSync(join(projectPath, "vite.config.cjs"))
+    ) {
       return "vite";
     }
 
-    if (existsSync(join(projectPath, "webpack.config.js")) ||
-        existsSync(join(projectPath, "webpack.config.ts")) ||
-        existsSync(join(projectPath, "webpack.config.mjs")) ||
-        existsSync(join(projectPath, "webpack.config.cjs"))) {
+    if (
+      existsSync(join(projectPath, "webpack.config.js")) ||
+      existsSync(join(projectPath, "webpack.config.ts")) ||
+      existsSync(join(projectPath, "webpack.config.mjs")) ||
+      existsSync(join(projectPath, "webpack.config.cjs"))
+    ) {
       return "webpack";
     }
 
@@ -67,7 +73,12 @@ export function detectBundler(projectPath: string): ProjectInfo["bundler"] {
       return "nextjs";
     }
 
-    if (deps.vite || deps["@vitejs/plugin-react"] || deps["@vitejs/plugin-vue"] || deps["@sveltejs/vite-plugin-svelte"]) {
+    if (
+      deps.vite ||
+      deps["@vitejs/plugin-react"] ||
+      deps["@vitejs/plugin-vue"] ||
+      deps["@sveltejs/vite-plugin-svelte"]
+    ) {
       return "vite";
     }
 
@@ -188,4 +199,3 @@ export function detectProject(projectPath: string): ProjectInfo {
     projectName: getProjectName(projectPath),
   };
 }
-

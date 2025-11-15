@@ -46,9 +46,7 @@ export async function analyzeCommand(
     console.error(
       "⚠️  Could not detect bundler. Make sure you have a valid project configuration.",
     );
-    console.error(
-      "Supported bundlers: webpack, vite, rollup, nextjs, angular",
-    );
+    console.error("Supported bundlers: webpack, vite, rollup, nextjs, angular");
   }
 
   // TODO: Integrate with plugin system to extract bundle information

@@ -19,14 +19,18 @@ program
     try {
       await analyzeCommand(projectPath, options);
     } catch (error) {
-      console.error("Error:", error instanceof Error ? error.message : String(error));
+      console.error(
+        "Error:",
+        error instanceof Error ? error.message : String(error),
+      );
       process.exit(1);
     }
   });
 
 // Only parse command line arguments if this file is being run directly
 // Check if the current module is the main module
-const isMainModule = process.argv[1] && new URL(import.meta.url).pathname === process.argv[1];
+const isMainModule =
+  process.argv[1] && new URL(import.meta.url).pathname === process.argv[1];
 if (isMainModule) {
   program.parse();
 }

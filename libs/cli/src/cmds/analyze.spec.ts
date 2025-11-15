@@ -61,7 +61,7 @@ describe("analyzeCommand", () => {
     // Check that verbose messages were logged
     const logCalls = consoleLogSpy.mock.calls.flat();
     const logMessages = logCalls.join(" ");
-    
+
     expect(logMessages).toContain("Analyzing project at:");
     expect(logMessages).toContain("Bundler:");
     expect(logMessages).toContain("Framework:");
@@ -76,7 +76,9 @@ describe("analyzeCommand", () => {
   });
 
   it("should warn when bundler is unknown", async () => {
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
     writeFileSync(
       join(testDir, "package.json"),
       JSON.stringify({ name: "test-project" }),
@@ -87,13 +89,13 @@ describe("analyzeCommand", () => {
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       expect.stringContaining("Could not detect bundler"),
     );
-    
+
     consoleErrorSpy.mockRestore();
   });
 
   it("should use current working directory as default", async () => {
     const originalCwd = process.cwd();
-    
+
     try {
       process.chdir(testDir);
 
@@ -113,4 +115,3 @@ describe("analyzeCommand", () => {
     }
   });
 });
-
