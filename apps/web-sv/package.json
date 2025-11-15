@@ -80,6 +80,7 @@
     "@ai-sdk/anthropic": "^2.0.42",
     "@ai-sdk/openai": "^2.0.64",
     "@smappy/core": "workspace:*",
+    "@smappy/store": "workspace:*",
     "@types/d3": "^7.4.3",
     "ai": "^5.0.89",
     "better-sqlite3": "^12.4.1",

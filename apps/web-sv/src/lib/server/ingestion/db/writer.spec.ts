@@ -15,7 +15,7 @@ import type {
 import type { ChunkInput } from '@smappy/core';
 import type { SymbolWithExport } from '@smappy/core';
 import type { IngestionOptions } from './writer.js';
-import * as schema from '../../db/schema.js';
+import { schema } from '@smappy/store';
 import { eq } from 'drizzle-orm';
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';

@@ -16,7 +16,7 @@ import {
   bundle,
   suggestion,
   suggestionLink,
-} from '$lib/server/db/schema';
+} from '@smappy/store/schema';
 import { eq, desc, asc, and, gte, lte, sql, count } from 'drizzle-orm';
 import type {
   AnalysisSummary,

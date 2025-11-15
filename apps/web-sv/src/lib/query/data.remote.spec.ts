@@ -7,7 +7,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
-import * as schema from '$lib/server/db/schema.js';
+import { schema } from '@smappy/store';
 
 // Mock the db module to avoid database initialization issues
 vi.mock('$lib/server/db/index.js', () => {

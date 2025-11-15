@@ -4,7 +4,7 @@
  */
 
 import { db } from '../db/index.js';
-import * as schema from '../db/schema.js';
+import { schema } from '@smappy/store';
 import { eq, desc, asc, and, like, sql } from 'drizzle-orm';
 import type {
   AnalysisRun,
