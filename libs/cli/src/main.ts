@@ -16,17 +16,30 @@ program
   .description("Analyze a JavaScript/TypeScript project")
   .argument("[project-path]", "Path to the project directory", process.cwd())
   .option("-v, --verbose", "Enable verbose output")
-  .action(async (projectPath: string, options: { verbose?: boolean }) => {
-    try {
-      await analyzeCommand(projectPath, options);
-    } catch (error) {
-      console.error(
-        "Error:",
-        error instanceof Error ? error.message : String(error),
-      );
-      process.exit(1);
-    }
-  });
+  .option(
+    "-b, --bundler <type>",
+    "Override detected bundler (vite, webpack, rollup, esbuild, parcel, nextjs, angular)",
+  )
+  .option(
+    "-f, --framework <type>",
+    "Override detected framework (react, vue, svelte, angular, sveltekit, nextjs, nuxt)",
+  )
+  .action(
+    async (
+      projectPath: string,
+      options: { verbose?: boolean; bundler?: string; framework?: string },
+    ) => {
+      try {
+        await analyzeCommand(projectPath, options);
+      } catch (error) {
+        console.error(
+          "Error:",
+          error instanceof Error ? error.message : String(error),
+        );
+        process.exit(1);
+      }
+    },
+  );
 
 // Only parse command line arguments if this file is being run directly
 // Check if the current module is the main module (cross-platform compatible)
