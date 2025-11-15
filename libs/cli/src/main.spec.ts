@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 
 describe("smappy-cli", () => {
-  it("is not implemented yet", () => {
-    expect(true).toBe(true);
+  it("should export main program", async () => {
+    // Basic smoke test - verify the module can be imported
+    await expect(import("./main.js")).resolves.toBeDefined();
   });
 });

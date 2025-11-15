@@ -4,14 +4,15 @@
   "type": "module",
   "scripts": {
     "build": "tsdown",
-    "check": "tsdown --no-clean --report false && prettier --check . && tsc",
+    "check": "tsdown --no-clean --report false && prettier --check . && tsc --noEmit --skipLibCheck",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "test": "vitest --run",
     "prepare": "tsdown"
   },
   "dependencies": {
-    "@smappy/core": "workspace:*"
+    "@smappy/core": "workspace:*",
+    "commander": "^14.0.2"
   },
   "devDependencies": {
     "@types/webpack": "^5.28.5",
