@@ -17,7 +17,7 @@ import { process } from 'node:process';
 vi.mock('../../src/lib/server/db/index.js', async () => {
   const Database = (await import('better-sqlite3')).default;
   const { drizzle } = await import('drizzle-orm/better-sqlite3');
-  const schema = await import('../../src/lib/server/db/schema.js');
+  const { schema } = await import('@smappy/store');
 
   const testClient = new Database(':memory:');
   const testDb = drizzle(testClient, { schema });
@@ -123,7 +123,7 @@ vi.mock('../../src/lib/server/db/index.js', async () => {
 
 // Import after mocking
 const { db } = await import('../../src/lib/server/db/index.js');
-const schema = await import('../../src/lib/server/db/schema.js');
+const { schema } = await import('@smappy/store');
 
 beforeEach(async () => {
   // Clear all tables before each test

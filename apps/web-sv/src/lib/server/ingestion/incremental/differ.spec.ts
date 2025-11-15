@@ -14,14 +14,14 @@ import {
   type IncrementalDiff,
 } from './differ.js';
 import type { ModuleInput, SymbolWithExport } from '@smappy/core';
-import * as schema from '../../db/schema.js';
+import { schema } from '@smappy/store';
 import { createHash } from 'crypto';
 
 // Mock the db module to use test database
 vi.mock('../../db/index.js', async () => {
   const Database = (await import('better-sqlite3')).default;
   const { drizzle } = await import('drizzle-orm/better-sqlite3');
-  const schema = await import('../../db/schema.js');
+  const { schema } = await import('@smappy/store');
 
   const testClient = new Database(':memory:');
   const testDb = drizzle(testClient, { schema });

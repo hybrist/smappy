@@ -4,7 +4,7 @@
  */
 
 import { db } from '../../db/index.js';
-import * as schema from '../../db/schema.js';
+import { schema } from '@smappy/store';
 import type { ModuleInput, ChunkInput, BundleInput } from '@smappy/core';
 import type { SymbolWithExport, SymbolFragment } from '@smappy/core';
 

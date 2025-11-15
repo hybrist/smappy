@@ -4,7 +4,7 @@
  */
 
 import { db } from '../../db/index.js';
-import * as schema from '../../db/schema.js';
+import { schema } from '@smappy/store';
 import { eq } from 'drizzle-orm';
 import { createHash } from 'crypto';
 import type { ModuleInput, SymbolWithExport } from '@smappy/core';

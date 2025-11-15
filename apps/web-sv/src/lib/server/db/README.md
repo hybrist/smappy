@@ -141,8 +141,7 @@ interface BundleIngestionInput {
 ## Files
 
 - `seed.ts` - Seed data module with all seed data functions
-- `index.ts` - Database client and schema
-- `schema.ts` - Drizzle ORM schema definitions
+- `index.ts` - Database client (schema imported from @smappy/store)
 - `README.md` - This file
 
 ## Related Scripts
@@ -151,3 +150,7 @@ interface BundleIngestionInput {
 - `pnpm run db:studio` - Open Drizzle Studio to view database contents
 - `pnpm run db:push` - Push schema changes to database
 - `pnpm run db:migrate` - Run database migrations
+
+## Schema
+
+The database schema is now managed by `@smappy/store` package. See `libs/store/src/schema.ts` for the schema definition.

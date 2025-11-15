@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@smappy/core": "workspace:*",
+    "@smappy/store": "workspace:*",
     "commander": "^14.0.2"
   },
   "devDependencies": {
