@@ -5,7 +5,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { writeFileSync, mkdirSync, rmSync, existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
-import { detectBundlerAndFramework } from "./index.js";
+import { detectBundlerAndFramework } from "./index.ts";
 
 describe("Detection Orchestrator", () => {
   let testDir: string;

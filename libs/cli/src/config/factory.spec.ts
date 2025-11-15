@@ -3,11 +3,11 @@ import {
   getConfigGenerator,
   isBundlerSupported,
   generateTempConfig,
-} from "./factory.js";
-import { ViteConfigGenerator } from "./vite.js";
-import { WebpackConfigGenerator } from "./webpack.js";
-import { NextjsConfigGenerator } from "./nextjs.js";
-import { RollupConfigGenerator } from "./rollup.js";
+} from "./factory.ts";
+import { ViteConfigGenerator } from "./vite.ts";
+import { WebpackConfigGenerator } from "./webpack.ts";
+import { NextjsConfigGenerator } from "./nextjs.ts";
+import { RollupConfigGenerator } from "./rollup.ts";
 
 describe("config/factory", () => {
   describe("getConfigGenerator", () => {

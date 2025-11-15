@@ -2,14 +2,15 @@
 
 import { Command } from "commander";
 import { fileURLToPath } from "node:url";
-import { analyzeCommand } from "./cmds/analyze.js";
+import pkgJSON from "../package.json" with { type: "json" };
+import { analyzeCommand } from "./cmds/analyze.ts";
 
 const program = new Command();
 
 program
   .name("smappy")
   .description("Bundle analysis tool for JavaScript/TypeScript projects")
-  .version("0.0.1");
+  .version(pkgJSON.version);
 
 program
   .command("analyze")
@@ -30,7 +31,8 @@ program
       options: { verbose?: boolean; bundler?: string; framework?: string },
     ) => {
       try {
-        await analyzeCommand(projectPath, options);
+        const code = await analyzeCommand(projectPath, options);
+        process.exit(code);
       } catch (error) {
         console.error(
           "Error:",

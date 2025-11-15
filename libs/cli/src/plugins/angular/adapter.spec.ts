@@ -2,8 +2,8 @@
  * Tests for Angular adapter
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { AngularAdapter } from "./adapter.js";
-import type { BundlerPluginOptions } from "../types.js";
+import { AngularAdapter } from "./adapter.ts";
+import type { BundlerPluginOptions } from "../types.ts";
 import * as fs from "node:fs";
 
 // Mock file system functions

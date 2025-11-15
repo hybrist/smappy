@@ -5,7 +5,7 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { TempConfigResult } from "./types.js";
+import type { TempConfigResult } from "./types.ts";
 
 /**
  * Create a temporary directory for config files

@@ -11,8 +11,8 @@ import type {
   BundlerPluginOptions,
   PluginConfig,
   PluginExtractionResult,
-} from "../types.js";
-import { WebpackAdapter } from "../webpack/adapter.js";
+} from "../types.ts";
+import { WebpackAdapter } from "../webpack/adapter.ts";
 
 /**
  * Supported Next.js build targets

@@ -2,10 +2,10 @@
  * Tests for Angular plugin
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { angularBundleAnalysisBuilder } from "./plugin.js";
-import type { AngularBuilderOptions } from "./plugin.js";
+import { angularBundleAnalysisBuilder } from "./plugin.ts";
+import type { AngularBuilderOptions } from "./plugin.ts";
 import * as fs from "node:fs";
-import * as ingestion from "../../ingestion/index.js";
+import * as ingestion from "../../ingestion/index.ts";
 
 // Mock file system
 vi.mock("node:fs", async () => {

@@ -4,8 +4,8 @@
 
 import { describe, it, expect } from "vitest";
 import type { Compilation, Stats } from "webpack";
-import { NextJsAdapter, sanitizeModuleIdentifier } from "./adapter.js";
-import type { NextJsAdapterOptions } from "./adapter.js";
+import { NextJsAdapter, sanitizeModuleIdentifier } from "./adapter.ts";
+import type { NextJsAdapterOptions } from "./adapter.ts";
 
 describe("NextJsAdapter", () => {
   const baseDir = "/project";

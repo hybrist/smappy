@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { generateTempConfig } from "./factory.js";
+import { generateTempConfig } from "./factory.ts";
 
 describe("config/integration", () => {
   let testDir: string;
@@ -57,7 +57,7 @@ export default defineConfig({
 
       // Verify config was generated
       expect(existsSync(result.configPath)).toBe(true);
-      expect(result.configPath).toContain("vite.config.temp.ts");
+      expect(result.configPath).toContain("vite.config.temp.mts");
 
       // Verify config content
       const { readFileSync } = await import("node:fs");

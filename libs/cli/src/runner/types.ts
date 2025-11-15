@@ -2,7 +2,7 @@
  * Types for build execution
  */
 
-import type { DetectionResult } from "../detection/index.js";
+import type { DetectionResult } from "../detection/index.ts";
 
 /**
  * Options for running a build

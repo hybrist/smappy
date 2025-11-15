@@ -25,6 +25,7 @@
     "db:migrate": "pnpm --filter @smappy/web-sv db:migrate",
     "db:studio": "pnpm --filter @smappy/web-sv db:studio",
     "db:seed": "pnpm --filter @smappy/web-sv db:seed",
+    "smappy": "./libs/cli/src/main.ts",
     "storybook": "pnpm --filter @smappy/web-sv storybook",
     "build-storybook": "pnpm --filter @smappy/web-sv build-storybook"
   },

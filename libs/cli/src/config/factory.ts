@@ -7,12 +7,12 @@ import type {
   ConfigGenerator,
   TempConfigOptions,
   TempConfigResult,
-} from "./types.js";
-import type { DetectionResult } from "../detection/index.js";
-import { ViteConfigGenerator } from "./vite.js";
-import { WebpackConfigGenerator } from "./webpack.js";
-import { NextjsConfigGenerator } from "./nextjs.js";
-import { RollupConfigGenerator } from "./rollup.js";
+} from "./types.ts";
+import type { DetectionResult } from "../detection/index.ts";
+import { ViteConfigGenerator } from "./vite.ts";
+import { WebpackConfigGenerator } from "./webpack.ts";
+import { NextjsConfigGenerator } from "./nextjs.ts";
+import { RollupConfigGenerator } from "./rollup.ts";
 
 /**
  * Registry of config generators

@@ -9,13 +9,13 @@ import type {
   ConfigGenerator,
   TempConfigOptions,
   TempConfigResult,
-} from "./types.js";
-import type { DetectionResult } from "../detection/index.js";
+} from "./types.ts";
+import type { DetectionResult } from "../detection/index.ts";
 import {
   createTempDir,
   writeTempConfig,
   createTempConfigResult,
-} from "./utils.js";
+} from "./utils.ts";
 
 /**
  * Next.js config generator
@@ -110,7 +110,7 @@ export class NextjsConfigGenerator implements ConfigGenerator {
 let userConfig;
 try {
   userConfig = require('${userConfigPath.replace(/\\/g, "/")}');
-  
+
   // Handle default exports from ESM modules
   if (userConfig.default) {
     userConfig = userConfig.default;
@@ -128,7 +128,7 @@ const smappyConfig = {
     if (typeof userConfig.webpack === 'function') {
       config = userConfig.webpack(config, context);
     }
-    
+
     // Add Smappy plugin
     const SmappyPlugin = nextjsBundleAnalysisPlugin({
       projectName: '${projectName}',
@@ -136,12 +136,12 @@ const smappyConfig = {
     }, {
       debug: ${debug},
     });
-    
+
     if (!config.plugins) {
       config.plugins = [];
     }
     config.plugins.push(SmappyPlugin);
-    
+
     return config;
   },
 };
@@ -164,12 +164,12 @@ module.exports = {
     }, {
       debug: ${debug},
     });
-    
+
     if (!config.plugins) {
       config.plugins = [];
     }
     config.plugins.push(SmappyPlugin);
-    
+
     return config;
   },
 };

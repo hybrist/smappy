@@ -8,7 +8,7 @@ import {
   hasTypeScript,
   getProjectName,
   detectProject,
-} from "./detect.js";
+} from "./detect.ts";
 
 describe("detect", () => {
   let testDir: string;

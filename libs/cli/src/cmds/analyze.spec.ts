@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { existsSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { analyzeCommand } from "./analyze.js";
+import { analyzeCommand } from "./analyze.ts";
 
 // Mock console methods to test output
 let consoleLogSpy: ReturnType<typeof vi.spyOn>;

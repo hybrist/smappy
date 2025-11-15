@@ -3,10 +3,10 @@
  * Integrates bundle analysis into Angular builds using Angular's builder API
  */
 
-import type { BundlerPluginOptions, PluginConfig } from "../types.js";
-import { AngularAdapter } from "./adapter.js";
-import { ingestBundle } from "../../ingestion/index.js";
-import type { BundleIngestionInput } from "../../ingestion/index.js";
+import type { BundlerPluginOptions, PluginConfig } from "../types.ts";
+import { AngularAdapter } from "./adapter.ts";
+import { ingestBundle } from "../../ingestion/index.ts";
+import type { BundleIngestionInput } from "../../ingestion/index.ts";
 import { resolve, join } from "node:path";
 import { existsSync, readFileSync } from "node:fs";
 

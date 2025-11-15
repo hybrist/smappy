@@ -8,9 +8,9 @@ import type {
   BundlerModule,
   BundlerChunk,
   BundlerBundle,
-} from "../types.js";
-import { BundlerAdapter } from "../adapters.js";
-import { normalizePath, extractSourceMap, readFileContent } from "../utils.js";
+} from "../types.ts";
+import { BundlerAdapter } from "../adapters.ts";
+import { normalizePath, extractSourceMap, readFileContent } from "../utils.ts";
 import type { OutputBundle, OutputChunk } from "rollup";
 
 // ============================================================================

@@ -12,9 +12,9 @@ export type {
   BundlerModule,
   BundlerChunk,
   BundlerBundle,
-} from "./types.js";
+} from "./types.ts";
 
-export { isBundlerPlugin, isBundlerModule, isBundlerChunk } from "./types.js";
+export { isBundlerPlugin, isBundlerModule, isBundlerChunk } from "./types.ts";
 
 // Re-export utilities
 export {
@@ -31,29 +31,29 @@ export {
   readFileContentSafe,
   shouldExcludeFile,
   shouldIncludeFile,
-} from "./utils.js";
+} from "./utils.ts";
 
 // Re-export adapters
 export {
   BundlerAdapter,
   AdapterRegistry,
   createDefaultAdapter,
-} from "./adapters.js";
-export type { AdapterFactory } from "./adapters.js";
+} from "./adapters.ts";
+export type { AdapterFactory } from "./adapters.ts";
 
 // Re-export Angular plugin
 export {
   AngularAdapter,
   angularBundleAnalysisBuilder,
-} from "./angular/index.js";
-export type { AngularBuilderOptions } from "./angular/index.js";
+} from "./angular/index.ts";
+export type { AngularBuilderOptions } from "./angular/index.ts";
 
 // Re-export Next.js plugin
 export {
   NextJsBundleAnalysisPlugin,
   nextJsBundleAnalysisPlugin,
   withNextBundleAnalysis,
-} from "./nextjs/index.js";
+} from "./nextjs/index.ts";
 export type {
   NextJsPluginOptions,
   WithNextBundleAnalysisOptions,
@@ -61,5 +61,5 @@ export type {
   NextWebpackBuildContext,
   NextJsBuildTarget,
   NextJsRuntime,
-} from "./nextjs/index.js";
-export { NextJsAdapter } from "./nextjs/index.js";
+} from "./nextjs/index.ts";
+export { NextJsAdapter } from "./nextjs/index.ts";

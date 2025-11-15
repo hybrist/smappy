@@ -26,7 +26,7 @@ The config generation module creates temporary configs in the OS temp directory 
 The analyze command automatically uses this module:
 
 ```typescript
-import { analyzeCommand } from "./cmds/analyze.js";
+import { analyzeCommand } from "./cmds/analyze.ts";
 
 await analyzeCommand("/path/to/project", {
   verbose: true,
@@ -38,7 +38,7 @@ await analyzeCommand("/path/to/project", {
 ### Direct Usage
 
 ```typescript
-import { generateTempConfig } from "./config/index.js";
+import { generateTempConfig } from "./config/index.ts";
 
 const result = await generateTempConfig({
   projectPath: "/path/to/project",

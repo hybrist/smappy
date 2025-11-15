@@ -4,7 +4,7 @@
  */
 
 import type { BundleInput, ChunkInput, ModuleInput } from "@smappy/core";
-import type { IngestionOptions } from "../ingestion/index.js";
+import type { IngestionOptions } from "../ingestion/index.ts";
 
 // ============================================================================
 // Plugin Options

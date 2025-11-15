@@ -16,6 +16,7 @@
     "commander": "^14.0.2"
   },
   "devDependencies": {
+    "@types/node": "^22.19.0",
     "@types/webpack": "^5.28.5",
     "prettier": "catalog:",
     "rollup": "^4.52.5",
@@ -25,7 +26,14 @@
     "vitest": "catalog:",
     "webpack": "^5.102.1"
   },
-  "exports": [],
+  "exports": {
+    "./main": "./src/main.ts",
+    "./plugins/angular": "./src/plugins/angular/index.ts",
+    "./plugins/nextjs": "./src/plugins/nextjs/index.ts",
+    "./plugins/vite": "./src/plugins/vite/index.ts",
+    "./plugins/webpack": "./src/plugins/webpack/index.ts",
+    "./package.json": "./package.json"
+  },
   "files": [
     "dist"
   ],
@@ -35,6 +43,14 @@
   "publishConfig": {
     "bin": {
       "smappy": "./dist/main.mjs"
+    },
+    "exports": {
+      "./main": "./dist/main.mjs",
+      "./plugins/angular": "./dist/plugins/angular/index.mjs",
+      "./plugins/nextjs": "./dist/plugins/nextjs/index.mjs",
+      "./plugins/vite": "./dist/plugins/vite/index.mjs",
+      "./plugins/webpack": "./dist/plugins/webpack/index.mjs",
+      "./package.json": "./package.json"
     }
   }
 }

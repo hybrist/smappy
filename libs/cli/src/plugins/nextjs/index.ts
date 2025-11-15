@@ -6,17 +6,17 @@ export {
   NextJsBundleAnalysisPlugin,
   nextJsBundleAnalysisPlugin,
   withNextBundleAnalysis,
-} from "./plugin.js";
+} from "./plugin.ts";
 export type {
   NextJsPluginOptions,
   WithNextBundleAnalysisOptions,
   NextConfig,
   NextWebpackBuildContext,
-} from "./plugin.js";
+} from "./plugin.ts";
 
-export { NextJsAdapter, sanitizeModuleIdentifier } from "./adapter.js";
+export { NextJsAdapter, sanitizeModuleIdentifier } from "./adapter.ts";
 export type {
   NextJsAdapterOptions,
   NextJsBuildTarget,
   NextJsRuntime,
-} from "./adapter.js";
+} from "./adapter.ts";

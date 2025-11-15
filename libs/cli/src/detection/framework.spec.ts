@@ -5,7 +5,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { writeFileSync, mkdirSync, rmSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { detectFramework } from "./framework.js";
+import { detectFramework } from "./framework.ts";
 
 describe("Framework Detection", () => {
   let testDir: string;

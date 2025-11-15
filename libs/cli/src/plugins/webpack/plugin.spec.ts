@@ -5,8 +5,8 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   WebpackBundleAnalysisPlugin,
   webpackBundleAnalysisPlugin,
-} from "./plugin.js";
-import type { WebpackPluginOptions } from "./plugin.js";
+} from "./plugin.ts";
+import type { WebpackPluginOptions } from "./plugin.ts";
 import type { Compiler, Stats } from "webpack";
 
 // Mock the ingestion module

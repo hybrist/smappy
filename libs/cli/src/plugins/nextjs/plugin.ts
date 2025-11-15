@@ -5,15 +5,15 @@
 
 import { resolve } from "node:path";
 import type { Configuration, Compiler, Stats } from "webpack";
-import type { BundlerPluginOptions, PluginConfig } from "../types.js";
-import type { BundleIngestionInput } from "../../ingestion/index.js";
-import { ingestBundle } from "../../ingestion/index.js";
+import type { BundlerPluginOptions, PluginConfig } from "../types.ts";
+import type { BundleIngestionInput } from "../../ingestion/index.ts";
+import { ingestBundle } from "../../ingestion/index.ts";
 import {
   NextJsAdapter,
   type NextJsAdapterOptions,
   type NextJsBuildTarget,
   type NextJsRuntime,
-} from "./adapter.js";
+} from "./adapter.ts";
 
 /**
  * Options for configuring the Next.js bundle analysis plugin.

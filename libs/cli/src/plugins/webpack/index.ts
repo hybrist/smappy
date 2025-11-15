@@ -6,9 +6,9 @@
 export {
   WebpackBundleAnalysisPlugin,
   webpackBundleAnalysisPlugin,
-} from "./plugin.js";
-export type { WebpackPluginOptions } from "./plugin.js";
-export { WebpackAdapter } from "./adapter.js";
+} from "./plugin.ts";
+export type { WebpackPluginOptions } from "./plugin.ts";
+export { WebpackAdapter } from "./adapter.ts";
 
 // Default export
-export { webpackBundleAnalysisPlugin as default } from "./plugin.js";
+export { webpackBundleAnalysisPlugin as default } from "./plugin.ts";
