@@ -5,6 +5,16 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
+/**
+ * Check if a config file exists with common extensions
+ */
+function configFileExists(projectPath: string, baseName: string): boolean {
+  const extensions = [".js", ".ts", ".mjs", ".cjs"];
+  return extensions.some((ext) =>
+    existsSync(join(projectPath, `${baseName}${ext}`)),
+  );
+}
+
 export interface ProjectInfo {
   bundler: "webpack" | "vite" | "rollup" | "nextjs" | "angular" | "unknown";
   framework:
@@ -37,12 +47,7 @@ export function detectBundler(projectPath: string): ProjectInfo["bundler"] {
     };
 
     // Check for bundler-specific config files first
-    if (
-      existsSync(join(projectPath, "next.config.js")) ||
-      existsSync(join(projectPath, "next.config.ts")) ||
-      existsSync(join(projectPath, "next.config.mjs")) ||
-      existsSync(join(projectPath, "next.config.cjs"))
-    ) {
+    if (configFileExists(projectPath, "next.config")) {
       return "nextjs";
     }
 
@@ -50,22 +55,16 @@ export function detectBundler(projectPath: string): ProjectInfo["bundler"] {
       return "angular";
     }
 
-    if (
-      existsSync(join(projectPath, "vite.config.js")) ||
-      existsSync(join(projectPath, "vite.config.ts")) ||
-      existsSync(join(projectPath, "vite.config.mjs")) ||
-      existsSync(join(projectPath, "vite.config.cjs"))
-    ) {
+    if (configFileExists(projectPath, "vite.config")) {
       return "vite";
     }
 
-    if (
-      existsSync(join(projectPath, "webpack.config.js")) ||
-      existsSync(join(projectPath, "webpack.config.ts")) ||
-      existsSync(join(projectPath, "webpack.config.mjs")) ||
-      existsSync(join(projectPath, "webpack.config.cjs"))
-    ) {
+    if (configFileExists(projectPath, "webpack.config")) {
       return "webpack";
+    }
+
+    if (configFileExists(projectPath, "rollup.config")) {
+      return "rollup";
     }
 
     // Check package.json dependencies
@@ -73,12 +72,13 @@ export function detectBundler(projectPath: string): ProjectInfo["bundler"] {
       return "nextjs";
     }
 
-    if (
-      deps.vite ||
-      deps["@vitejs/plugin-react"] ||
-      deps["@vitejs/plugin-vue"] ||
-      deps["@sveltejs/vite-plugin-svelte"]
-    ) {
+    const viteDeps = [
+      "vite",
+      "@vitejs/plugin-react",
+      "@vitejs/plugin-vue",
+      "@sveltejs/vite-plugin-svelte",
+    ];
+    if (viteDeps.some((dep) => deps[dep])) {
       return "vite";
     }
 

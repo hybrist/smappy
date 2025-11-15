@@ -3,7 +3,7 @@
  * Analyzes a JavaScript/TypeScript project to extract bundle information
  */
 
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import { detectProject } from "./detect.js";
 
@@ -24,6 +24,10 @@ export async function analyzeCommand(
 
   if (!existsSync(resolvedPath)) {
     throw new Error(`Project path does not exist: ${resolvedPath}`);
+  }
+
+  if (!statSync(resolvedPath).isDirectory()) {
+    throw new Error(`Project path is not a directory: ${resolvedPath}`);
   }
 
   if (options.verbose) {

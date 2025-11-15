@@ -75,6 +75,15 @@ describe("analyzeCommand", () => {
     );
   });
 
+  it("should throw error when path is a file, not a directory", async () => {
+    const testFile = join(testDir, "test-file.txt");
+    writeFileSync(testFile, "test content");
+
+    await expect(analyzeCommand(testFile)).rejects.toThrow(
+      "Project path is not a directory",
+    );
+  });
+
   it("should warn when bundler is unknown", async () => {
     const consoleErrorSpy = vi
       .spyOn(console, "error")

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
+import { fileURLToPath } from "node:url";
 import { analyzeCommand } from "./cmds/analyze.js";
 
 const program = new Command();
@@ -28,9 +29,9 @@ program
   });
 
 // Only parse command line arguments if this file is being run directly
-// Check if the current module is the main module
+// Check if the current module is the main module (cross-platform compatible)
 const isMainModule =
-  process.argv[1] && new URL(import.meta.url).pathname === process.argv[1];
+  process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
 if (isMainModule) {
   program.parse();
 }
