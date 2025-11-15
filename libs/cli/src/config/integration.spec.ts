@@ -57,7 +57,7 @@ export default defineConfig({
 
       // Verify config was generated
       expect(existsSync(result.configPath)).toBe(true);
-      expect(result.configPath).toContain("vite.config.temp.ts");
+      expect(result.configPath).toContain("vite.config.temp.mts");
 
       // Verify config content
       const { readFileSync } = await import("node:fs");

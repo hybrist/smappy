@@ -5,6 +5,7 @@
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { createRequire } from "node:module";
 import type {
   ConfigGenerator,
   TempConfigOptions,
@@ -16,6 +17,7 @@ import {
   writeTempConfig,
   createTempConfigResult,
 } from "./utils.ts";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 /**
  * Vite config generator
@@ -46,7 +48,7 @@ export class ViteConfigGenerator implements ConfigGenerator {
     // Write the config file
     const configPath = await writeTempConfig(
       tempDir,
-      "vite.config.temp.ts",
+      "vite.config.temp.mts",
       configContent,
       debug,
     );
@@ -86,17 +88,41 @@ export class ViteConfigGenerator implements ConfigGenerator {
     outputDir: string,
     debug = false,
   ): string {
+    let pluginPath: string;
+    let vitePath: string;
+
+    // Workaround for Vitest:
+    if (
+      typeof import.meta.resolve !== "function" &&
+      process.env.VITEST === "true"
+    ) {
+      const projectRequire = createRequire(projectPath);
+      const cliRequire = createRequire(fileURLToPath(import.meta.url));
+      pluginPath = cliRequire.resolve("@smappy/cli/plugins/vite");
+      vitePath = projectRequire.resolve("vite");
+    } else {
+      pluginPath = import.meta.resolve("@smappy/cli/plugins/vite");
+      vitePath = import.meta.resolve("vite", pathToFileURL(projectPath));
+    }
+
     // If user has a config, extend it; otherwise create minimal config
     if (userConfigPath) {
       return this.generateExtendingConfig(
-        projectPath,
+        pluginPath,
+        vitePath,
         projectName,
         userConfigPath,
         outputDir,
         debug,
       );
     } else {
-      return this.generateMinimalConfig(projectName, outputDir, debug);
+      return this.generateMinimalConfig(
+        pluginPath,
+        vitePath,
+        projectName,
+        outputDir,
+        debug,
+      );
     }
   }
 
@@ -104,7 +130,8 @@ export class ViteConfigGenerator implements ConfigGenerator {
    * Generate config that extends user's existing config
    */
   private generateExtendingConfig(
-    _projectPath: string,
+    pluginPath: string,
+    vitePath: string,
     projectName: string,
     userConfigPath: string,
     outputDir: string,
@@ -112,8 +139,8 @@ export class ViteConfigGenerator implements ConfigGenerator {
   ): string {
     // Import user's config and extend it with Smappy plugin
     // Use dynamic import inside defineConfig to avoid top-level await issues
-    return `import { defineConfig, mergeConfig } from 'vite';
-import { viteBundleAnalysisPlugin } from '@smappy/cli/plugins/vite';
+    return `import { defineConfig, mergeConfig } from '${vitePath}';
+import { viteBundleAnalysisPlugin } from '${pluginPath}';
 
 export default defineConfig(async () => {
   // Import user's existing config
@@ -140,6 +167,9 @@ export default defineConfig(async () => {
         debug: ${debug},
       }),
     ],
+    build: {
+      outDir: '${outputDir.replace(/\\/g, "/")}',
+    },
   };
 
   // Merge configs, ensuring Smappy plugin is added last
@@ -152,12 +182,14 @@ export default defineConfig(async () => {
    * Generate minimal config when user has no config
    */
   private generateMinimalConfig(
+    pluginPath: string,
+    vitePath: string,
     projectName: string,
     outputDir: string,
     debug = false,
   ): string {
-    return `import { defineConfig } from 'vite';
-import { viteBundleAnalysisPlugin } from '@smappy/cli/plugins/vite';
+    return `import { defineConfig } from '${vitePath}';
+import { viteBundleAnalysisPlugin } from '${pluginPath}';
 
 export default defineConfig({
   plugins: [

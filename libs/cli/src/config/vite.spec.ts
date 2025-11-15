@@ -57,7 +57,7 @@ describe("ViteConfigGenerator", () => {
       tempDirs.push(result.tempDir);
 
       expect(existsSync(result.configPath)).toBe(true);
-      expect(result.configPath).toContain("vite.config.temp.ts");
+      expect(result.configPath).toContain("vite.config.temp.mts");
       expect(result.tempDir).toContain("smappy-vite-");
       expect(typeof result.cleanup).toBe("function");
     });
@@ -76,7 +76,9 @@ describe("ViteConfigGenerator", () => {
       const { readFileSync } = await import("node:fs");
       const configContent = readFileSync(result.configPath, "utf-8");
 
-      expect(configContent).toContain("import { defineConfig } from 'vite'");
+      expect(configContent).toMatch(
+        /import { defineConfig } from '[^']*vite[^']*'/,
+      );
       expect(configContent).toContain("viteBundleAnalysisPlugin");
       expect(configContent).toContain("projectName: 'test-project'");
       expect(configContent).toContain("autoIngest: true");
