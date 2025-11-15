@@ -88,20 +88,23 @@ export class ViteConfigGenerator implements ConfigGenerator {
     outputDir: string,
     debug = false,
   ): string {
-    let pluginPath: string;
-    let vitePath: string;
+    // For generated configs, we need to use the built dist files since
+    // Node.js ESM loader (used by Vite config loader) can't load TypeScript.
+    // When this code runs, it's from the built dist file (e.g., dist/adapter-*.mjs).
+    // Navigate to dist/plugins/vite/index.mjs
+    const currentFileUrl = fileURLToPath(import.meta.url);
+    const distDir = join(currentFileUrl, ".."); // Current file is in dist/
+    const pluginPath = join(distDir, "plugins/vite/index.mjs");
 
-    // Workaround for Vitest:
+    // Vite needs to be resolved from the project directory
+    let vitePath: string;
     if (
       typeof import.meta.resolve !== "function" &&
       process.env.VITEST === "true"
     ) {
       const projectRequire = createRequire(projectPath);
-      const cliRequire = createRequire(fileURLToPath(import.meta.url));
-      pluginPath = cliRequire.resolve("@smappy/cli/plugins/vite");
       vitePath = projectRequire.resolve("vite");
     } else {
-      pluginPath = import.meta.resolve("@smappy/cli/plugins/vite");
       vitePath = import.meta.resolve("vite", pathToFileURL(projectPath));
     }
 

@@ -5,8 +5,7 @@
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { createRequire } from "node:module";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import type {
   ConfigGenerator,
   TempConfigOptions,
@@ -88,19 +87,12 @@ export class WebpackConfigGenerator implements ConfigGenerator {
     outputDir: string,
     debug = false,
   ): string {
-    let pluginPath: string;
-
-    // Resolve the absolute path to the plugin
-    // Workaround for Vitest:
-    if (
-      typeof import.meta.resolve !== "function" &&
-      process.env.VITEST === "true"
-    ) {
-      const cliRequire = createRequire(fileURLToPath(import.meta.url));
-      pluginPath = cliRequire.resolve("@smappy/cli/plugins/webpack");
-    } else {
-      pluginPath = import.meta.resolve("@smappy/cli/plugins/webpack");
-    }
+    // For webpack configs, we need to use the built dist files since webpack can't load TypeScript.
+    // When this code runs, it's from the built dist file (e.g., dist/adapter-*.mjs).
+    // Navigate to dist/plugins/webpack/index.mjs
+    const currentFileUrl = fileURLToPath(import.meta.url);
+    const distDir = join(currentFileUrl, ".."); // Current file is in dist/
+    const pluginPath = join(distDir, "plugins/webpack/index.mjs");
 
     // If user has a config, extend it; otherwise create minimal config
     if (userConfigPath) {
