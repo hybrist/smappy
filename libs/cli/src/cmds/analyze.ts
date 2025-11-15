@@ -20,9 +20,7 @@ export interface AnalyzeOptions {
 /**
  * Parse bundler string to DetectionResult bundler type
  */
-function parseBundler(
-  bundler?: string,
-): DetectionResult["bundler"] {
+function parseBundler(bundler?: string): DetectionResult["bundler"] {
   if (!bundler) return null;
 
   const validBundlers: DetectionResult["bundler"][] = [
@@ -43,9 +41,7 @@ function parseBundler(
 /**
  * Parse framework string to DetectionResult framework type
  */
-function parseFramework(
-  framework?: string,
-): DetectionResult["framework"] {
+function parseFramework(framework?: string): DetectionResult["framework"] {
   if (!framework) return null;
 
   const validFrameworks: DetectionResult["framework"][] = [
@@ -58,9 +54,7 @@ function parseFramework(
     "nuxt",
   ];
 
-  return validFrameworks.includes(
-    framework as DetectionResult["framework"],
-  )
+  return validFrameworks.includes(framework as DetectionResult["framework"])
     ? (framework as DetectionResult["framework"])
     : null;
 }
@@ -144,10 +138,10 @@ export async function analyzeCommand(
     detection = {
       ...detection,
       bundler: options.bundler
-        ? parseBundler(options.bundler) ?? detection.bundler
+        ? (parseBundler(options.bundler) ?? detection.bundler)
         : detection.bundler,
       framework: options.framework
-        ? parseFramework(options.framework) ?? detection.framework
+        ? (parseFramework(options.framework) ?? detection.framework)
         : detection.framework,
       confidence:
         options.bundler || options.framework ? "high" : detection.confidence,

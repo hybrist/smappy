@@ -322,4 +322,3 @@ describe("Bundler Detection", () => {
     });
   });
 });
-
