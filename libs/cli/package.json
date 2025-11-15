@@ -11,7 +11,8 @@
     "prepare": "tsdown"
   },
   "dependencies": {
-    "@smappy/core": "workspace:*"
+    "@smappy/core": "workspace:*",
+    "commander": "^14.0.2"
   },
   "devDependencies": {
     "@types/webpack": "^5.28.5",

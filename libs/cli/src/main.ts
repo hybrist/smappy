@@ -1,3 +1,35 @@
 #!/usr/bin/env node
 
-console.log("TODO: Implement CLI with subcommands for analyzing project");
+import { Command } from "commander";
+import { analyzeCommand } from "./cmds/analyze.js";
+
+const program = new Command();
+
+program
+  .name("smappy")
+  .description("Bundle analysis tool for JavaScript/TypeScript projects")
+  .version("0.0.1");
+
+program
+  .command("analyze")
+  .description("Analyze a JavaScript/TypeScript project")
+  .argument("[project-path]", "Path to the project directory", process.cwd())
+  .option("-v, --verbose", "Enable verbose output")
+  .action(async (projectPath: string, options: { verbose?: boolean }) => {
+    try {
+      await analyzeCommand(projectPath, options);
+    } catch (error) {
+      console.error("Error:", error instanceof Error ? error.message : String(error));
+      process.exit(1);
+    }
+  });
+
+// Only parse command line arguments if this file is being run directly
+// Check if the current module is the main module
+const isMainModule = process.argv[1] && new URL(import.meta.url).pathname === process.argv[1];
+if (isMainModule) {
+  program.parse();
+}
+
+// Export program for testing
+export { program };

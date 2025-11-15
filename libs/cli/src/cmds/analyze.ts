@@ -1,25 +1,68 @@
-// TODO: Turn this into a sub command for the CLI in src/main.ts.
-//
-// Example usage:
-//
-//   smappy analyze # Analyze the project in the current directory.
-//
-//   smappy analyze path/to/project # Analyze given directory.
-//
-// The command should generally detect options and flags, e.g.:
-//
-// * The bundler used (based on config files & package.json deps)
-// * The framework used (based on package.json deps)
-//
-// There should be no configuration files required in the project,
-// e.g. if necessary, the command should generate temporary configs
-// in tmpdir to avoid polluting the project directory. This can be
-// used to inject plugins to extend the configs of the project.
-//
-// Implementing this might involve adding persistence support to
-// @smappy/core (or a new package like @smappy/store). By default,
-// let's store the database in the home directory of the user.
-//
-// The core implementation of the analysis command should be decoupled
-// from the CLI interface so we can also offer the command as an MCP
-// tool in the future.
+/**
+ * Analyze command implementation
+ * Analyzes a JavaScript/TypeScript project to extract bundle information
+ */
+
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
+import { detectProject } from "./detect.js";
+
+export interface AnalyzeOptions {
+  projectPath: string;
+  verbose?: boolean;
+}
+
+/**
+ * Main analyze command handler
+ */
+export async function analyzeCommand(
+  projectPath: string = process.cwd(),
+  options: Omit<AnalyzeOptions, "projectPath"> = {},
+): Promise<void> {
+  // Resolve and validate project path
+  const resolvedPath = resolve(projectPath);
+
+  if (!existsSync(resolvedPath)) {
+    throw new Error(`Project path does not exist: ${resolvedPath}`);
+  }
+
+  if (options.verbose) {
+    console.log(`Analyzing project at: ${resolvedPath}`);
+  }
+
+  // Detect project information
+  console.log("Detecting project configuration...");
+  const projectInfo = detectProject(resolvedPath);
+
+  if (options.verbose) {
+    console.log(`  Bundler: ${projectInfo.bundler}`);
+    console.log(`  Framework: ${projectInfo.framework}`);
+    console.log(`  TypeScript: ${projectInfo.hasTypeScript ? "Yes" : "No"}`);
+    console.log(`  Project name: ${projectInfo.projectName}`);
+  }
+
+  // Validate that we detected a bundler
+  if (projectInfo.bundler === "unknown") {
+    console.error(
+      "⚠️  Could not detect bundler. Make sure you have a valid project configuration.",
+    );
+    console.error(
+      "Supported bundlers: webpack, vite, rollup, nextjs, angular",
+    );
+  }
+
+  // TODO: Integrate with plugin system to extract bundle information
+  // This will be implemented in follow-up tasks:
+  // - Run bundler build with injected plugin
+  // - Extract bundle data using appropriate adapter
+  // - Ingest bundle data into database
+  // - Generate analysis report
+
+  console.log("\n✅ Project analysis complete!");
+  console.log(
+    "\nNote: Full bundle extraction and analysis will be implemented in follow-up tasks.",
+  );
+  console.log(
+    `Detected ${projectInfo.bundler} bundler for ${projectInfo.framework} project.`,
+  );
+}
