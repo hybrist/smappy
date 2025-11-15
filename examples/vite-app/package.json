@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Test fixture project for Vite 5 bundle analysis",
   "scripts": {
+    "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development"
   },
