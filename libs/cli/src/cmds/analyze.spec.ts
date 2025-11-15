@@ -36,13 +36,13 @@ describe("analyzeCommand", () => {
     );
     writeFileSync(join(testDir, "vite.config.js"), "");
 
-    await analyzeCommand(testDir, { verbose: false });
+    await analyzeCommand(testDir, { verbose: false, skipBuild: true });
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
       "Detecting project configuration...",
     );
     expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining("Project analysis complete"),
+      expect.stringContaining("Configuration generated successfully"),
     );
   });
 
@@ -56,7 +56,7 @@ describe("analyzeCommand", () => {
     );
     writeFileSync(join(testDir, "vite.config.js"), "");
 
-    await analyzeCommand(testDir, { verbose: true });
+    await analyzeCommand(testDir, { verbose: true, skipBuild: true });
 
     // Check that verbose messages were logged
     const logCalls = consoleLogSpy.mock.calls.flat();
@@ -116,7 +116,7 @@ describe("analyzeCommand", () => {
         }),
       );
 
-      await analyzeCommand();
+      await analyzeCommand(undefined, { skipBuild: true });
 
       expect(consoleLogSpy).toHaveBeenCalled();
     } finally {

@@ -9,12 +9,22 @@ import {
   detectBundlerAndFramework,
   type DetectionResult,
 } from "../detection/index.js";
+import {
+  generateTempConfig,
+  isBundlerSupported,
+  type TempConfigResult,
+} from "../config/index.js";
+import { runBuild } from "../build/index.js";
 
 export interface AnalyzeOptions {
   projectPath?: string;
   bundler?: string;
   framework?: string;
   verbose?: boolean;
+  /** Skip the build execution (for testing or dry-run) */
+  skipBuild?: boolean;
+  /** Keep temporary files for debugging */
+  keepTemp?: boolean;
 }
 
 /**
@@ -107,6 +117,113 @@ function hasTypeScript(projectPath: string): boolean {
 }
 
 /**
+ * Run bundle analysis with temporary config
+ */
+async function runBundleAnalysis(
+  projectPath: string,
+  projectName: string,
+  detection: DetectionResult,
+  options: Omit<AnalyzeOptions, "projectPath">,
+): Promise<void> {
+  const { bundler } = detection;
+  const { verbose, skipBuild, keepTemp } = options;
+
+  // Check if bundler is supported for temp config generation
+  if (!isBundlerSupported(bundler)) {
+    console.warn(
+      `\n⚠️  Bundler '${bundler}' is not yet supported for automatic analysis.`,
+    );
+    console.log(
+      "Supported bundlers: vite, webpack, nextjs, rollup",
+    );
+    return;
+  }
+
+  console.log("\nGenerating temporary build configuration...");
+
+  let tempConfig: TempConfigResult | null = null;
+
+  try {
+    // Generate temporary config
+    tempConfig = await generateTempConfig({
+      projectPath,
+      projectName,
+      bundler,
+      debug: verbose,
+      keepTemp: keepTemp || false,
+    });
+
+    if (verbose) {
+      console.log(`  Config path: ${tempConfig.configPath}`);
+      console.log(`  Temp directory: ${tempConfig.tempDir}`);
+    }
+
+    // Skip build if requested (for testing or dry-run)
+    if (skipBuild) {
+      console.log("\n✅ Configuration generated successfully!");
+      console.log(
+        `\nSkipping build execution (skipBuild option enabled).`,
+      );
+      console.log(`Temporary config: ${tempConfig.configPath}`);
+      return;
+    }
+
+    console.log("\nRunning build with analysis plugin...");
+
+    // Run the build
+    const buildResult = await runBuild({
+      projectPath,
+      configPath: tempConfig.configPath,
+      bundler,
+      debug: verbose,
+    });
+
+    if (buildResult.success) {
+      console.log("\n✅ Build and analysis complete!");
+      console.log(
+        `\nBundle data has been extracted and is ready for analysis.`,
+      );
+    } else {
+      console.error("\n❌ Build failed!");
+      if (buildResult.error) {
+        console.error(`  Error: ${buildResult.error}`);
+      }
+      if (!verbose && buildResult.stderr) {
+        console.error("\nBuild errors:");
+        console.error(buildResult.stderr);
+      }
+      if (!verbose && buildResult.stdout) {
+        console.log("\nBuild output:");
+        console.log(buildResult.stdout);
+      }
+    }
+  } catch (error) {
+    console.error("\n❌ Failed to run bundle analysis:");
+    console.error(
+      error instanceof Error ? error.message : String(error),
+    );
+    if (verbose && error instanceof Error && error.stack) {
+      console.error("\nStack trace:");
+      console.error(error.stack);
+    }
+  } finally {
+    // Always cleanup temporary files
+    if (tempConfig) {
+      try {
+        await tempConfig.cleanup();
+      } catch (cleanupError) {
+        if (verbose) {
+          console.warn(
+            "Warning: Failed to cleanup temporary files:",
+            cleanupError,
+          );
+        }
+      }
+    }
+  }
+}
+
+/**
  * Main analyze command handler
  * Compatible with Commander.js interface from PR #145
  */
@@ -192,18 +309,16 @@ export async function analyzeCommand(
     console.error("Supported bundlers: webpack, vite, rollup, nextjs, angular");
   }
 
-  // TODO: Integrate with plugin system to extract bundle information
-  // This will be implemented in follow-up tasks:
-  // - Run bundler build with injected plugin
-  // - Extract bundle data using appropriate adapter
-  // - Ingest bundle data into database
-  // - Generate analysis report
-
-  console.log("\n✅ Project analysis complete!");
-  console.log(
-    "\nNote: Full bundle extraction and analysis will be implemented in follow-up tasks.",
-  );
-  console.log(
-    `Detected ${detection.bundler ?? "unknown"} bundler for ${detection.framework ?? "unknown"} project.`,
-  );
+  // Integrate with plugin system to extract bundle information
+  if (detection.bundler) {
+    await runBundleAnalysis(resolvedPath, projectName, detection, options);
+  } else {
+    console.log("\n✅ Project analysis complete!");
+    console.log(
+      "\nNote: Cannot run bundle analysis without detected bundler.",
+    );
+    console.log(
+      `Detected ${detection.bundler ?? "unknown"} bundler for ${detection.framework ?? "unknown"} project.`,
+    );
+  }
 }
