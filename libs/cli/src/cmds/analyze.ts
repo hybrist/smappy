@@ -14,7 +14,7 @@ import {
   isBundlerSupported,
   type TempConfigResult,
 } from "../config/index.js";
-import { runBuild } from "../build/index.js";
+import { runBuild } from "../runner/index.js";
 
 export interface AnalyzeOptions {
   projectPath?: string;
