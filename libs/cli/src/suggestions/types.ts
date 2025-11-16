@@ -6,7 +6,7 @@ import type {
   SuggestionData,
   ModuleWithAnalysis,
   DependencyRelationship,
-} from '@smappy/cli/ingestion';
+} from '../ingestion/db/writer.js';
 import type { ChunkInput, BundleInput } from '@smappy/core';
 
 /**

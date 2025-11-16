@@ -3,7 +3,7 @@
  * Provides realistic example analysis data that can be used across tests and for manual seeding
  */
 
-import { ingestBundle, type BundleIngestionInput } from '../ingestion/index.js';
+import { ingestBundle, type BundleIngestionInput } from '@smappy/cli/ingestion';
 import type { BundleInput, ModuleInput, ChunkInput } from '@smappy/core';
 import { db } from './index.js';
 import { sql } from 'drizzle-orm';
@@ -317,7 +317,7 @@ export async function seedDatabase(profile: SeedProfile = 'realistic', clean = t
 
   for (const dataset of datasets) {
     console.log(`  📦 Ingesting project: ${dataset.options.projectName}`);
-    await ingestBundle(dataset);
+    await ingestBundle(db, dataset);
   }
 
   console.log('✅ Database seeded successfully!');

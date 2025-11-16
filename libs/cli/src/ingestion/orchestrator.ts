@@ -3,8 +3,10 @@
  * Coordinates the analysis pipeline from bundle input to database persistence
  */
 
-import type { BundleInput, ChunkInput, ModuleInput } from '@smappy/core';
-import { posix as pathPosix } from 'node:path';
+import type { BundleInput, ChunkInput, ModuleInput } from "@smappy/core";
+import { schema } from "@smappy/store";
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+import { posix as pathPosix } from "node:path";
 import type {
   IngestionData,
   IngestionWriteResult,
@@ -13,7 +15,7 @@ import type {
   DependencyRelationship,
   SuggestionData,
   IngestionOptions,
-} from './db/writer.js';
+} from "./db/writer.js";
 import {
   extractSymbols,
   type SymbolWithExport,
@@ -24,12 +26,12 @@ import {
   buildDependencyGraph,
   computeRawSize,
   computeGzipSize,
-} from '@smappy/core';
-import { writeIngestionData } from './db/writer.js';
+} from "@smappy/core";
+import { writeIngestionData } from "./db/writer.js";
 
-import { createSuggestionAnalyzer } from '../suggestions/orchestrator.js';
-import type { SuggestionContext } from '../suggestions/types.js';
-import { LLMAnalyzer } from './suggestions/llm-analyzer.js';
+import { createSuggestionAnalyzer } from "../suggestions/orchestrator.js";
+import type { SuggestionContext } from "../suggestions/types.js";
+import { LLMAnalyzer } from "./suggestions/llm-analyzer.js";
 
 // ============================================================================
 // Main Orchestrator API
@@ -83,13 +85,20 @@ export interface BundleIngestionResult extends IngestionWriteResult {
  * @returns Result with analysis run ID and statistics
  * @throws Error if critical failure occurs
  */
-export async function ingestBundle(input: BundleIngestionInput): Promise<BundleIngestionResult> {
+export async function ingestBundle(
+  db: BetterSQLite3Database<typeof schema>,
+  input: BundleIngestionInput,
+): Promise<BundleIngestionResult> {
   const errors: string[] = [];
 
   try {
     // Step 1: Analyze modules
     console.log(`[Ingestion] Analyzing ${input.modules.length} modules...`);
-    const analyzedModules = await analyzeModules(input.modules, input.bundles, errors);
+    const analyzedModules = await analyzeModules(
+      input.modules,
+      input.bundles,
+      errors,
+    );
 
     // Step 2: Build dependency graph
     console.log(`[Ingestion] Building dependency graph...`);
@@ -115,9 +124,11 @@ export async function ingestBundle(input: BundleIngestionInput): Promise<BundleI
 
     // Step 5: Write to database
     console.log(`[Ingestion] Writing to database...`);
-    const result = await writeIngestionData(ingestionData);
+    const result = await writeIngestionData(db, ingestionData);
 
-    console.log(`[Ingestion] ✓ Complete! Analysis run ID: ${result.analysisRunId}`);
+    console.log(
+      `[Ingestion] ✓ Complete! Analysis run ID: ${result.analysisRunId}`,
+    );
     console.log(`[Ingestion] Stats:`, result.stats);
 
     return {
@@ -125,7 +136,7 @@ export async function ingestBundle(input: BundleIngestionInput): Promise<BundleI
       errors,
     };
   } catch (error) {
-    console.error('[Ingestion] ✗ Fatal error:', error);
+    console.error("[Ingestion] ✗ Fatal error:", error);
     throw error;
   }
 }
@@ -162,13 +173,15 @@ async function analyzeModules(
     try {
       // Extract symbols from source code
       const analysisResult = extractSymbols(module.sourceContent, {
-        sourceType: 'module',
+        sourceType: "module",
         includeNested: true,
         filePath: module.filePath,
       });
 
       if (analysisResult.errors.length > 0) {
-        errors.push(`Errors analyzing ${module.filePath}: ${analysisResult.errors.join(', ')}`);
+        errors.push(
+          `Errors analyzing ${module.filePath}: ${analysisResult.errors.join(", ")}`,
+        );
       }
 
       // Compute module sizes
@@ -193,18 +206,22 @@ async function analyzeModules(
             }
           } catch (error) {
             // Non-fatal: symbol mapping failure
-            errors.push(`Failed to map symbol ${symbol.name} in ${module.filePath}: ${error}`);
+            errors.push(
+              `Failed to map symbol ${symbol.name} in ${module.filePath}: ${error}`,
+            );
           }
         }
       }
 
       // Detect third-party modules
-      const isThirdParty = module.filePath.includes('node_modules');
+      const isThirdParty = module.filePath.includes("node_modules");
       let packageName: string | undefined;
       let packageVersion: string | undefined;
 
       if (isThirdParty) {
-        const match = module.filePath.match(/node_modules\/(?:@([^/]+)\/)?([^/]+)/);
+        const match = module.filePath.match(
+          /node_modules\/(?:@([^/]+)\/)?([^/]+)/,
+        );
         if (match) {
           packageName = match[1] ? `@${match[1]}/${match[2]}` : match[2];
         }
@@ -257,32 +274,46 @@ async function buildDependencies(
 ): Promise<DependencyRelationship[]> {
   const dependencies: DependencyRelationship[] = [];
   const moduleLookup = createModuleLookup(modules);
-  const importerLookup = new Map(modules.map((m) => [normalizeModulePath(m.filePath), m.filePath]));
+  const importerLookup = new Map(
+    modules.map((m) => [normalizeModulePath(m.filePath), m.filePath]),
+  );
 
   for (const module of modules) {
     try {
-      const graph = buildDependencyGraph(module.sourceContent, module.filePath, {
-        baseDir: process.cwd(),
-        followDynamicImports: true,
-      });
+      const graph = buildDependencyGraph(
+        module.sourceContent,
+        module.filePath,
+        {
+          baseDir: process.cwd(),
+          followDynamicImports: true,
+        },
+      );
 
       // Convert graph dependencies to database format
       for (const dep of graph.dependencies) {
-        const resolvedPath = resolveImportedModulePath(module.filePath, dep.target, moduleLookup);
+        const resolvedPath = resolveImportedModulePath(
+          module.filePath,
+          dep.target,
+          moduleLookup,
+        );
 
         if (!resolvedPath) {
           continue;
         }
 
         dependencies.push({
-          importerPath: importerLookup.get(normalizeModulePath(module.filePath)) ?? module.filePath,
+          importerPath:
+            importerLookup.get(normalizeModulePath(module.filePath)) ??
+            module.filePath,
           importedPath: resolvedPath,
-          type: dep.type === 'dynamic-import' ? 'dynamic' : 'static',
+          type: dep.type === "dynamic-import" ? "dynamic" : "static",
           importedSymbols: dep.importedNames,
         });
       }
     } catch (error) {
-      errors.push(`Failed to build dependency graph for ${module.filePath}: ${error}`);
+      errors.push(
+        `Failed to build dependency graph for ${module.filePath}: ${error}`,
+      );
     }
   }
 
@@ -298,7 +329,10 @@ function resolveImportedModulePath(
   moduleLookup: Map<string, string>,
 ): string | null {
   const normalizedImporter = normalizeModulePath(importerPath);
-  const candidateKeys = createSpecifierCandidates(normalizedImporter, rawSpecifier);
+  const candidateKeys = createSpecifierCandidates(
+    normalizedImporter,
+    rawSpecifier,
+  );
 
   for (const key of candidateKeys) {
     const resolved = moduleLookup.get(key);
@@ -311,15 +345,15 @@ function resolveImportedModulePath(
 }
 
 const SUPPORTED_EXTENSIONS = [
-  '.js',
-  '.jsx',
-  '.ts',
-  '.tsx',
-  '.mjs',
-  '.cjs',
-  '.json',
-  '.svelte',
-  '.css',
+  ".js",
+  ".jsx",
+  ".ts",
+  ".tsx",
+  ".mjs",
+  ".cjs",
+  ".json",
+  ".svelte",
+  ".css",
 ];
 
 function createModuleLookup(modules: ModuleInput[]): Map<string, string> {
@@ -329,8 +363,8 @@ function createModuleLookup(modules: ModuleInput[]): Map<string, string> {
     const normalized = normalizeModulePath(module.filePath);
     addPathVariants(lookup, normalized, module.filePath);
 
-    if (normalized.startsWith('node_modules/')) {
-      const withoutPrefix = normalized.slice('node_modules/'.length);
+    if (normalized.startsWith("node_modules/")) {
+      const withoutPrefix = normalized.slice("node_modules/".length);
       addPathVariants(lookup, withoutPrefix, module.filePath);
 
       const packageName = extractPackageNameFromNodeModulesPath(withoutPrefix);
@@ -369,7 +403,11 @@ function addPathVariants(
     const indexWithoutExt = stripExtension(indexBase);
     addLookupKey(lookup, indexWithoutExt, actualPath);
     addLookupKey(lookup, stripLeadingDot(indexWithoutExt), actualPath);
-    addLookupKey(lookup, addDotPrefix(stripLeadingDot(indexWithoutExt)), actualPath);
+    addLookupKey(
+      lookup,
+      addDotPrefix(stripLeadingDot(indexWithoutExt)),
+      actualPath,
+    );
   }
 }
 
@@ -394,17 +432,17 @@ function addLookupKey(
 
 function normalizeModulePath(pathValue: string): string {
   const normalized = normalizeSpecifier(pathValue);
-  return normalized.startsWith('../') || normalized.startsWith('./')
+  return normalized.startsWith("../") || normalized.startsWith("./")
     ? normalized
-    : normalized.replace(/^\.\/+/, '');
+    : normalized.replace(/^\.\/+/, "");
 }
 
 function normalizeSpecifier(specifier: string): string {
-  return pathPosix.normalize(specifier.replace(/\\/g, '/'));
+  return pathPosix.normalize(specifier.replace(/\\/g, "/"));
 }
 
 function stripLeadingDot(pathValue: string): string {
-  return pathValue.startsWith('./') ? pathValue.slice(2) : pathValue;
+  return pathValue.startsWith("./") ? pathValue.slice(2) : pathValue;
 }
 
 function stripExtension(pathValue: string): string {
@@ -418,9 +456,9 @@ function stripExtension(pathValue: string): string {
 function addDotPrefix(pathValue: string): string | null {
   if (
     !pathValue ||
-    pathValue.startsWith('./') ||
-    pathValue.startsWith('../') ||
-    pathValue.startsWith('/')
+    pathValue.startsWith("./") ||
+    pathValue.startsWith("../") ||
+    pathValue.startsWith("/")
   ) {
     return null;
   }
@@ -432,28 +470,33 @@ function removeIndexFile(pathValue: string): string | null {
   return match ? match[1] : null;
 }
 
-function extractPackageNameFromNodeModulesPath(pathValue: string): string | null {
+function extractPackageNameFromNodeModulesPath(
+  pathValue: string,
+): string | null {
   if (!pathValue) {
     return null;
   }
 
-  const parts = pathValue.split('/');
+  const parts = pathValue.split("/");
   if (parts.length === 0) {
     return null;
   }
 
-  if (parts[0].startsWith('@') && parts.length >= 2) {
+  if (parts[0].startsWith("@") && parts.length >= 2) {
     return `${parts[0]}/${parts[1]}`;
   }
 
   return parts[0] || null;
 }
 
-function createSpecifierCandidates(importerPath: string, target: string): string[] {
+function createSpecifierCandidates(
+  importerPath: string,
+  target: string,
+): string[] {
   const candidates = new Set<string>();
   const importerDir = pathPosix.dirname(importerPath);
-  const isRelative = target.startsWith('./') || target.startsWith('../');
-  const isAbsolute = target.startsWith('/');
+  const isRelative = target.startsWith("./") || target.startsWith("../");
+  const isAbsolute = target.startsWith("/");
   const normalizedTarget = normalizeSpecifier(target);
 
   if (isRelative || isAbsolute) {
@@ -494,7 +537,7 @@ function addCandidateVariants(candidates: Set<string>, base: string): void {
     }
   }
 
-  if (!normalizedBase.endsWith('/index')) {
+  if (!normalizedBase.endsWith("/index")) {
     const indexBase = `${normalizedBase}/index`;
     candidates.add(indexBase);
     candidates.add(stripLeadingDot(indexBase));
@@ -513,12 +556,12 @@ function extractPackageNameFromSpecifier(specifier: string): string | null {
     return null;
   }
 
-  const [first, second] = normalized.split('/');
+  const [first, second] = normalized.split("/");
   if (!first) {
     return null;
   }
 
-  if (first.startsWith('@') && second) {
+  if (first.startsWith("@") && second) {
     return `${first}/${second}`;
   }
 
@@ -562,7 +605,9 @@ async function processBundles(
   return processed;
 }
 
-async function generateAISuggestions(ingestionData: IngestionData): Promise<SuggestionData[]> {
+async function generateAISuggestions(
+  ingestionData: IngestionData,
+): Promise<SuggestionData[]> {
   try {
     const analyzer = createSuggestionAnalyzer();
     analyzer.registerRule(new LLMAnalyzer());
@@ -576,7 +621,7 @@ async function generateAISuggestions(ingestionData: IngestionData): Promise<Sugg
 
     return await analyzer.analyze(context);
   } catch (error) {
-    console.error('[Ingestion] Failed to generate AI suggestions', error);
+    console.error("[Ingestion] Failed to generate AI suggestions", error);
     return [];
   }
 }
@@ -586,7 +631,7 @@ async function generateAISuggestions(ingestionData: IngestionData): Promise<Sugg
 // ============================================================================
 
 // Re-export input types from @smappy/core
-export type { BundleInput, ChunkInput, ModuleInput } from '@smappy/core';
+export type { BundleInput, ChunkInput, ModuleInput } from "@smappy/core";
 
 // Re-export result types from db writer
 export type {
@@ -596,9 +641,9 @@ export type {
   BundleWithMetadata,
   DependencyRelationship,
   IngestionOptions,
-} from './db/writer.js';
+} from "./db/writer.js";
 
-export { createMockIngestionOptions } from './db/writer.js';
+export { createMockIngestionOptions } from "./db/writer.js";
 
 // Re-export analysis types from @smappy/core
 export type {
@@ -611,7 +656,7 @@ export type {
   ParsedSymbol,
   ParsedDependency,
   SizeInfo,
-} from '@smappy/core';
+} from "@smappy/core";
 
 // Re-export test helpers from @smappy/core
 export {
@@ -621,4 +666,4 @@ export {
   createMockParsedSymbol,
   createMockParsedDependency,
   createMockSizeInfo,
-} from '@smappy/core';
+} from "@smappy/core";

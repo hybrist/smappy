@@ -5,7 +5,7 @@
 import { describe, it, expect } from 'vitest';
 import { createTreeShakingDetector } from './tree-shaking-detector.js';
 import type { SuggestionContext } from '../types.js';
-import type { ModuleWithAnalysis } from '@smappy/cli/ingestion';
+import type { ModuleWithAnalysis } from '../../ingestion/db/writer.js';
 
 /**
  * Helper to create a minimal module with analysis

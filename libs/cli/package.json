@@ -13,7 +13,12 @@
   "dependencies": {
     "@smappy/core": "workspace:*",
     "@smappy/store": "workspace:*",
-    "commander": "^14.0.2"
+    "commander": "^14.0.2",
+    "drizzle-orm": "^0.44.7",
+    "ai": "^5.0.89",
+    "@ai-sdk/anthropic": "^2.0.42",
+    "@ai-sdk/openai": "^2.0.64",
+    "ollama-ai-provider-v2": "^1.5.3"
   },
   "devDependencies": {
     "@types/node": "^22.19.0",

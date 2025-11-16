@@ -4,7 +4,7 @@
  */
 
 import type { SuggestionRule, SuggestionContext } from '../types.js';
-import type { SuggestionData } from '@smappy/cli/ingestion';
+import type { SuggestionData } from '../../ingestion/db/writer.js';
 
 export interface TreeShakingDetectorOptions {
   /** Minimum size in bytes to trigger a suggestion */

@@ -4,7 +4,7 @@
  */
 
 import type { SuggestionContext, SuggestionRule, SuggestionRuleRegistry } from './types.js';
-import type { SuggestionData } from '@smappy/cli/ingestion';
+import type { SuggestionData } from '../ingestion/db/writer.js';
 import { createRuleRegistry } from './registry.js';
 
 /**

@@ -8,7 +8,7 @@ import type {
   SuggestionData,
   DependencyRelationship,
   ModuleWithAnalysis,
-} from '@smappy/cli/ingestion';
+} from '../../ingestion/db/writer.js';
 
 export interface DependencyAnalyzerOptions {
   /** Maximum dependency depth before warning (default: 5) */

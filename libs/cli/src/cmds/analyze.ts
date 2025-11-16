@@ -217,6 +217,7 @@ export async function analyzeCommand(
   }
 
   const result = await adapter.extract();
+  // TODO: Replace this with storing in the database using the ingestion code.
   console.error("TODO: store data for %j", result.options.projectName);
 
   return 0;

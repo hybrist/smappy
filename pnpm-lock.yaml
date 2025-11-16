@@ -279,15 +279,30 @@ importers:
 
   libs/cli:
     dependencies:
+      '@ai-sdk/anthropic':
+        specifier: ^2.0.42
+        version: 2.0.42(zod@4.1.12)
+      '@ai-sdk/openai':
+        specifier: ^2.0.64
+        version: 2.0.64(zod@4.1.12)
       '@smappy/core':
         specifier: workspace:*
         version: link:../core
       '@smappy/store':
         specifier: workspace:*
         version: link:../store
+      ai:
+        specifier: ^5.0.89
+        version: 5.0.89(zod@4.1.12)
       commander:
         specifier: ^14.0.2
         version: 14.0.2
+      drizzle-orm:
+        specifier: ^0.44.7
+        version: 0.44.7(@opentelemetry/api@1.9.0)(@types/better-sqlite3@7.6.13)(better-sqlite3@12.4.1)(kysely@0.27.6)
+      ollama-ai-provider-v2:
+        specifier: ^1.5.3
+        version: 1.5.3(zod@4.1.12)
     devDependencies:
       '@types/node':
         specifier: ^22.19.0
@@ -7148,7 +7163,7 @@ snapshots:
       schema-utils: 4.3.3
       serialize-javascript: 6.0.2
       terser: 5.44.1
-      webpack: 5.102.1
+      webpack: 5.102.1(webpack-cli@5.1.4)
 
   terser@5.44.1:
     dependencies:

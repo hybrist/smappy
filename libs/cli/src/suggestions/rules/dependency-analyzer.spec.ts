@@ -5,7 +5,7 @@
 import { describe, it, expect } from 'vitest';
 import { createDependencyAnalyzer } from './dependency-analyzer.js';
 import type { SuggestionContext } from '../types.js';
-import type { ModuleWithAnalysis, DependencyRelationship } from '@smappy/cli/ingestion';
+import type { ModuleWithAnalysis, DependencyRelationship } from '../../ingestion/db/writer.js';
 
 /**
  * Helper to create a minimal module with analysis

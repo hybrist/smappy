@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { SuggestionAnalyzer, createSuggestionAnalyzer } from './orchestrator.js';
 import { createRuleRegistry } from './registry.js';
 import type { SuggestionRule, SuggestionContext } from './types.js';
-import type { ModuleWithAnalysis } from '@smappy/cli/ingestion';
+import type { ModuleWithAnalysis } from '../ingestion/db/writer.js';
 
 describe('SuggestionAnalyzer', () => {
   let analyzer: SuggestionAnalyzer;
