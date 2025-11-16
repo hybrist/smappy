@@ -4,8 +4,9 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { ingestBundle } from '../../src/lib/server/ingestion/index.js';
+import { ingestBundle } from '@smappy/cli/ingestion';
 import { cleanDatabase, createDashboardTestData } from '../../src/lib/server/db/seed.js';
+import { db } from '../../src/lib/server/db/index.js';
 
 test.describe('Dashboard Landing Page', () => {
   test.beforeEach(async () => {
@@ -16,7 +17,7 @@ test.describe('Dashboard Landing Page', () => {
     const { landingPageProjects } = createDashboardTestData();
 
     for (const project of landingPageProjects) {
-      await ingestBundle(project);
+      await ingestBundle(db, project);
     }
   });
 
@@ -55,7 +56,7 @@ test.describe('Project Dashboard Page', () => {
 
     // Set up test data with realistic bundle analysis using seed data
     const { detailedProject } = createDashboardTestData();
-    await ingestBundle(detailedProject);
+    await ingestBundle(db, detailedProject);
   });
 
   test('should display project dashboard with stats', async ({ page }) => {
