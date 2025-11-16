@@ -18,7 +18,7 @@ describe("BundlerAdapter", () => {
   };
 
   class TestAdapter extends BundlerAdapter {
-    extract(_bundlerOutput: unknown): PluginExtractionResult {
+    extract(): PluginExtractionResult {
       return {
         bundles: [],
         modules: [],
@@ -54,7 +54,7 @@ describe("BundlerAdapter", () => {
   describe("extract", () => {
     it("should be implemented by subclasses", () => {
       const adapter = new TestAdapter(baseDir, options);
-      const result = adapter.extract({});
+      const result = adapter.extract();
       expect(result).toBeDefined();
       expect(result.options.projectName).toBe("test-project");
     });
@@ -63,7 +63,7 @@ describe("BundlerAdapter", () => {
   describe("convertModules", () => {
     it("should convert bundler modules to ModuleInput", () => {
       class TestAdapter extends BundlerAdapter {
-        extract(_bundlerOutput: unknown): PluginExtractionResult {
+        extract(): PluginExtractionResult {
           const errors: string[] = [];
           const modules = this.convertModules(
             [
@@ -89,7 +89,7 @@ describe("BundlerAdapter", () => {
       }
 
       const adapter = new TestAdapter(baseDir, options);
-      const result = adapter.extract({});
+      const result = adapter.extract();
       expect(result.modules).toHaveLength(1);
       expect(result.modules[0].filePath).toContain("src/index.js");
       expect(result.modules[0].sourceContent).toBe(
@@ -99,7 +99,7 @@ describe("BundlerAdapter", () => {
 
     it("should filter out excluded patterns", () => {
       class TestAdapter extends BundlerAdapter {
-        extract(_bundlerOutput: unknown): PluginExtractionResult {
+        extract(): PluginExtractionResult {
           const errors: string[] = [];
           const modules = this.convertModules(
             [
@@ -133,14 +133,14 @@ describe("BundlerAdapter", () => {
         excludePatterns: ["**/test.js"],
       };
       const adapter = new TestAdapter(baseDir, opts);
-      const result = adapter.extract({});
+      const result = adapter.extract();
       expect(result.modules).toHaveLength(1);
       expect(result.modules[0].filePath).not.toContain("test.js");
     });
 
     it("should filter out third-party modules when configured", () => {
       class TestAdapter extends BundlerAdapter {
-        extract(_bundlerOutput: unknown): PluginExtractionResult {
+        extract(): PluginExtractionResult {
           const errors: string[] = [];
           const modules = this.convertModules(
             [
@@ -174,7 +174,7 @@ describe("BundlerAdapter", () => {
         analyzeThirdParty: false,
       };
       const adapter = new TestAdapter(baseDir, opts);
-      const result = adapter.extract({});
+      const result = adapter.extract();
       expect(result.modules).toHaveLength(1);
       expect(result.modules[0].filePath).not.toContain("node_modules");
     });
@@ -183,7 +183,7 @@ describe("BundlerAdapter", () => {
   describe("convertChunks", () => {
     it("should convert bundler chunks to ChunkInput", () => {
       class TestAdapter extends BundlerAdapter {
-        extract(_bundlerOutput: unknown): PluginExtractionResult {
+        extract(): PluginExtractionResult {
           const errors: string[] = [];
           const chunks = this.convertChunks(
             [
@@ -211,7 +211,7 @@ describe("BundlerAdapter", () => {
       }
 
       const adapter = new TestAdapter(baseDir, options);
-      const result = adapter.extract({});
+      const result = adapter.extract();
       expect(result.chunks).toHaveLength(1);
       expect(result.chunks[0].name).toBe("main");
       expect(result.chunks[0].isEntry).toBe(true);
@@ -223,7 +223,7 @@ describe("BundlerAdapter", () => {
   describe("createIngestionOptions", () => {
     it("should create IngestionOptions from plugin options", () => {
       class TestAdapter extends BundlerAdapter {
-        extract(_bundlerOutput: unknown): PluginExtractionResult {
+        extract(): PluginExtractionResult {
           const options = this.createIngestionOptions("webpack");
           return {
             bundles: [],
@@ -243,7 +243,7 @@ describe("BundlerAdapter", () => {
         maxHistorySize: 20,
       };
       const adapter = new TestAdapter(baseDir, opts);
-      const result = adapter.extract({});
+      const result = adapter.extract();
       expect(result.options.bundlerType).toBe("webpack");
       expect(result.options.projectName).toBe("test-project");
       expect(result.options.enableIncremental).toBe(true);
@@ -328,7 +328,7 @@ describe("createDefaultAdapter", () => {
 
   it("should throw when extract is called", () => {
     const adapter = createDefaultAdapter("/project", { projectName: "test" });
-    expect(() => adapter.extract({})).toThrow(
+    expect(() => adapter.extract()).toThrow(
       "Default adapter cannot extract - must be extended",
     );
   });

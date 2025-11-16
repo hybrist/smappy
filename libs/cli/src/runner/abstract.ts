@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import type { BuildRunOptions, ProjectInfo } from "./types.ts";
+import type { BundlerAdapter } from "../plugins/adapters.ts";
 
 export abstract class BuildRunner {
   readonly #project: ProjectInfo;
@@ -18,7 +19,7 @@ export abstract class BuildRunner {
     return this.#debug;
   }
 
-  abstract runBuild(options: BuildRunOptions): Promise<void>;
+  abstract runBuild(options: BuildRunOptions): Promise<BundlerAdapter | null>;
 }
 
 export function npx(project: ProjectInfo, cmd: string, args: string[]) {

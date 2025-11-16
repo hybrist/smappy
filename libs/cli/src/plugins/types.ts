@@ -121,9 +121,9 @@ export interface BundlerModule {
   dependencies?: string[];
   /** Reasons for inclusion in bundle */
   reasons?: Array<{
-    type?: string;
-    module?: string;
-    userRequest?: string;
+    type?: string | null;
+    module?: string | null;
+    userRequest?: string | null;
   }>;
 }
 

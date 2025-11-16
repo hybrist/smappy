@@ -1,25 +1,34 @@
-import { BuildRunner, npx } from "./abstract.ts";
-import type { BuildRunOptions, ProjectInfo } from "./types.ts";
-import { join } from "node:path";
-import { glob, rename, unlink, writeFile } from "node:fs/promises";
+import { glob, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import type { StatsCompilation } from "webpack";
+import type { BundlerAdapter } from "../plugins/adapters.ts";
+import { WebpackAdapter } from "../webpack/adapter.ts";
+import { BuildRunner, npx } from "./abstract.ts";
+import { createTempDir } from "./temp.ts";
+import type { BuildRunOptions } from "./types.ts";
 
 export class NextjsBuildRunner extends BuildRunner {
-  override async runBuild(options: BuildRunOptions): Promise<void> {
+  override async runBuild(
+    options: BuildRunOptions,
+  ): Promise<BundlerAdapter | null> {
     // Run the build
-    const statsFile = "/tmp/smappy-webpack-stats.json";
+    const tempDir = await createTempDir();
+    const statsFile = join(tempDir, "smappy-webpack-stats.json");
+
     await using _config = await this.createTempConfig(statsFile);
     if (options.skipBuild) {
       console.log("\n✅ Configuration generated successfully!");
       console.log(`\nSkipping build execution (skipBuild option enabled).`);
-      return;
+      return null;
     }
 
-    npx(this.project, "next", [
-      "build",
-      // TODO: Inject stuff for making this write the stats file.
-    ]);
+    npx(this.project, "next", ["build"]);
+
+    const statsJson = await readFile(statsFile, "utf8");
+    const stats = JSON.parse(statsJson) as StatsCompilation;
+    return new WebpackAdapter(this.project, stats);
   }
 
   private async findUserConfig(
@@ -58,9 +67,9 @@ export class NextjsBuildRunner extends BuildRunner {
       process.env.VITEST === "true"
     ) {
       const cliRequire = createRequire(fileURLToPath(import.meta.url));
-      pluginPath = cliRequire.resolve("@smappy/cli/plugins/webpack");
+      pluginPath = cliRequire.resolve("@smappy/cli/webpack/plugin");
     } else {
-      pluginPath = import.meta.resolve("@smappy/cli/plugins/webpack");
+      pluginPath = import.meta.resolve("@smappy/cli/webpack/plugin");
     }
 
     const userConfig = await this.findUserConfig();
@@ -75,7 +84,7 @@ export class NextjsBuildRunner extends BuildRunner {
         join(this.project.path, "next.config.mjs"),
         `\
 import userConfig from './${backupPath}';
-import SmappyPlugin from '${pluginPath}';
+import {WebpackSmappyPlugin} from '${pluginPath}';
 
 export default {
   ...userConfig,
@@ -83,11 +92,10 @@ export default {
   webpack: (config, options) => {
     if (!options.isServer) {
       config.devtool = 'source-map';
+      config.plugins.push(new WebpackSmappyPlugin({
+        statsFile: ${JSON.stringify(statsFile)},
+      }));
     }
-    config.plugins.push(new SmappyPlugin({
-      projectName: "DELETE ME",
-      statsFile: ${JSON.stringify(statsFile)},
-    }));
     if (typeof userConfig.webpack === 'function') {
       return userConfig.webpack(config, options);
     }
@@ -100,18 +108,17 @@ export default {
       await writeFile(
         join(this.project.path, "next.config.mjs"),
         `\
-import SmappyPlugin from '${pluginPath}';
+import {WebpackSmappyPlugin} from '${pluginPath}';
 
 export default {
   productionBrowserSourceMaps: true,
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.devtool = 'source-map';
+      config.plugins.push(new WebpackSmappyPlugin({
+        statsFile: ${JSON.stringify(statsFile)},
+      }));
     }
-    config.plugins.push(new SmappyPlugin({
-      projectName: "DELETE ME",
-      statsFile: ${JSON.stringify(statsFile)},
-    }));
     return config;
   },
 };
