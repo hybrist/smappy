@@ -3,8 +3,11 @@
  * Identifies modules that are excessively large and could benefit from code splitting or refactoring
  */
 
-import type { SuggestionRule, SuggestionContext } from '../../suggestions/types.js';
-import type { SuggestionData } from '../db/writer.js';
+import type {
+  SuggestionRule,
+  SuggestionContext,
+} from "../../suggestions/types.ts";
+import type { SuggestionData } from "../db/writer.ts";
 
 /**
  * Configuration for large module detection
@@ -28,10 +31,10 @@ const DEFAULT_CONFIG: Required<LargeModuleDetectorConfig> = {
  * Detect modules that are excessively large
  */
 export class LargeModuleDetector implements SuggestionRule {
-  readonly id = 'large-module';
-  readonly name = 'Large Module Detector';
+  readonly id = "large-module";
+  readonly name = "Large Module Detector";
   readonly description =
-    'Identifies modules that are excessively large and could benefit from code splitting';
+    "Identifies modules that are excessively large and could benefit from code splitting";
 
   private config: Required<LargeModuleDetectorConfig>;
 
@@ -55,29 +58,29 @@ export class LargeModuleDetector implements SuggestionRule {
       }
 
       const size = module.bundledSize;
-      let severity: 'critical' | 'warning' | null = null;
-      let title = '';
-      let description = '';
+      let severity: "critical" | "warning" | null = null;
+      let title = "";
+      let description = "";
 
       if (size >= this.config.criticalThreshold) {
-        severity = 'critical';
+        severity = "critical";
         title = `Critical: Very large module detected (${this.formatSize(size)})`;
-        description = this.buildDescription(module.filePath, size, 'critical');
+        description = this.buildDescription(module.filePath, size, "critical");
       } else if (size >= this.config.warningThreshold) {
-        severity = 'warning';
+        severity = "warning";
         title = `Large module detected (${this.formatSize(size)})`;
-        description = this.buildDescription(module.filePath, size, 'warning');
+        description = this.buildDescription(module.filePath, size, "warning");
       }
 
       if (severity) {
         suggestions.push({
-          type: 'LARGE_MODULE',
+          type: "LARGE_MODULE",
           severity,
           title,
           description,
           links: [
             {
-              entityType: 'Module',
+              entityType: "Module",
               entityPath: module.filePath,
             },
           ],
@@ -94,20 +97,24 @@ export class LargeModuleDetector implements SuggestionRule {
   private buildDescription(
     filePath: string,
     size: number,
-    severity: 'critical' | 'warning',
+    severity: "critical" | "warning",
   ): string {
     const threshold =
-      severity === 'critical' ? this.config.criticalThreshold : this.config.warningThreshold;
+      severity === "critical"
+        ? this.config.criticalThreshold
+        : this.config.warningThreshold;
 
     let description = `Module \`${filePath}\` has a bundled size of ${this.formatSize(size)}, `;
     description += `which exceeds the ${severity} threshold of ${this.formatSize(threshold)}.\n\n`;
-    description += 'Consider the following optimization strategies:\n\n';
-    description += '- **Code splitting**: Break the module into smaller, more focused modules\n';
-    description += '- **Lazy loading**: Use dynamic imports for non-critical code paths\n';
+    description += "Consider the following optimization strategies:\n\n";
     description +=
-      '- **Tree shaking**: Ensure exports are granular and unused code can be eliminated\n';
+      "- **Code splitting**: Break the module into smaller, more focused modules\n";
     description +=
-      '- **Refactoring**: Look for multiple concerns that could be separated into different modules';
+      "- **Lazy loading**: Use dynamic imports for non-critical code paths\n";
+    description +=
+      "- **Tree shaking**: Ensure exports are granular and unused code can be eliminated\n";
+    description +=
+      "- **Refactoring**: Look for multiple concerns that could be separated into different modules";
 
     return description;
   }
@@ -129,6 +136,8 @@ export class LargeModuleDetector implements SuggestionRule {
 /**
  * Create a large module detector with optional configuration
  */
-export function createLargeModuleDetector(config?: LargeModuleDetectorConfig): LargeModuleDetector {
+export function createLargeModuleDetector(
+  config?: LargeModuleDetectorConfig,
+): LargeModuleDetector {
   return new LargeModuleDetector(config);
 }

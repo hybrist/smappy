@@ -3,9 +3,13 @@
  * Runs all registered rules and aggregates suggestions
  */
 
-import type { SuggestionContext, SuggestionRule, SuggestionRuleRegistry } from './types.js';
-import type { SuggestionData } from '../ingestion/db/writer.js';
-import { createRuleRegistry } from './registry.js';
+import type {
+  SuggestionContext,
+  SuggestionRule,
+  SuggestionRuleRegistry,
+} from "./types.ts";
+import type { SuggestionData } from "../ingestion/db/writer.ts";
+import { createRuleRegistry } from "./registry.ts";
 
 /**
  * Suggestion analyzer orchestrator

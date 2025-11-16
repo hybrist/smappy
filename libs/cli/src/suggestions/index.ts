@@ -3,9 +3,16 @@
  * Provides extensible rule-based suggestion generation
  */
 
-export { SuggestionAnalyzer, createSuggestionAnalyzer } from './orchestrator.js';
-export { createRuleRegistry } from './registry.js';
-export type { SuggestionContext, SuggestionRule, SuggestionRuleRegistry } from './types.js';
+export {
+  SuggestionAnalyzer,
+  createSuggestionAnalyzer,
+} from "./orchestrator.ts";
+export { createRuleRegistry } from "./registry.ts";
+export type {
+  SuggestionContext,
+  SuggestionRule,
+  SuggestionRuleRegistry,
+} from "./types.ts";
 
 // Re-export rules
-export * from './rules/index.js';
+export * from "./rules/index.ts";

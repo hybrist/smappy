@@ -32,6 +32,7 @@
     "webpack": "^5.102.1"
   },
   "exports": {
+    "./ingestion": "./src/ingestion/index.ts",
     "./main": "./src/main.ts",
     "./webpack/plugin": "./src/webpack/plugin.ts",
     "./package.json": "./package.json"
@@ -47,6 +48,7 @@
       "smappy": "./dist/main.mjs"
     },
     "exports": {
+      "./ingestion": "./dist/ingestion/index.mjs",
       "./main": "./dist/main.mjs",
       "./webpack/plugin": "./dist/webpack/plugin.mjs",
       "./package.json": "./package.json"

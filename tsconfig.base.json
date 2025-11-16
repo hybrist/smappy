@@ -10,6 +10,7 @@
     "sourceMap": true,
     "strict": true,
     "skipLibCheck": true,
+    "erasableSyntaxOnly": true,
     "forceConsistentCasingInFileNames": true,
     "rewriteRelativeImportExtensions": true,
     "verbatimModuleSyntax": true,

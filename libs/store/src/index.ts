@@ -5,9 +5,9 @@
  * in a user's home directory without polluting project directories.
  */
 
-import { createDatabase, type DatabaseOptions } from "./db.js";
+import { createDatabase, type DatabaseOptions } from "./db.ts";
 import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
-import * as schema from "./schema.js";
+import * as schema from "./schema.ts";
 import {
   listAnalysisRuns,
   getLatestAnalysisRun,
@@ -19,7 +19,7 @@ import {
   type SaveAnalysisRunInput,
   type SaveAnalysisRunResult,
   type AnalysisRunData,
-} from "./queries.js";
+} from "./queries.ts";
 
 /**
  * Store instance providing access to analysis data

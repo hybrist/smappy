@@ -6,8 +6,8 @@ import type {
   SuggestionData,
   ModuleWithAnalysis,
   DependencyRelationship,
-} from '../ingestion/db/writer.js';
-import type { ChunkInput, BundleInput } from '@smappy/core';
+} from "../ingestion/db/writer.ts";
+import type { ChunkInput, BundleInput } from "@smappy/core";
 
 /**
  * Context provided to suggestion rules for analysis
@@ -39,7 +39,9 @@ export interface SuggestionRule {
    * @param context - Analysis context with modules, dependencies, etc.
    * @returns Array of suggestions (may be empty)
    */
-  execute(context: SuggestionContext): SuggestionData[] | Promise<SuggestionData[]>;
+  execute(
+    context: SuggestionContext,
+  ): SuggestionData[] | Promise<SuggestionData[]>;
 }
 
 /**

@@ -13,6 +13,8 @@ import {
   createBuilderOrNull as createBuildRunnerOrNull,
   type ProjectInfo,
 } from "../runner/index.ts";
+import { createStore } from "@smappy/store";
+import { ingestBundle } from "../ingestion/index.ts";
 
 export interface AnalyzeOptions {
   projectPath?: string;
@@ -216,9 +218,49 @@ export async function analyzeCommand(
     return 1;
   }
 
-  const result = await adapter.extract();
-  // TODO: Replace this with storing in the database using the ingestion code.
-  console.error("TODO: store data for %j", result.options.projectName);
+  const extractionResult = await adapter.extract();
 
-  return 0;
+  // Store analysis results in database
+  console.log("Storing analysis results...");
+  const store = createStore();
+
+  try {
+    const ingestionResult = await ingestBundle(store.db, {
+      options: extractionResult.options,
+      bundles: extractionResult.bundles,
+      modules: extractionResult.modules,
+      chunks: extractionResult.chunks,
+    });
+
+    console.log(`✅ Analysis complete!`);
+    console.log(`   Analysis run ID: ${ingestionResult.analysisRunId}`);
+    console.log(`   Modules analyzed: ${ingestionResult.stats.modulesWritten}`);
+    console.log(
+      `   Symbols extracted: ${ingestionResult.stats.symbolsWritten}`,
+    );
+    console.log(
+      `   Dependencies found: ${ingestionResult.stats.dependenciesWritten}`,
+    );
+    console.log(
+      `   Bundles processed: ${ingestionResult.stats.bundlesWritten}`,
+    );
+
+    if (ingestionResult.errors.length > 0) {
+      console.warn(
+        `   ⚠️  ${ingestionResult.errors.length} non-fatal errors occurred`,
+      );
+      if (options.verbose) {
+        ingestionResult.errors.forEach((error) =>
+          console.warn(`     - ${error}`),
+        );
+      }
+    }
+
+    return 0;
+  } catch (error) {
+    console.error("❌ Failed to store analysis results:", error);
+    return 1;
+  } finally {
+    store.close();
+  }
 }

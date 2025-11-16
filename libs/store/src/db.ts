@@ -6,12 +6,12 @@
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import Database from "better-sqlite3";
-import * as schema from "./schema.js";
-import { applyMigrations } from "./migrations.js";
+import * as schema from "./schema.ts";
+import { applyMigrations } from "./migrations.ts";
 import { existsSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { homedir } from "node:os";
-import { expandPath } from "./utils.js";
+import { expandPath } from "./utils.ts";
 
 /**
  * Options for creating a database connection

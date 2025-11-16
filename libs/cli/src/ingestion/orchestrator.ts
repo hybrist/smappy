@@ -15,7 +15,7 @@ import type {
   DependencyRelationship,
   SuggestionData,
   IngestionOptions,
-} from "./db/writer.js";
+} from "./db/writer.ts";
 import {
   extractSymbols,
   type SymbolWithExport,
@@ -27,11 +27,11 @@ import {
   computeRawSize,
   computeGzipSize,
 } from "@smappy/core";
-import { writeIngestionData } from "./db/writer.js";
+import { writeIngestionData } from "./db/writer.ts";
 
-import { createSuggestionAnalyzer } from "../suggestions/orchestrator.js";
-import type { SuggestionContext } from "../suggestions/types.js";
-import { LLMAnalyzer } from "./suggestions/llm-analyzer.js";
+import { createSuggestionAnalyzer } from "../suggestions/orchestrator.ts";
+import type { SuggestionContext } from "../suggestions/types.ts";
+import { LLMAnalyzer } from "./suggestions/llm-analyzer.ts";
 
 // ============================================================================
 // Main Orchestrator API
@@ -641,9 +641,9 @@ export type {
   BundleWithMetadata,
   DependencyRelationship,
   IngestionOptions,
-} from "./db/writer.js";
+} from "./db/writer.ts";
 
-export { createMockIngestionOptions } from "./db/writer.js";
+export { createMockIngestionOptions } from "./db/writer.ts";
 
 // Re-export analysis types from @smappy/core
 export type {

@@ -8,7 +8,7 @@ import { parse, type ParseResult } from "@babel/parser";
 import traverseDefault, { type NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
 import { createHash } from "node:crypto";
-import type { ParsedSymbol } from "../types.js";
+import type { ParsedSymbol } from "../types.ts";
 
 // Handle both default and named exports from @babel/traverse
 const traverse =

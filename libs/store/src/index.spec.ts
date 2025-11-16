@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { createStore } from "./index.js";
+import { createStore } from "./index.ts";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { unlinkSync, existsSync } from "node:fs";
