@@ -10,11 +10,9 @@ import {
   type DetectionResult,
 } from "../detection/index.ts";
 import {
-  generateTempConfig,
-  isBundlerSupported,
-  type TempConfigResult,
-} from "../config/index.ts";
-import { runBuild } from "../runner/index.ts";
+  createBuilderOrNull as createBuildRunnerOrNull,
+  type ProjectInfo,
+} from "../runner/index.ts";
 
 export interface AnalyzeOptions {
   projectPath?: string;
@@ -117,107 +115,6 @@ function hasTypeScript(projectPath: string): boolean {
 }
 
 /**
- * Run bundle analysis with temporary config
- */
-async function runBundleAnalysis(
-  projectPath: string,
-  projectName: string,
-  detection: DetectionResult,
-  options: Omit<AnalyzeOptions, "projectPath">,
-): Promise<void> {
-  const { bundler } = detection;
-  const { verbose, skipBuild, keepTemp } = options;
-
-  // Check if bundler is supported for temp config generation
-  if (!isBundlerSupported(bundler)) {
-    console.warn(
-      `\n⚠️  Bundler '${bundler}' is not yet supported for automatic analysis.`,
-    );
-    console.log("Supported bundlers: vite, webpack, nextjs, rollup");
-    return;
-  }
-
-  console.log("\nGenerating temporary build configuration...");
-
-  let tempConfig: TempConfigResult | null = null;
-
-  try {
-    // Generate temporary config
-    tempConfig = await generateTempConfig({
-      projectPath,
-      projectName,
-      bundler,
-      debug: verbose,
-      keepTemp: keepTemp || false,
-    });
-
-    if (verbose) {
-      console.log(`  Config path: ${tempConfig.configPath}`);
-      console.log(`  Temp directory: ${tempConfig.tempDir}`);
-    }
-
-    // Skip build if requested (for testing or dry-run)
-    if (skipBuild) {
-      console.log("\n✅ Configuration generated successfully!");
-      console.log(`\nSkipping build execution (skipBuild option enabled).`);
-      console.log(`Temporary config: ${tempConfig.configPath}`);
-      return;
-    }
-
-    console.log("\nRunning build with analysis plugin...");
-
-    // Run the build
-    const buildResult = await runBuild({
-      projectPath,
-      configPath: tempConfig.configPath,
-      bundler,
-      debug: verbose,
-    });
-
-    if (buildResult.success) {
-      console.log("\n✅ Build and analysis complete!");
-      console.log(
-        `\nBundle data has been extracted and is ready for analysis.`,
-      );
-    } else {
-      console.error("\n❌ Build failed!");
-      if (buildResult.error) {
-        console.error(`  Error: ${buildResult.error}`);
-      }
-      if (!verbose && buildResult.stderr) {
-        console.error("\nBuild errors:");
-        console.error(buildResult.stderr);
-      }
-      if (!verbose && buildResult.stdout) {
-        console.log("\nBuild output:");
-        console.log(buildResult.stdout);
-      }
-    }
-  } catch (error) {
-    console.error("\n❌ Failed to run bundle analysis:");
-    console.error(error instanceof Error ? error.message : String(error));
-    if (verbose && error instanceof Error && error.stack) {
-      console.error("\nStack trace:");
-      console.error(error.stack);
-    }
-  } finally {
-    // Always cleanup temporary files
-    if (tempConfig) {
-      try {
-        await tempConfig.cleanup();
-      } catch (cleanupError) {
-        if (verbose) {
-          console.warn(
-            "Warning: Failed to cleanup temporary files:",
-            cleanupError,
-          );
-        }
-      }
-    }
-  }
-}
-
-/**
  * Main analyze command handler
  * Compatible with Commander.js interface from PR #145
  */
@@ -296,7 +193,15 @@ export async function analyzeCommand(
   }
 
   // Validate that we detected a bundler
-  if (!detection.bundler) {
+  const runner = createBuildRunnerOrNull(
+    {
+      name: projectName,
+      path: resolvedPath,
+      ...detection,
+    } satisfies ProjectInfo,
+    options.verbose ?? false,
+  );
+  if (!runner) {
     console.error(
       "⚠️  Could not detect bundler. Make sure you have a valid project configuration.",
     );
@@ -305,6 +210,6 @@ export async function analyzeCommand(
   }
 
   // Integrate with plugin system to extract bundle information
-  await runBundleAnalysis(resolvedPath, projectName, detection, options);
+  await runner.runBuild(options);
   return 0;
 }

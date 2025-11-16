@@ -4,6 +4,19 @@
 
 import type { DetectionResult } from "../detection/index.ts";
 
+export interface ProjectInfo extends DetectionResult {
+  name: string;
+  path: string;
+}
+
+export interface BuildRunOptions {
+  verbose?: boolean;
+  /** Skip the build execution (for testing or dry-run) */
+  skipBuild?: boolean;
+  /** Keep temporary files for debugging */
+  keepTemp?: boolean;
+}
+
 /**
  * Options for running a build
  */
