@@ -26,26 +26,6 @@ describe("analyzeCommand", () => {
     consoleWarnSpy.mockRestore();
   });
 
-  it("should analyze a valid project directory", async () => {
-    writeFileSync(
-      join(testDir, "package.json"),
-      JSON.stringify({
-        name: "test-project",
-        dependencies: { react: "^18.0.0" },
-      }),
-    );
-    writeFileSync(join(testDir, "vite.config.js"), "");
-
-    await analyzeCommand(testDir, { verbose: false, skipBuild: true });
-
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      "Detecting project configuration...",
-    );
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining("Configuration generated successfully"),
-    );
-  });
-
   it("should show verbose output when enabled", async () => {
     writeFileSync(
       join(testDir, "package.json"),

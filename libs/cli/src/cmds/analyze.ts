@@ -210,6 +210,14 @@ export async function analyzeCommand(
   }
 
   // Integrate with plugin system to extract bundle information
-  await runner.runBuild(options);
+  const adapter = await runner.runBuild(options);
+  if (!adapter) {
+    console.error("⚠️ Failed to extract bundle information.");
+    return 1;
+  }
+
+  const result = await adapter.extract();
+  console.error("TODO: store data for %j", result.options.projectName);
+
   return 0;
 }

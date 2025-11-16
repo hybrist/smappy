@@ -53,12 +53,9 @@ export abstract class BundlerAdapter {
    * Extract normalized data from bundler output
    * Must be implemented by concrete adapter classes
    *
-   * @param bundlerOutput - Bundler-specific output
    * @returns Normalized extraction result
    */
-  abstract extract(
-    bundlerOutput: unknown,
-  ): PluginExtractionResult | Promise<PluginExtractionResult>;
+  abstract extract(): PluginExtractionResult | Promise<PluginExtractionResult>;
 
   /**
    * Convert bundler modules to normalized ModuleInput

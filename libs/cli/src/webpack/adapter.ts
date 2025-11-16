@@ -1,6 +1,6 @@
 /**
  * Webpack adapter for bundle analysis
- * Extracts bundle data from webpack stats and converts it to normalized ingestion input
+ * Extracts bundle data from webpack stats JSON and converts it to normalized ingestion input
  */
 
 import type {
@@ -8,23 +8,16 @@ import type {
   BundlerModule,
   BundlerChunk,
   BundlerBundle,
-} from "../types.ts";
-import { BundlerAdapter } from "../adapters.ts";
-import { normalizePath, extractSourceMap, readFileContent } from "../utils.ts";
-import type { Stats, Compilation } from "webpack";
-
-// ============================================================================
-// Webpack Stats Types
-// ============================================================================
-
-/**
- * Webpack stats output structure
- */
-interface WebpackStatsOutput {
-  stats: Stats;
-  compilation: Compilation;
-  outputPath: string;
-}
+  BundlerPluginOptions,
+} from "../plugins/types.ts";
+import { BundlerAdapter } from "../plugins/adapters.ts";
+import {
+  normalizePath,
+  extractSourceMap,
+  readFileContent,
+} from "../plugins/utils.ts";
+import type { StatsCompilation } from "webpack";
+import type { ProjectInfo } from "../runner/types.ts";
 
 // ============================================================================
 // Webpack Adapter Implementation
@@ -34,52 +27,47 @@ interface WebpackStatsOutput {
  * Adapter for extracting bundle data from webpack builds
  */
 export class WebpackAdapter extends BundlerAdapter {
+  readonly #stats: StatsCompilation;
+
+  constructor(
+    project: ProjectInfo,
+    stats: StatsCompilation,
+    options?: Omit<BundlerPluginOptions, "projectName">,
+  ) {
+    super(
+      project.path,
+      {
+        ...options,
+        projectName: project.name,
+      },
+      {},
+    );
+    this.#stats = stats;
+  }
+
   /**
-   * Extract normalized data from webpack stats
+   * Extract normalized data from webpack stats JSON
    *
-   * @param bundlerOutput - Webpack Stats and Compilation
+   * @param bundlerOutput - Optional StatsCompilation to use instead of constructor stats
    * @returns Normalized extraction result
    */
-  extract(bundlerOutput: unknown): PluginExtractionResult {
+  extract(): PluginExtractionResult {
     const errors: string[] = [];
     const warnings: string[] = [];
 
-    if (!this.isWebpackStats(bundlerOutput)) {
-      errors.push("Invalid webpack stats output format");
+    // Use provided stats or the one from constructor
+    const statsJson = this.#stats;
+
+    if (!statsJson) {
+      errors.push("No webpack stats available");
       return this.createEmptyResult(errors, warnings);
     }
 
-    const webpackOutput = bundlerOutput as WebpackStatsOutput;
-    const { stats, compilation, outputPath } = webpackOutput;
-
     try {
-      // Get stats as JSON
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const statsJson: any = stats.toJson({
-        all: false,
-        modules: true,
-        chunks: true,
-        assets: true,
-        chunkModules: true,
-        chunkOrigins: true,
-        reasons: true,
-        source: false, // Don't include source in stats for performance
-      });
-
       // Convert webpack stats to our normalized types
-      const bundlerModules = this.extractModules(
-        statsJson,
-        compilation,
-        outputPath,
-        errors,
-      );
-      const bundlerChunks = this.extractChunks(statsJson, errors);
-      const bundlerBundles = this.extractBundles(
-        statsJson,
-        compilation,
-        outputPath,
-        errors,
-      );
+      const bundlerModules = this.extractModules(statsJson);
+      const bundlerChunks = this.extractChunks(statsJson);
+      const bundlerBundles = this.extractBundles(statsJson);
 
       // Use base class conversion methods
       const modules = this.convertModules(bundlerModules, errors);
@@ -106,15 +94,9 @@ export class WebpackAdapter extends BundlerAdapter {
   }
 
   /**
-   * Extract modules from webpack stats
+   * Extract modules from webpack stats JSON
    */
-  private extractModules(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    statsJson: any,
-    compilation: Compilation,
-    outputPath: string,
-    _errors: string[],
-  ): BundlerModule[] {
+  private extractModules(statsJson: StatsCompilation): BundlerModule[] {
     const modules: BundlerModule[] = [];
     const moduleMap = new Map<string, BundlerModule>();
 
@@ -132,37 +114,17 @@ export class WebpackAdapter extends BundlerAdapter {
           continue;
         }
 
-        // Try to get source content from compilation
+        // Try to read source content from file system
         let source: string | undefined;
         try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const moduleGraph = compilation.moduleGraph as any;
-          const moduleFromCompilation =
-            moduleGraph.getModuleById?.(moduleId) ||
-            moduleGraph.getModule?.(moduleId);
-          if (moduleFromCompilation) {
-            // Try to get source from module
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const sourceModule = moduleFromCompilation as any;
-            if (sourceModule._source && sourceModule._source._value) {
-              source = sourceModule._source._value;
-            } else if (sourceModule.originalSource) {
-              source = sourceModule.originalSource.source();
-            }
-          }
+          const modulePath = this.resolveModulePath(moduleId);
+          source = readFileContent(modulePath);
         } catch {
-          // Source not available from compilation; could be missing moduleGraph or incompatible webpack version
+          // Source not available, that's okay
           if (this.config?.debug) {
             console.debug(
-              `[webpack-adapter] Failed to extract source from compilation for moduleId: ${moduleId}. Falling back to file system.`,
+              `[webpack-adapter] Failed to read source for moduleId: ${moduleId}`,
             );
-          }
-          // Try reading from file system
-          try {
-            const modulePath = this.resolveModulePath(moduleId, outputPath);
-            source = readFileContent(modulePath);
-          } catch {
-            // Source not available, that's okay
           }
         }
 
@@ -170,8 +132,8 @@ export class WebpackAdapter extends BundlerAdapter {
         const dependencies: string[] = [];
         if (module.reasons) {
           for (const reason of module.reasons) {
-            if (reason.module) {
-              dependencies.push(reason.module);
+            if (reason.moduleName) {
+              dependencies.push(reason.moduleName);
             }
           }
         }
@@ -211,10 +173,25 @@ export class WebpackAdapter extends BundlerAdapter {
             // Try to get source content
             let source: string | undefined;
             try {
-              const modulePath = this.resolveModulePath(moduleId, outputPath);
+              const modulePath = this.resolveModulePath(moduleId);
               source = readFileContent(modulePath);
             } catch {
               // Source not available
+              if (this.config?.debug) {
+                console.debug(
+                  `[webpack-adapter] Failed to read source for moduleId: ${moduleId}`,
+                );
+              }
+            }
+
+            // Extract dependencies from reasons
+            const dependencies: string[] = [];
+            if (module.reasons) {
+              for (const reason of module.reasons) {
+                if (reason.moduleName) {
+                  dependencies.push(reason.moduleName);
+                }
+              }
             }
 
             const bundlerModule: BundlerModule = {
@@ -222,7 +199,7 @@ export class WebpackAdapter extends BundlerAdapter {
               name: module.name || moduleId,
               size: module.size,
               source,
-              dependencies: [],
+              dependencies: [...new Set(dependencies)],
               reasons: module.reasons || [],
             };
 
@@ -237,10 +214,9 @@ export class WebpackAdapter extends BundlerAdapter {
   }
 
   /**
-   * Extract chunks from webpack stats
+   * Extract chunks from webpack stats JSON
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private extractChunks(statsJson: any, _errors: string[]): BundlerChunk[] {
+  private extractChunks(statsJson: StatsCompilation): BundlerChunk[] {
     const chunks: BundlerChunk[] = [];
 
     if (!statsJson.chunks) {
@@ -266,7 +242,7 @@ export class WebpackAdapter extends BundlerAdapter {
         size: chunk.size,
         modules: [...new Set(moduleIds)], // Deduplicate
         isEntry: chunk.entry || chunk.initial || false,
-        isAsync: chunk.async || false,
+        isAsync: !chunk.initial || false,
         files: chunk.files || [],
       });
     }
@@ -275,18 +251,14 @@ export class WebpackAdapter extends BundlerAdapter {
   }
 
   /**
-   * Extract bundles (output files) from webpack stats
+   * Extract bundles (output files) from webpack stats JSON
    */
-  private extractBundles(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    statsJson: any,
-    _compilation: Compilation,
-    outputPath: string,
-    _errors: string[],
-  ): BundlerBundle[] {
+  private extractBundles(statsJson: StatsCompilation): BundlerBundle[] {
     const bundles: BundlerBundle[] = [];
 
-    if (!statsJson.assets) {
+    const { outputPath } = statsJson;
+
+    if (!statsJson.assets || !outputPath) {
       return bundles;
     }
 
@@ -357,7 +329,7 @@ export class WebpackAdapter extends BundlerAdapter {
   /**
    * Resolve module path from module identifier
    */
-  private resolveModulePath(moduleId: string, outputPath: string): string {
+  private resolveModulePath(moduleId: string): string {
     // Remove webpack-specific prefixes
     let cleanId = moduleId;
     if (cleanId.startsWith("multi ")) {
@@ -370,11 +342,11 @@ export class WebpackAdapter extends BundlerAdapter {
 
     // If it's already an absolute path, return it normalized
     if (cleanId.startsWith("/") || cleanId.match(/^[A-Z]:/)) {
-      return normalizePath(cleanId, outputPath || this.baseDir);
+      return normalizePath(cleanId, this.#stats.outputPath);
     }
 
     // Try to resolve relative to output path or base directory
-    return normalizePath(cleanId, outputPath || this.baseDir);
+    return normalizePath(cleanId, this.#stats.outputPath);
   }
 
   /**
@@ -384,27 +356,7 @@ export class WebpackAdapter extends BundlerAdapter {
     if (fileName.startsWith("/")) {
       return fileName;
     }
-    return normalizePath(fileName, outputPath || this.baseDir);
-  }
-
-  /**
-   * Type guard for webpack stats output
-   */
-  private isWebpackStats(output: unknown): output is WebpackStatsOutput {
-    if (!output || typeof output !== "object") {
-      return false;
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const obj = output as Record<string, any>;
-    return (
-      "stats" in obj &&
-      typeof obj.stats === "object" &&
-      obj.stats !== null &&
-      "compilation" in obj &&
-      typeof obj.compilation === "object" &&
-      obj.compilation !== null
-    );
+    return normalizePath(fileName, outputPath);
   }
 
   /**
