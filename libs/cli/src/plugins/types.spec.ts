@@ -25,16 +25,12 @@ describe("Plugin Types", () => {
     it("should support optional fields", () => {
       const options: BundlerPluginOptions = {
         projectName: "test-project",
-        enableIncremental: true,
-        compareWithPrevious: true,
-        maxHistorySize: 20,
         outputDir: "./output",
         extractSourceMaps: true,
         analyzeThirdParty: false,
         excludePatterns: ["**/node_modules/**"],
         includePatterns: ["**/*.ts", "**/*.tsx"],
       };
-      expect(options.enableIncremental).toBe(true);
       expect(options.excludePatterns).toHaveLength(1);
       expect(options.includePatterns).toHaveLength(2);
     });

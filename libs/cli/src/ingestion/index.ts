@@ -22,12 +22,6 @@ export interface IngestionOptions {
     | "other";
   /** Name of the project being analyzed */
   projectName: string;
-  /** Whether to perform incremental analysis */
-  enableIncremental?: boolean;
-  /** Whether to compare with previous analysis results */
-  compareWithPrevious?: boolean;
-  /** Maximum number of previous results to keep */
-  maxHistorySize?: number;
 }
 
 /**

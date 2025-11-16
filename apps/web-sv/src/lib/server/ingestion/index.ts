@@ -26,11 +26,7 @@ import {
   computeGzipSize,
 } from '@smappy/core';
 import { writeIngestionData } from './db/writer.js';
-import {
-  computeIncrementalDiff,
-  shouldReanalyze,
-  type IncrementalDiff,
-} from './incremental/index.js';
+
 import { createSuggestionAnalyzer } from '../suggestions/orchestrator.js';
 import type { SuggestionContext } from '../suggestions/types.js';
 import { LLMAnalyzer } from './suggestions/llm-analyzer.js';
@@ -68,12 +64,9 @@ export interface BundleIngestionResult extends IngestionWriteResult {
     bundlesWritten: number;
     sourceMapEntriesWritten: number;
     suggestionsWritten: number;
-    modulesSkipped?: number;
   };
   /** Errors encountered during processing (non-fatal) */
   errors: string[];
-  /** Incremental diff information (if incremental mode enabled) */
-  diff?: IncrementalDiff;
 }
 
 /**
@@ -92,49 +85,15 @@ export interface BundleIngestionResult extends IngestionWriteResult {
  */
 export async function ingestBundle(input: BundleIngestionInput): Promise<BundleIngestionResult> {
   const errors: string[] = [];
-  let diff: IncrementalDiff | undefined;
-  let modulesToAnalyze = input.modules;
-  let modulesSkipped = 0;
 
   try {
-    // Step 0: Compute incremental diff if enabled
-    if (input.options.enableIncremental && input.options.projectName) {
-      console.log(`[Ingestion] Computing incremental diff...`);
+    // Step 1: Analyze modules
+    console.log(`[Ingestion] Analyzing ${input.modules.length} modules...`);
+    const analyzedModules = await analyzeModules(input.modules, input.bundles, errors);
 
-      // Perform lightweight analysis to get symbol names for diff computation
-      const symbolsForDiff = new Map<string, SymbolWithExport[]>();
-      for (const module of input.modules) {
-        try {
-          const analysisResult = extractSymbols(module.sourceContent, {
-            sourceType: 'module',
-            includeNested: false, // Lightweight for diff only
-            filePath: module.filePath,
-          });
-          symbolsForDiff.set(module.filePath, analysisResult.symbols);
-        } catch {
-          // Skip if analysis fails
-          symbolsForDiff.set(module.filePath, []);
-        }
-      }
-
-      diff = await computeIncrementalDiff(input.options.projectName, input.modules, symbolsForDiff);
-
-      // Filter modules that need re-analysis
-      modulesToAnalyze = input.modules.filter((module) => shouldReanalyze(module.filePath, diff!));
-      modulesSkipped = input.modules.length - modulesToAnalyze.length;
-
-      console.log(
-        `[Ingestion] Incremental: ${modulesToAnalyze.length} to analyze, ${modulesSkipped} skipped`,
-      );
-    }
-
-    // Step 1: Analyze modules (only those that changed in incremental mode)
-    console.log(`[Ingestion] Analyzing ${modulesToAnalyze.length} modules...`);
-    const analyzedModules = await analyzeModules(modulesToAnalyze, input.bundles, errors);
-
-    // Step 2: Build dependency graph (only for changed modules)
+    // Step 2: Build dependency graph
     console.log(`[Ingestion] Building dependency graph...`);
-    const dependencies = await buildDependencies(modulesToAnalyze, errors);
+    const dependencies = await buildDependencies(input.modules, errors);
 
     // Step 3: Process bundles
     console.log(`[Ingestion] Processing ${input.bundles.length} bundles...`);
@@ -159,16 +118,11 @@ export async function ingestBundle(input: BundleIngestionInput): Promise<BundleI
     const result = await writeIngestionData(ingestionData);
 
     console.log(`[Ingestion] ✓ Complete! Analysis run ID: ${result.analysisRunId}`);
-    console.log(`[Ingestion] Stats:`, { ...result.stats, modulesSkipped });
+    console.log(`[Ingestion] Stats:`, result.stats);
 
     return {
       ...result,
-      stats: {
-        ...result.stats,
-        modulesSkipped,
-      },
       errors,
-      diff,
     };
   } catch (error) {
     console.error('[Ingestion] ✗ Fatal error:', error);

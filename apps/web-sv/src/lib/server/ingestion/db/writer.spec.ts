@@ -147,7 +147,6 @@ function createMockIngestionData(): IngestionData {
   const options: IngestionOptions = {
     bundlerType: 'webpack',
     projectName: 'test-project',
-    enableIncremental: false,
   };
 
   const bundles: BundleWithMetadata[] = [

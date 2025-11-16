@@ -63,7 +63,6 @@ export function createMinimalSeedData(): BundleIngestionInput {
     options: {
       bundlerType: 'vite',
       projectName: 'minimal-example',
-      enableIncremental: false,
     },
     bundles,
     modules,
@@ -222,7 +221,6 @@ export function formatCurrency(amount: number, currency = 'USD'): string {
     options: {
       bundlerType: 'vite',
       projectName,
-      enableIncremental: false,
     },
     bundles,
     modules,
@@ -242,7 +240,6 @@ export function createComprehensiveSeedData(): BundleIngestionInput[] {
       options: {
         bundlerType: 'webpack',
         projectName: 'legacy-webapp',
-        enableIncremental: false,
       },
       bundles: [
         {
@@ -337,7 +334,6 @@ export function createDashboardTestData() {
       options: {
         bundlerType: 'vite',
         projectName,
-        enableIncremental: false,
       },
       bundles: [
         {
@@ -369,7 +365,6 @@ export function createDashboardTestData() {
     options: {
       bundlerType: 'vite',
       projectName: 'dashboard-test-project',
-      enableIncremental: false,
     },
     bundles: [
       {

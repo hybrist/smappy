@@ -21,12 +21,6 @@ export interface IngestionOptions {
   bundlerType: 'webpack' | 'rollup' | 'esbuild' | 'vite' | 'parcel' | 'nextjs' | 'other';
   /** Name of the project being analyzed */
   projectName: string;
-  /** Whether to perform incremental analysis */
-  enableIncremental?: boolean;
-  /** Whether to compare with previous analysis results */
-  compareWithPrevious?: boolean;
-  /** Maximum number of previous results to keep */
-  maxHistorySize?: number;
 }
 
 /**
@@ -40,9 +34,6 @@ export function createMockIngestionOptions(
   return {
     bundlerType: 'webpack',
     projectName: 'test-project',
-    enableIncremental: false,
-    compareWithPrevious: false,
-    maxHistorySize: 10,
     ...overrides,
   };
 }

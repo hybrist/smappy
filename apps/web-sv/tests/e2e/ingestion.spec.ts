@@ -76,7 +76,6 @@ export function add(a, b) {
       options: {
         bundlerType: 'webpack',
         projectName: 'e2e-test-project',
-        enableIncremental: false,
       },
       bundles,
       modules,
@@ -172,7 +171,6 @@ console.log(button.render());
       options: {
         bundlerType: 'vite',
         projectName: 'e2e-test-multi-bundle',
-        enableIncremental: false,
       },
       bundles,
       modules,

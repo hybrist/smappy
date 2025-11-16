@@ -140,7 +140,6 @@ function createTestIngestionInput(): BundleIngestionInput {
   const options: IngestionOptions = {
     bundlerType: 'webpack',
     projectName: 'test-project',
-    enableIncremental: false,
   };
 
   const bundles: BundleInput[] = [
@@ -481,26 +480,6 @@ console.log(add(1, 2), React);
       expect(result.stats.chunksWritten).toBe(2);
       const chunks = await db.select().from(schema.chunk).execute();
       expect(chunks).toHaveLength(2);
-    });
-
-    it('should support incremental mode and skip unchanged modules', async () => {
-      expect.assertions(6);
-
-      // First run - create baseline
-      const input = createTestIngestionInput();
-      input.options.enableIncremental = true;
-      input.options.projectName = 'incremental-test';
-
-      const firstRun = await ingestBundle(input);
-      expect(firstRun.stats.modulesWritten).toBe(2);
-      expect(firstRun.stats.modulesSkipped).toBe(0);
-      expect(firstRun.diff).toBeDefined();
-
-      // Second run - same content, should skip both modules
-      const secondRun = await ingestBundle(input);
-      expect(secondRun.stats.modulesSkipped).toBeGreaterThan(0);
-      expect(secondRun.diff).toBeDefined();
-      expect(secondRun.diff!.canUseIncremental).toBe(true);
     });
   });
 });

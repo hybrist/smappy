@@ -17,12 +17,6 @@ import type { IngestionOptions } from "../ingestion/index.ts";
 export interface BundlerPluginOptions {
   /** Name of the project being analyzed */
   projectName: string;
-  /** Whether to enable incremental analysis */
-  enableIncremental?: boolean;
-  /** Whether to compare with previous analysis results */
-  compareWithPrevious?: boolean;
-  /** Maximum number of previous results to keep */
-  maxHistorySize?: number;
   /** Custom output directory for analysis results */
   outputDir?: string;
   /** Whether to extract source maps */
