@@ -70,7 +70,6 @@ export async function runBuild(options: BuildOptions): Promise<BuildResult> {
     const child = spawn(command, args, {
       cwd: resolve(projectPath),
       stdio: debug ? "inherit" : "pipe",
-      shell: true,
       env: {
         ...process.env,
         // Disable any interactive prompts
