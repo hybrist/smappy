@@ -38,6 +38,8 @@ export interface ChunkInput {
   isAsync: boolean;
   /** List of module identifiers included in this chunk */
   moduleIds: string[];
+  /** Optional total size in bytes (from bundler stats) */
+  size?: number;
 }
 
 /**
@@ -51,6 +53,8 @@ export interface ModuleInput {
   sourceContent: string;
   /** File type (extension) */
   fileType: "js" | "mjs" | "cjs" | "jsx" | "ts" | "tsx" | "json" | "css";
+  /** Optional bundled size in bytes (from bundler stats, after minification/tree-shaking) */
+  bundledSize?: number;
 }
 
 // ============================================================================

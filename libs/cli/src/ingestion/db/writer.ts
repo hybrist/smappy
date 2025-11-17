@@ -452,7 +452,7 @@ function writeChunks(
       .values({
         analysisRunId,
         name: chunk.name,
-        totalSize: 0, // Will be computed from module sizes
+        totalSize: chunk.size ?? 0,
         isEntry: chunk.isEntry,
         isAsync: chunk.isAsync,
       })

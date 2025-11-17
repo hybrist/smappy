@@ -186,7 +186,6 @@ async function analyzeModules(
 
       // Compute module sizes
       const originalSize = computeRawSize(module.sourceContent);
-      const bundledSize = originalSize; // Simplified - would compute from source map
 
       // Map symbols to bundle positions
       const symbolFragments = new Map<string, SymbolFragment[]>();
@@ -211,6 +210,21 @@ async function analyzeModules(
             );
           }
         }
+      }
+
+      // Calculate bundled size from source map fragments if available
+      let bundledSize: number;
+      if (symbolFragments.size > 0) {
+        // Sum up all symbol fragment sizes for this module
+        bundledSize = 0;
+        for (const fragments of symbolFragments.values()) {
+          for (const fragment of fragments) {
+            bundledSize += fragment.byteEnd - fragment.byteStart;
+          }
+        }
+      } else {
+        // Fall back to bundler stats if available, otherwise use original size
+        bundledSize = module.bundledSize ?? originalSize;
       }
 
       // Detect third-party modules
