@@ -163,11 +163,17 @@ export function isSourceFile(filePath: string): boolean {
  * @returns Normalized path
  */
 export function normalizePath(filePath: string, baseDir?: string): string {
-  // Remove leading slashes and normalize separators
-  let normalized = filePath.replace(/\\/g, "/").replace(/^\/+/, "");
+  // Normalize separators
+  let normalized = filePath.replace(/\\/g, "/");
+
+  // Track if the original path was absolute
+  const isAbsolute = normalized.startsWith("/") || normalized.match(/^[A-Z]:/);
+
+  // Remove leading slashes for processing (we'll add back if needed)
+  normalized = normalized.replace(/^\/+/, "");
 
   // Resolve relative paths if baseDir is provided
-  if (baseDir && !normalized.startsWith("/") && !normalized.match(/^[A-Z]:/)) {
+  if (baseDir && !isAbsolute) {
     const base = baseDir.replace(/\\/g, "/").replace(/\/+$/, "");
     normalized = `${base}/${normalized}`;
   }
@@ -186,7 +192,24 @@ export function normalizePath(filePath: string, baseDir?: string): string {
     }
   }
 
-  return resolved.join("/");
+  const result = resolved.join("/");
+
+  // Restore leading slash ONLY if:
+  // 1. We joined with an absolute baseDir (baseDir starts with /), OR
+  // 2. The original path was absolute Unix-style
+  // Do NOT add leading slash for Windows absolute paths or relative paths
+  const baseDirIsAbsolute =
+    baseDir && baseDir.replace(/\\/g, "/").startsWith("/");
+  const isWindowsPath = /^[A-Z]:/.test(result);
+
+  if (
+    (baseDirIsAbsolute || (isAbsolute && !isWindowsPath)) &&
+    !result.startsWith("/")
+  ) {
+    return `/${result}`;
+  }
+
+  return result;
 }
 
 /**

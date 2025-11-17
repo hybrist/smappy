@@ -186,7 +186,6 @@ async function analyzeModules(
 
       // Compute module sizes
       const originalSize = computeRawSize(module.sourceContent);
-      const bundledSize = originalSize; // Simplified - would compute from source map
 
       // Map symbols to bundle positions
       const symbolFragments = new Map<string, SymbolFragment[]>();
@@ -211,6 +210,21 @@ async function analyzeModules(
             );
           }
         }
+      }
+
+      // Calculate bundled size from source map fragments if available
+      let bundledSize: number;
+      if (symbolFragments.size > 0) {
+        // Sum up all symbol fragment sizes for this module
+        bundledSize = 0;
+        for (const fragments of symbolFragments.values()) {
+          for (const fragment of fragments) {
+            bundledSize += fragment.byteEnd - fragment.byteStart;
+          }
+        }
+      } else {
+        // Fall back to bundler stats if available, otherwise use original size
+        bundledSize = module.bundledSize ?? originalSize;
       }
 
       // Detect third-party modules
@@ -583,8 +597,24 @@ async function processBundles(
 
   for (const bundle of bundles) {
     try {
-      const size = computeRawSize(bundle.content);
-      const gzipSize = await computeGzipSize(bundle.content);
+      // If size is already provided (e.g., from webpack stats when content isn't available),
+      // use it directly. Otherwise compute from content.
+      let size: number;
+      let gzipSize: number;
+
+      if (bundle.content) {
+        // Content is available, compute size from it
+        size = computeRawSize(bundle.content);
+        gzipSize = await computeGzipSize(bundle.content);
+      } else if (bundle.size !== undefined) {
+        // Content not available but size provided (e.g., from bundler stats)
+        size = bundle.size;
+        gzipSize = bundle.gzipSize ?? 0;
+      } else {
+        // Neither content nor size available
+        size = 0;
+        gzipSize = 0;
+      }
 
       processed.push({
         ...bundle,
@@ -593,11 +623,11 @@ async function processBundles(
       });
     } catch (error) {
       errors.push(`Failed to process bundle ${bundle.fileName}: ${error}`);
-      // Add stub bundle
+      // Add stub bundle with size from bundle if available
       processed.push({
         ...bundle,
-        size: 0,
-        gzipSize: 0,
+        size: bundle.size ?? 0,
+        gzipSize: bundle.gzipSize ?? 0,
       });
     }
   }

@@ -182,17 +182,17 @@ describe("Path Utilities", () => {
       expect(normalizePath("src\\index.js")).toBe("src/index.js");
     });
 
-    it("should remove leading slashes", () => {
-      expect(normalizePath("/src/index.js")).toBe("src/index.js");
-      expect(normalizePath("///src/index.js")).toBe("src/index.js");
+    it("should preserve absolute Unix paths", () => {
+      expect(normalizePath("/src/index.js")).toBe("/src/index.js");
+      expect(normalizePath("///src/index.js")).toBe("/src/index.js");
     });
 
-    it("should resolve relative paths", () => {
+    it("should resolve relative paths with absolute baseDir", () => {
       expect(normalizePath("./src/index.js", "/project")).toBe(
-        "project/src/index.js",
+        "/project/src/index.js",
       );
       expect(normalizePath("../other/index.js", "/project/src")).toBe(
-        "project/other/index.js",
+        "/project/other/index.js",
       );
     });
 
@@ -229,7 +229,7 @@ describe("Path Utilities", () => {
         "./src/index.js",
         "/project",
       );
-      expect(result).toBe("project/src/utils.js");
+      expect(result).toBe("/project/src/utils.js");
     });
 
     it("should resolve parent directory imports", () => {
@@ -238,7 +238,7 @@ describe("Path Utilities", () => {
         "./src/components/Button.js",
         "/project",
       );
-      expect(result).toBe("project/src/utils.js");
+      expect(result).toBe("/project/src/utils.js");
     });
   });
 });

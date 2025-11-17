@@ -149,6 +149,8 @@ export interface BundlerBundle {
   content?: string;
   /** Bundle size in bytes */
   size?: number;
+  /** Gzipped bundle size in bytes */
+  gzipSize?: number;
   /** Source map content */
   sourceMap?: string;
   /** Chunks included in this bundle */

@@ -22,6 +22,7 @@ import {
   shouldIncludeFile,
   isModuleFile,
 } from "./utils.ts";
+import { relative } from "node:path";
 
 // ============================================================================
 // Abstract Adapter Base Class
@@ -72,19 +73,23 @@ export abstract class BundlerAdapter {
     const modules: ModuleInput[] = [];
 
     for (const bundlerModule of bundlerModules) {
-      const filePath = normalizePath(bundlerModule.identifier, this.baseDir);
+      // Normalize to absolute path for filtering
+      const absolutePath = normalizePath(
+        bundlerModule.identifier,
+        this.baseDir,
+      );
 
       // Apply filters
       if (
         this.options.excludePatterns &&
-        shouldExcludeFile(filePath, this.options.excludePatterns)
+        shouldExcludeFile(absolutePath, this.options.excludePatterns)
       ) {
         continue;
       }
 
       if (
         this.options.includePatterns &&
-        !shouldIncludeFile(filePath, this.options.includePatterns)
+        !shouldIncludeFile(absolutePath, this.options.includePatterns)
       ) {
         continue;
       }
@@ -101,6 +106,9 @@ export abstract class BundlerAdapter {
       if (!isModuleFile(bundlerModule.identifier)) {
         continue;
       }
+
+      // Make path relative to baseDir for storage
+      const filePath = relative(this.baseDir, absolutePath);
       const sourceContent = bundlerModule.source || "";
       const fileType = detectFileType(filePath);
 
@@ -108,6 +116,7 @@ export abstract class BundlerAdapter {
         filePath,
         sourceContent,
         fileType,
+        bundledSize: bundlerModule.size,
       });
     }
 
@@ -134,6 +143,7 @@ export abstract class BundlerAdapter {
         isEntry: bundlerChunk.isEntry ?? false,
         isAsync: bundlerChunk.isAsync ?? false,
         moduleIds: bundlerChunk.modules || [],
+        size: bundlerChunk.size,
       });
     }
 
@@ -189,6 +199,8 @@ export abstract class BundlerAdapter {
         content: bundleContent,
         type: bundleType,
         sourceMapReference,
+        size: bundlerBundle.size,
+        gzipSize: bundlerBundle.gzipSize,
       });
     }
 
