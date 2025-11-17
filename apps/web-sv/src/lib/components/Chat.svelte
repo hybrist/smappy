@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { AnalysisSummary } from '$lib/server/query/types';
   import { marked } from 'marked';
+  import DOMPurify from 'isomorphic-dompurify';
   import { chatStreamEventSchema } from '$lib/chat/stream-schema';
   import * as v from 'valibot';
 
@@ -189,7 +190,8 @@
 
   function renderMarkdown(content: string): string {
     if (!content) return '';
-    return marked.parse(content, { async: false }) as string;
+    const dirty = marked.parse(content, { async: false }) as string;
+    return DOMPurify.sanitize(dirty);
   }
 
   function formatJSON(value: unknown): string {
@@ -301,7 +303,9 @@
               </div>
               <div class="text-sm break-words whitespace-pre-wrap">
                 {#if message.role === 'assistant'}
-                  <div class="prose prose-sm dark:prose-invert max-w-none">
+                  <div class="prose prose-sm max-w-none dark:prose-invert">
+                    <!-- Sanitized via DOMPurify before rendering -->
+                    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                     {@html renderMarkdown(message.content)}
                   </div>
                 {:else}
