@@ -190,7 +190,7 @@
 
   function renderMarkdown(content: string): string {
     if (!content) return '';
-    const dirty = marked.parseInline(content, { async: false });
+    const dirty = marked.parse(content, { async: false, gfm: true, breaks: true }) as string;
     return DOMPurify.sanitize(dirty);
   }
 
