@@ -3,6 +3,7 @@
  * Extracts bundle data from webpack stats JSON and converts it to normalized ingestion input
  */
 
+import type { ModuleInput } from "@smappy/core";
 import type {
   PluginExtractionResult,
   BundlerModule,
@@ -37,6 +38,7 @@ export class WebpackAdapter extends BundlerAdapter {
     super(
       project.path,
       {
+        analyzeThirdParty: true,
         ...options,
         projectName: project.name,
       },
@@ -327,18 +329,25 @@ export class WebpackAdapter extends BundlerAdapter {
   }
 
   /**
+   * Sanitize module identifiers before conversion so we don't misclassify modules
+   */
+  protected override convertModules(
+    bundlerModules: BundlerModule[],
+    errors: string[],
+  ): ModuleInput[] {
+    const sanitizedModules = bundlerModules.map((module) => ({
+      ...module,
+      identifier: this.sanitizeModuleIdentifier(module.identifier),
+    }));
+
+    return super.convertModules(sanitizedModules, errors);
+  }
+
+  /**
    * Resolve module path from module identifier
    */
   private resolveModulePath(moduleId: string): string {
-    // Remove webpack-specific prefixes
-    let cleanId = moduleId;
-    if (cleanId.startsWith("multi ")) {
-      cleanId = cleanId.replace(/^multi /, "");
-    }
-    if (cleanId.includes("!")) {
-      // Webpack loader syntax: loader!path
-      cleanId = cleanId.split("!").pop() || cleanId;
-    }
+    const cleanId = this.sanitizeModuleIdentifier(moduleId) || moduleId;
 
     // If it's already an absolute path, return it normalized
     if (cleanId.startsWith("/") || cleanId.match(/^[A-Z]:/)) {
@@ -347,6 +356,29 @@ export class WebpackAdapter extends BundlerAdapter {
 
     // Try to resolve relative to output path or base directory
     return normalizePath(cleanId, this.#stats.outputPath);
+  }
+
+  /**
+   * Strip webpack loader prefixes and query strings
+   */
+  private sanitizeModuleIdentifier(moduleId: string): string {
+    let cleanId = moduleId.trim();
+
+    if (cleanId.startsWith("multi ")) {
+      cleanId = cleanId.replace(/^multi\s+/, "");
+    }
+
+    const lastBangIndex = cleanId.lastIndexOf("!");
+    if (lastBangIndex !== -1) {
+      cleanId = cleanId.slice(lastBangIndex + 1);
+    }
+
+    const queryIndex = cleanId.indexOf("?");
+    if (queryIndex !== -1) {
+      cleanId = cleanId.slice(0, queryIndex);
+    }
+
+    return cleanId;
   }
 
   /**

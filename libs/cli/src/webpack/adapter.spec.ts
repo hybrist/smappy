@@ -104,6 +104,29 @@ describe("WebpackAdapter", () => {
       expect(result.errors).toEqual([]);
     });
 
+    it("should strip loader prefixes so first-party modules stay first-party", () => {
+      const mockStats: StatsCompilation = {
+        outputPath,
+        modules: [
+          {
+            identifier:
+              "../../node_modules/ts-loader/index.js??ruleSet[1].rules[0]!/project/src/utils/pricing.ts?abc",
+            name: "./src/utils/pricing.ts",
+            size: 200,
+            reasons: [],
+          },
+        ],
+        chunks: [],
+        assets: [],
+      };
+
+      const adapter = new WebpackAdapter(project, mockStats);
+      const result = adapter.extract();
+
+      expect(result.modules).toHaveLength(1);
+      expect(result.modules[0].filePath).toBe("src/utils/pricing.ts");
+    });
+
     it("should extract chunks from webpack stats", () => {
       const mockStats: StatsCompilation = {
         outputPath,

@@ -20,7 +20,7 @@
 
   <!-- Smappy Wordmark -->
   <g id="wordmark">
-    <text x="50" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="700" fill="#111827">
+    <text x="50" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="700" fill="#059669">
       Smappy
     </text>
     <!-- Tagline -->
