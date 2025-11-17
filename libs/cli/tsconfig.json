@@ -1,11 +1,4 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src/**/*"],
-  "compilerOptions": {
-    "skipLibCheck": true,
-    "paths": {
-      "@smappy/core": ["../core/dist/index.d.mts"],
-      "@smappy/core/*": ["../core/dist/*/index.d.mts"]
-    }
-  }
+  "include": ["src/**/*"]
 }
