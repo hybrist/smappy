@@ -28,9 +28,6 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm --filter @smappy/web-sv exec playwright install --with-deps chromium
 
-      - name: Build packages
-        run: pnpm run build
-
       - name: Run E2E tests
         run: pnpm run test:e2e
 

@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "tsdown",
-    "check": "tsdown --no-clean --report false && prettier --check . && tsc --noEmit --skipLibCheck",
+    "check": "tsdown --no-clean --report false && prettier --check . && tsc",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "test": "vitest --run",
