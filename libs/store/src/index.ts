@@ -10,6 +10,7 @@ import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import * as schema from "./schema.ts";
 import {
   listAnalysisRuns,
+  listProjects,
   getLatestAnalysisRun,
   getAnalysisRunById,
   saveAnalysisRun,
@@ -19,6 +20,7 @@ import {
   type SaveAnalysisRunInput,
   type SaveAnalysisRunResult,
   type AnalysisRunData,
+  type ProjectData,
 } from "./queries.ts";
 
 /**
@@ -27,6 +29,9 @@ import {
 export interface Store {
   /** Database instance (exposed for advanced queries) */
   db: BetterSQLite3Database<typeof schema>;
+
+  /** List all unique projects with summary statistics */
+  listProjects: () => ProjectData[];
 
   /** List analysis runs with optional filtering */
   listAnalysisRuns: (options?: ListAnalysisRunsOptions) => AnalysisRunData[];
@@ -84,6 +89,7 @@ export function createStore(options?: DatabaseOptions): Store {
 
   return {
     db,
+    listProjects: () => listProjects(db),
     listAnalysisRuns: (opts) => listAnalysisRuns(db, opts),
     getLatestAnalysisRun: (projectName) =>
       getLatestAnalysisRun(db, projectName),
@@ -102,6 +108,7 @@ export type {
   SaveAnalysisRunInput,
   SaveAnalysisRunResult,
   AnalysisRunData,
+  ProjectData,
 };
 
 // Re-export schema for advanced use cases

@@ -44,6 +44,15 @@ export interface AnalysisRunData {
 }
 
 /**
+ * Project data with summary statistics
+ */
+export interface ProjectData {
+  projectName: string;
+  latestRunDate: string | null;
+  totalRuns: number;
+}
+
+/**
  * Input data for saving an analysis run
  * This matches the IngestionData structure from web-sv
  */
@@ -179,6 +188,65 @@ export function listAnalysisRuns(
         : null,
     };
   });
+}
+
+/**
+ * List all unique projects with their latest run date and total run count
+ * @param db - Database instance
+ * @returns Array of projects with summary statistics
+ */
+export function listProjects(
+  db: BetterSQLite3Database<typeof schema>,
+): ProjectData[] {
+  // Get all runs grouped by project name
+  const allRuns = db
+    .select({
+      projectName: schema.analysisRun.projectName,
+      createdAt: schema.analysisRun.createdAt,
+    })
+    .from(schema.analysisRun)
+    .where(sql`${schema.analysisRun.projectName} IS NOT NULL`)
+    .all();
+
+  // Group by project name and calculate stats
+  const projectMap = new Map<
+    string,
+    { latestDate: string | null; count: number }
+  >();
+
+  for (const run of allRuns) {
+    if (!run.projectName) continue;
+
+    const existing = projectMap.get(run.projectName);
+    if (existing) {
+      existing.count++;
+      if (
+        run.createdAt &&
+        (!existing.latestDate || run.createdAt > existing.latestDate)
+      ) {
+        existing.latestDate = run.createdAt;
+      }
+    } else {
+      projectMap.set(run.projectName, {
+        latestDate: run.createdAt || null,
+        count: 1,
+      });
+    }
+  }
+
+  // Convert to array and sort by latest date (most recent first)
+  return Array.from(projectMap.entries())
+    .map(([projectName, stats]) => ({
+      projectName,
+      latestRunDate: stats.latestDate,
+      totalRuns: stats.count,
+    }))
+    .sort((a, b) => {
+      if (!a.latestRunDate && !b.latestRunDate) return 0;
+      if (!a.latestRunDate) return 1;
+      if (!b.latestRunDate) return -1;
+      return b.latestRunDate.localeCompare(a.latestRunDate);
+    });
 }
 
 /**
