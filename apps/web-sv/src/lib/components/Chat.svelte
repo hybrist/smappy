@@ -1,10 +1,22 @@
 <script lang="ts">
   import type { AnalysisSummary } from '$lib/server/query/types';
+  import { marked } from 'marked';
+  import DOMPurify from 'isomorphic-dompurify';
+  import { chatStreamEventSchema } from '$lib/chat/stream-schema';
+  import * as v from 'valibot';
 
-  interface Message {
-    role: 'user' | 'assistant';
-    content: string;
+  interface ToolCall {
+    toolCallId: string;
+    toolName: string;
+    input: unknown;
+    output?: unknown;
   }
+
+  import type { ChatMessage } from '$lib/chat/request-schema';
+
+  type Message = ChatMessage & {
+    toolCalls?: ToolCall[];
+  };
 
   interface Props {
     projectName?: string;
@@ -16,8 +28,9 @@
   let {
     projectName,
     analysis,
-    defaultModel = 'qwen2.5-coder:3b',
+    defaultModel = 'gpt-oss',
     availableModels = [
+      'gpt-oss',
       'qwen2.5-coder:3b',
       'llama3.2:3b',
       'phi3:3.8b',
@@ -32,6 +45,7 @@
   let input = $state('');
   let isLoading = $state(false);
   let error = $state<string | null>(null);
+  let expandedToolCalls = $state<Record<string, boolean>>({});
 
   // Auto-scroll to bottom when messages change
   let messagesContainer: HTMLDivElement;
@@ -66,7 +80,7 @@
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          messages: messages,
+          messages: messages.map(({ role, content }) => ({ role, content })),
           model: selectedModel,
           context: {
             projectName,
@@ -87,31 +101,127 @@
       }
 
       // Add assistant message placeholder
-      messages = [...messages, { role: 'assistant', content: '' }];
+      messages = [...messages, { role: 'assistant', content: '', toolCalls: [] }];
 
-      let assistantMessage = '';
+      let buffer = '';
 
       while (true) {
         const { done, value } = await reader.read();
 
         if (done) break;
 
-        const chunk = decoder.decode(value);
-        // For text stream, we just append the chunks directly
-        assistantMessage += chunk;
-        // Update the last message
-        messages = [...messages.slice(0, -1), { role: 'assistant', content: assistantMessage }];
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split('\n\n');
+        buffer = events.pop() || '';
+
+        for (const event of events) {
+          if (!event.startsWith('data: ')) continue;
+          const data = JSON.parse(event.slice(6));
+          handleStreamEvent(data);
+        }
       }
     } catch (err) {
       console.error('Chat error:', err);
       error = err instanceof Error ? err.message : 'An error occurred';
-      // Remove the empty assistant message if there was an error
       if (messages[messages.length - 1]?.content === '') {
         messages = messages.slice(0, -1);
       }
     } finally {
       isLoading = false;
     }
+  }
+
+  function handleStreamEvent(raw: unknown) {
+    const parsed = v.safeParse(chatStreamEventSchema, raw);
+    if (!parsed.success) {
+      console.warn('Chat stream parse error', parsed.issues);
+      return;
+    }
+
+    const data = parsed.output;
+
+    switch (data.type) {
+      case 'text': {
+        const updated = [...messages];
+        const last = updated[updated.length - 1];
+        if (last && last.role === 'assistant') {
+          updated[updated.length - 1] = {
+            ...last,
+            content: `${last.content}${data.content ?? ''}`,
+          };
+          messages = updated;
+        }
+        break;
+      }
+      case 'tool-call': {
+        const updated = [...messages];
+        const last = updated[updated.length - 1];
+        if (last && last.role === 'assistant') {
+          const toolCalls = last.toolCalls ? [...last.toolCalls] : [];
+          toolCalls.push({
+            toolCallId: data.toolCallId,
+            toolName: data.toolName,
+            input: data.input,
+          });
+          updated[updated.length - 1] = { ...last, toolCalls };
+          messages = updated;
+        }
+        break;
+      }
+      case 'tool-result': {
+        const updated = [...messages];
+        const last = updated[updated.length - 1];
+        if (last && last.role === 'assistant' && last.toolCalls) {
+          const toolCalls = last.toolCalls.map((toolCall) =>
+            toolCall.toolCallId === data.toolCallId
+              ? { ...toolCall, output: data.output }
+              : toolCall,
+          );
+          updated[updated.length - 1] = { ...last, toolCalls };
+          messages = updated;
+        }
+        break;
+      }
+      case 'error':
+        error = data.error ?? 'Stream error';
+        break;
+    }
+  }
+
+  function renderMarkdown(content: string): string {
+    if (!content) return '';
+    const dirty = marked.parseInline(content, { async: false });
+    return DOMPurify.sanitize(dirty);
+  }
+
+  function formatJSON(value: unknown): string {
+    try {
+      return JSON.stringify(value, null, 2);
+    } catch {
+      return String(value);
+    }
+  }
+
+  function toggleToolCall(messageIndex: number, toolIndex: number) {
+    const key = `${messageIndex}-${toolIndex}`;
+    expandedToolCalls = {
+      ...expandedToolCalls,
+      [key]: !expandedToolCalls[key],
+    };
+  }
+
+  function isToolCallExpanded(messageIndex: number, toolIndex: number): boolean {
+    return !!expandedToolCalls[`${messageIndex}-${toolIndex}`];
+  }
+
+  function hasInputParams(input: unknown): boolean {
+    if (!input || typeof input !== 'object') {
+      return false;
+    }
+    if (Array.isArray(input)) {
+      return input.length > 0;
+    }
+    return Object.keys(input as Record<string, unknown>).length > 0;
   }
 </script>
 
@@ -192,8 +302,69 @@
                 </span>
               </div>
               <div class="text-sm break-words whitespace-pre-wrap">
-                {message.content}
+                {#if message.role === 'assistant'}
+                  <div class="prose prose-sm dark:prose-invert max-w-none">
+                    <!-- Sanitized via DOMPurify before rendering -->
+                    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                    {@html renderMarkdown(message.content)}
+                  </div>
+                {:else}
+                  <div>{message.content}</div>
+                {/if}
               </div>
+              {#if message.toolCalls && message.toolCalls.length > 0}
+                <div class="mt-3 space-y-2">
+                  {#each message.toolCalls as toolCall, toolIndex (toolCall.toolCallId)}
+                    <div
+                      class="rounded-md bg-white/80 text-xs text-gray-800 dark:bg-gray-900/70 dark:text-gray-100"
+                    >
+                      <button
+                        type="button"
+                        class="flex w-full items-center justify-between gap-3 border-b border-gray-200 px-3 py-2 text-left dark:border-gray-800"
+                        onclick={() => toggleToolCall(index, toolIndex)}
+                      >
+                        <div class="font-semibold">
+                          🔧 {toolCall.toolName}
+                          <span class="ml-2 text-[10px] tracking-wide text-gray-500 uppercase">
+                            {toolCall.output === undefined ? 'pending' : 'done'}
+                          </span>
+                        </div>
+                        <span class="text-[11px] font-medium text-blue-600 dark:text-blue-300">
+                          {isToolCallExpanded(index, toolIndex) ? 'Hide' : 'Show'}
+                        </span>
+                      </button>
+                      {#if isToolCallExpanded(index, toolIndex)}
+                        <div class="space-y-3 px-3 py-3">
+                          {#if hasInputParams(toolCall.input)}
+                            <div>
+                              <div class="text-[11px] tracking-wide text-gray-500 uppercase">
+                                Input
+                              </div>
+                              <pre
+                                class="mt-1 rounded bg-gray-900/80 p-2 text-[11px] text-gray-100 dark:bg-black/40">{formatJSON(
+                                  toolCall.input,
+                                )}</pre>
+                            </div>
+                          {/if}
+                          {#if toolCall.output !== undefined}
+                            <div>
+                              <div class="text-[11px] tracking-wide text-gray-500 uppercase">
+                                Result
+                              </div>
+                              <pre
+                                class="mt-1 rounded bg-gray-900/80 p-2 text-[11px] text-gray-100 dark:bg-black/40">{formatJSON(
+                                  toolCall.output,
+                                )}</pre>
+                            </div>
+                          {:else}
+                            <div class="text-gray-500">Waiting for result…</div>
+                          {/if}
+                        </div>
+                      {/if}
+                    </div>
+                  {/each}
+                </div>
+              {/if}
             </div>
           </div>
         {/each}

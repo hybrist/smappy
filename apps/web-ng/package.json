@@ -23,6 +23,8 @@
     "singleQuote": true
   },
   "dependencies": {
+    "@smappy/llm-tools": "workspace:*",
+    "@smappy/store": "workspace:*",
     "@ai-sdk/openai": "^2.0.59",
     "@angular/common": "21.0.0-rc.0",
     "@angular/compiler": "21.0.0-rc.0",
