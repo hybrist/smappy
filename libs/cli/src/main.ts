@@ -4,6 +4,7 @@ import { Command } from "commander";
 import { fileURLToPath } from "node:url";
 import pkgJSON from "../package.json" with { type: "json" };
 import { analyzeCommand } from "./cmds/analyze.ts";
+import { listCommand } from "./cmds/list.ts";
 
 const program = new Command();
 
@@ -42,6 +43,23 @@ program
       }
     },
   );
+
+program
+  .command("list")
+  .description("List analyzed projects or analysis runs for a project")
+  .argument("[project-name]", "Project name to list runs for")
+  .action(async (projectName?: string) => {
+    try {
+      const code = await listCommand(projectName);
+      process.exit(code);
+    } catch (error) {
+      console.error(
+        "Error:",
+        error instanceof Error ? error.message : String(error),
+      );
+      process.exit(1);
+    }
+  });
 
 // Only parse command line arguments if this file is being run directly
 // Check if the current module is the main module (cross-platform compatible)
