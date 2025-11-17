@@ -5,18 +5,22 @@ import { db } from '$lib/server/db';
 import { schema } from '@smappy/store';
 import { desc, eq } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
-import type { AnalysisSummary } from '$lib/server/query/types';
 import type { ChatStreamEvent } from '$lib/chat/stream-schema';
+import { chatRequestSchema } from '$lib/chat/request-schema';
+import * as v from 'valibot';
 
-function createSystemPrompt(context?: {
-  projectName?: string;
-  analysis?: AnalysisSummary;
-}): string {
+import type { ChatRequestBody } from '$lib/chat/request-schema';
+
+function createSystemPrompt(context?: ChatRequestBody['context']): string {
   if (!context || !context.analysis) {
     return 'You are a helpful assistant specializing in JavaScript bundle analysis and optimization.';
   }
 
   const { projectName, analysis } = context;
+  const createdAt = analysis.createdAt
+    ? new Date(analysis.createdAt).toLocaleString()
+    : 'Unknown date';
+  const totalSize = analysis.totalSize ?? 0;
 
   // Format bundle size nicely
   const formatBytes = (bytes: number) => {
@@ -33,8 +37,8 @@ You are currently helping with the bundle analysis for the project: ${projectNam
 
 Current Analysis Summary:
 - Analysis ID: ${analysis.id}
-- Created: ${new Date(analysis.createdAt).toLocaleString()}
-- Total Size: ${formatBytes(analysis.totalSize)}
+- Created: ${createdAt}
+- Total Size: ${formatBytes(totalSize)}
 
 Your role is to:
 1. Help users understand their bundle composition and dependencies
@@ -51,6 +55,8 @@ When answering questions:
 The user can see the full bundle visualization in the dashboard, so you can reference specific modules or dependencies they might be looking at.`;
 }
 
+const DEFAULT_MODEL = 'gpt-oss';
+
 const ALLOWED_MODELS = [
   'gpt-oss',
   'qwen2.5-coder:3b',
@@ -62,46 +68,41 @@ const ALLOWED_MODELS = [
 
 export const POST: RequestHandler = async ({ request }) => {
   try {
-    const body = await request.json();
+    const json = await request.json();
+    const parsedBody = v.safeParse(chatRequestSchema, json);
+    if (!parsedBody.success) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid request body', details: parsedBody.issues }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
+    }
+
     const {
       messages,
-      model: requestedModel = 'qwen2.5-coder:3b',
+      model: parsedModel,
       context,
       analysisId: bodyAnalysisId,
       bundleId: bodyBundleId,
-    } = body;
+    } = parsedBody.output;
 
-    // Validate messages format
-    if (
-      !Array.isArray(messages) ||
-      messages.some(
-        (msg) =>
-          typeof msg !== 'object' ||
-          typeof msg.role !== 'string' ||
-          typeof msg.content !== 'string',
-      )
-    ) {
-      return new Response(JSON.stringify({ error: 'Invalid messages format' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+    const requestedModel = parsedModel ?? DEFAULT_MODEL;
 
     // Validate and sanitize model selection
-    const model = ALLOWED_MODELS.includes(requestedModel) ? requestedModel : 'qwen2.5-coder:3b';
+    const model = ALLOWED_MODELS.includes(requestedModel) ? requestedModel : DEFAULT_MODEL;
 
     // Resolve analysis and bundle context
-    const analysisId = normalizeNumeric(
-      bodyAnalysisId ?? context?.analysis?.id ?? context?.analysisId,
-    );
-    if (!analysisId) {
+    const analysisId = bodyAnalysisId ?? context?.analysisId ?? context?.analysis?.id ?? null;
+    if (analysisId === null || analysisId === undefined) {
       return new Response(JSON.stringify({ error: 'analysisId is required for chat tools' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    let bundleId = normalizeNumeric(bodyBundleId ?? context?.bundleId ?? context?.bundle?.id);
+    let bundleId = bodyBundleId ?? context?.bundleId ?? null;
     if (!bundleId) {
       const fallbackBundle = await db
         .select({ id: schema.bundle.id })
@@ -217,16 +218,3 @@ export const POST: RequestHandler = async ({ request }) => {
     );
   }
 };
-
-function normalizeNumeric(value: unknown): number | null {
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return value;
-  }
-  if (typeof value === 'string' && value.trim().length > 0) {
-    const parsed = Number(value);
-    if (Number.isFinite(parsed)) {
-      return parsed;
-    }
-  }
-  return null;
-}

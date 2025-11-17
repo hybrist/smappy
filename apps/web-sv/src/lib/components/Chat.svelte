@@ -12,11 +12,11 @@
     output?: unknown;
   }
 
-  interface Message {
-    role: 'user' | 'assistant';
-    content: string;
+  import type { ChatMessage } from '$lib/chat/request-schema';
+
+  type Message = ChatMessage & {
     toolCalls?: ToolCall[];
-  }
+  };
 
   interface Props {
     projectName?: string;
@@ -80,7 +80,7 @@
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          messages: messages,
+          messages: messages.map(({ role, content }) => ({ role, content })),
           model: selectedModel,
           context: {
             projectName,
@@ -190,7 +190,7 @@
 
   function renderMarkdown(content: string): string {
     if (!content) return '';
-    const dirty = marked.parse(content, { async: false }) as string;
+    const dirty = marked.parseInline(content, { async: false });
     return DOMPurify.sanitize(dirty);
   }
 
