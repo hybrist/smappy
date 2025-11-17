@@ -86,7 +86,8 @@
               "process.env": "{}"
             },
             "styles": ["src/styles.css"],
-            "polyfills": ["@angular/localize/init"]
+            "polyfills": ["@angular/localize/init"],
+            "karmaConfig": "karma.conf.js"
           }
         }
       }
