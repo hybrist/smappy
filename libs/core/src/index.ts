@@ -16,7 +16,7 @@ export type {
   ParsedSymbol,
   ParsedDependency,
   SizeInfo,
-} from "./types.js";
+} from "./types.ts";
 
 export {
   createMockBundleInput,
@@ -25,20 +25,20 @@ export {
   createMockParsedSymbol,
   createMockParsedDependency,
   createMockSizeInfo,
-} from "./types.js";
+} from "./types.ts";
 
 // AST Analysis
 export type {
   SymbolWithExport,
   AnalysisResult,
   AnalyzerOptions,
-} from "./ast/index.js";
+} from "./ast/index.ts";
 
 export {
   extractSymbols,
   analyzeFunctions,
   analyzeClasses,
-} from "./ast/index.js";
+} from "./ast/index.ts";
 
 // Dependency Graph
 export type {
@@ -46,7 +46,7 @@ export type {
   ResolvedModule,
   DependencyGraph,
   PackageMetadata,
-} from "./graph/index.js";
+} from "./graph/index.ts";
 
 export {
   buildDependencyGraph,
@@ -54,7 +54,7 @@ export {
   findCircularDependencies,
   isThirdPartyModule,
   extractPackageName,
-} from "./graph/index.js";
+} from "./graph/index.ts";
 
 // Size Calculation
 export {
@@ -62,14 +62,14 @@ export {
   computeGzipSize,
   aggregateChunkSizes,
   aggregateBundleSizes,
-} from "./size/index.js";
+} from "./size/index.ts";
 
 // Source Map Processing
 export type {
   Position,
   PositionMapping,
   SymbolFragment,
-} from "./source-map/index.js";
+} from "./source-map/index.ts";
 
 export {
   parseSourceMap,
@@ -77,4 +77,4 @@ export {
   computeSymbolFragments,
   computeSymbolFragmentsWithContent,
   loadExternalSourceMap,
-} from "./source-map/index.js";
+} from "./source-map/index.ts";

@@ -3,12 +3,12 @@
  * Detects problematic dependency patterns: circular dependencies, unused third-party dependencies, and overly deep dependency chains
  */
 
-import type { SuggestionRule, SuggestionContext } from '../types.js';
+import type { SuggestionRule, SuggestionContext } from "../types.ts";
 import type {
   SuggestionData,
   DependencyRelationship,
   ModuleWithAnalysis,
-} from '@smappy/cli/ingestion';
+} from "../../ingestion/db/writer.ts";
 
 export interface DependencyAnalyzerOptions {
   /** Maximum dependency depth before warning (default: 5) */
@@ -32,14 +32,16 @@ const DEFAULT_OPTIONS: Required<DependencyAnalyzerOptions> = {
  * Creates a dependency analyzer rule
  * @param options - Configuration options
  */
-export function createDependencyAnalyzer(options: DependencyAnalyzerOptions = {}): SuggestionRule {
+export function createDependencyAnalyzer(
+  options: DependencyAnalyzerOptions = {},
+): SuggestionRule {
   const opts = { ...DEFAULT_OPTIONS, ...options };
 
   return {
-    id: 'dependency-analyzer',
-    name: 'Dependency Analyzer',
+    id: "dependency-analyzer",
+    name: "Dependency Analyzer",
     description:
-      'Detects problematic dependency patterns: circular dependencies, unused third-party dependencies, and overly deep dependency chains',
+      "Detects problematic dependency patterns: circular dependencies, unused third-party dependencies, and overly deep dependency chains",
 
     execute(context: SuggestionContext): SuggestionData[] {
       const suggestions: SuggestionData[] = [];
@@ -72,17 +74,17 @@ export function createDependencyAnalyzer(options: DependencyAnalyzerOptions = {}
       if (opts.detectCircular) {
         const circularDeps = detectCircularDependencies(importMap);
         for (const cycle of circularDeps) {
-          const cyclePaths = cycle.join(' → ');
+          const cyclePaths = cycle.join(" → ");
           suggestions.push({
-            type: 'circular-dependency',
-            severity: 'warning',
+            type: "circular-dependency",
+            severity: "warning",
             title: `Circular dependency detected: ${cycle[0]}`,
             description:
               `A circular dependency cycle was detected: ${cyclePaths} → ${cycle[0]}. ` +
               `Circular dependencies can cause initialization issues and make code harder to maintain. ` +
               `Consider refactoring to break the cycle by extracting shared code into a separate module.`,
             links: cycle.map((path) => ({
-              entityType: 'Module' as const,
+              entityType: "Module" as const,
               entityPath: path,
             })),
           });
@@ -98,8 +100,8 @@ export function createDependencyAnalyzer(options: DependencyAnalyzerOptions = {}
         );
         for (const unused of unusedThirdParty) {
           suggestions.push({
-            type: 'unused-third-party',
-            severity: 'info',
+            type: "unused-third-party",
+            severity: "info",
             title: `Unused third-party dependency: ${unused.packageName}`,
             description:
               `The package '${unused.packageName}' is imported but never used. ` +
@@ -107,7 +109,7 @@ export function createDependencyAnalyzer(options: DependencyAnalyzerOptions = {}
               `Consider removing this dependency to reduce bundle size.`,
             links: [
               {
-                entityType: 'Module' as const,
+                entityType: "Module" as const,
                 entityPath: unused.modulePath,
               },
             ],
@@ -117,20 +119,24 @@ export function createDependencyAnalyzer(options: DependencyAnalyzerOptions = {}
 
       // Detect deep dependency chains
       if (opts.detectDeepChains) {
-        const deepChains = detectDeepDependencyChains(importMap, moduleMap, opts.maxDepth);
+        const deepChains = detectDeepDependencyChains(
+          importMap,
+          moduleMap,
+          opts.maxDepth,
+        );
         for (const chain of deepChains) {
           const depth = chain.length - 1;
-          const chainPath = chain.join(' → ');
+          const chainPath = chain.join(" → ");
           suggestions.push({
-            type: 'deep-dependency-chain',
-            severity: depth > 10 ? 'warning' : 'info',
+            type: "deep-dependency-chain",
+            severity: depth > 10 ? "warning" : "info",
             title: `Deep dependency chain detected (depth: ${depth})`,
             description:
               `Module '${chain[0]}' has a deep dependency chain with depth ${depth}: ${chainPath}. ` +
               `Deep dependency chains can impact build times and bundle size. ` +
               `Consider flattening the dependency structure or using lazy loading.`,
             links: chain.map((path) => ({
-              entityType: 'Module' as const,
+              entityType: "Module" as const,
               entityPath: path,
             })),
           });
@@ -145,7 +151,9 @@ export function createDependencyAnalyzer(options: DependencyAnalyzerOptions = {}
 /**
  * Detect circular dependencies using DFS
  */
-function detectCircularDependencies(importMap: Map<string, Set<string>>): string[][] {
+function detectCircularDependencies(
+  importMap: Map<string, Set<string>>,
+): string[][] {
   const cycles: string[][] = [];
   const visited = new Set<string>();
   const recursionStack = new Set<string>();
@@ -169,7 +177,11 @@ function detectCircularDependencies(importMap: Map<string, Set<string>>): string
           const cycle = path.slice(cycleStart);
           // Only add if not already detected (check by normalized cycle)
           const normalizedCycle = normalizeCycle(cycle);
-          if (!cycles.some((c) => areCyclesEqual(normalizedCycle, normalizeCycle(c)))) {
+          if (
+            !cycles.some((c) =>
+              areCyclesEqual(normalizedCycle, normalizeCycle(c)),
+            )
+          ) {
             cycles.push(normalizedCycle);
           }
         }
@@ -245,7 +257,9 @@ function detectUnusedThirdPartyDependencies(
   );
 
   // Find all third-party modules
-  const thirdPartyModules = modules.filter((m) => m.isThirdParty && m.packageName);
+  const thirdPartyModules = modules.filter(
+    (m) => m.isThirdParty && m.packageName,
+  );
 
   for (const module of thirdPartyModules) {
     // Check if this module is imported by any first-party module
@@ -285,7 +299,11 @@ function detectDeepDependencyChains(
 
   // For each module, find the longest path from it
   for (const startModule of modulesWithDeps) {
-    const longestPath = findLongestPath(startModule, importMap, new Set<string>());
+    const longestPath = findLongestPath(
+      startModule,
+      importMap,
+      new Set<string>(),
+    );
     const depth = longestPath.length - 1;
     if (depth > maxDepth) {
       deepChains.push(longestPath);

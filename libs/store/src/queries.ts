@@ -4,7 +4,7 @@
  */
 
 import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
-import * as schema from "./schema.js";
+import * as schema from "./schema.ts";
 import { eq, desc, and, gte, sql } from "drizzle-orm";
 
 /**

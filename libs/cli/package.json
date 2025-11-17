@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "tsdown",
-    "check": "tsdown --no-clean --report false && prettier --check . && tsc --noEmit --skipLibCheck",
+    "check": "tsdown --no-clean --report false && prettier --check . && tsc",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "test": "vitest --run",
@@ -13,7 +13,12 @@
   "dependencies": {
     "@smappy/core": "workspace:*",
     "@smappy/store": "workspace:*",
-    "commander": "^14.0.2"
+    "commander": "^14.0.2",
+    "drizzle-orm": "^0.44.7",
+    "ai": "^5.0.89",
+    "@ai-sdk/anthropic": "^2.0.42",
+    "@ai-sdk/openai": "^2.0.64",
+    "ollama-ai-provider-v2": "^1.5.3"
   },
   "devDependencies": {
     "@types/node": "^22.19.0",
@@ -27,6 +32,7 @@
     "webpack": "^5.102.1"
   },
   "exports": {
+    "./ingestion": "./src/ingestion/index.ts",
     "./main": "./src/main.ts",
     "./webpack/plugin": "./src/webpack/plugin.ts",
     "./package.json": "./package.json"
@@ -42,6 +48,7 @@
       "smappy": "./dist/main.mjs"
     },
     "exports": {
+      "./ingestion": "./dist/ingestion/index.mjs",
       "./main": "./dist/main.mjs",
       "./webpack/plugin": "./dist/webpack/plugin.mjs",
       "./package.json": "./package.json"

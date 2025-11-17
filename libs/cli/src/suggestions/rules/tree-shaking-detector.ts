@@ -3,8 +3,8 @@
  * Detects unused exports that could be tree-shaken for size savings
  */
 
-import type { SuggestionRule, SuggestionContext } from '../types.js';
-import type { SuggestionData } from '@smappy/cli/ingestion';
+import type { SuggestionRule, SuggestionContext } from "../types.ts";
+import type { SuggestionData } from "../../ingestion/db/writer.ts";
 
 export interface TreeShakingDetectorOptions {
   /** Minimum size in bytes to trigger a suggestion */
@@ -28,9 +28,10 @@ export function createTreeShakingDetector(
   const opts = { ...DEFAULT_OPTIONS, ...options };
 
   return {
-    id: 'tree-shaking-detector',
-    name: 'Tree-shaking Detector',
-    description: 'Detects unused exports that could be tree-shaken for size savings',
+    id: "tree-shaking-detector",
+    name: "Tree-shaking Detector",
+    description:
+      "Detects unused exports that could be tree-shaken for size savings",
 
     execute(context: SuggestionContext): SuggestionData[] {
       const suggestions: SuggestionData[] = [];
@@ -57,7 +58,9 @@ export function createTreeShakingDetector(
         const isCompletelyUnused = unusedExports.length === allExports.length;
         const potentialSavings = isCompletelyUnused
           ? module.bundledSize
-          : Math.floor((module.bundledSize * unusedExports.length) / allExports.length);
+          : Math.floor(
+              (module.bundledSize * unusedExports.length) / allExports.length,
+            );
 
         // Skip if savings are below threshold
         if (potentialSavings < opts.minSizeThreshold) {
@@ -66,14 +69,14 @@ export function createTreeShakingDetector(
 
         // Create suggestion
         const severity = isCompletelyUnused
-          ? ('warning' as const)
+          ? ("warning" as const)
           : potentialSavings > 1000
-            ? ('warning' as const)
-            : ('info' as const);
+            ? ("warning" as const)
+            : ("info" as const);
 
         const unusedExportsText =
           unusedExports.length <= 3
-            ? unusedExports.map((e) => `'${e}'`).join(', ')
+            ? unusedExports.map((e) => `'${e}'`).join(", ")
             : `${unusedExports.length} exports`;
 
         const title = isCompletelyUnused
@@ -88,25 +91,29 @@ export function createTreeShakingDetector(
             `Removing unused exports could save ~${formatBytes(potentialSavings)}.`;
 
         // Build links array
-        const links: SuggestionData['links'] = [
+        const links: SuggestionData["links"] = [
           {
-            entityType: 'Module',
+            entityType: "Module",
             entityPath: module.filePath,
           },
         ];
 
         // Add symbol links for unused exports (limit to avoid too many links)
-        if (opts.detectPartiallyUnused && !isCompletelyUnused && unusedExports.length <= 10) {
+        if (
+          opts.detectPartiallyUnused &&
+          !isCompletelyUnused &&
+          unusedExports.length <= 10
+        ) {
           for (const exportName of unusedExports) {
             links.push({
-              entityType: 'Symbol',
+              entityType: "Symbol",
               entityPath: `${module.filePath}:${exportName}`,
             });
           }
         }
 
         suggestions.push({
-          type: 'tree-shaking',
+          type: "tree-shaking",
           severity,
           title,
           description,

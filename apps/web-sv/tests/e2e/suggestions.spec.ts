@@ -4,8 +4,9 @@
  */
 
 import { test, expect } from '@playwright/test';
-import { ingestBundle } from '../../src/lib/server/ingestion/index.js';
+import { ingestBundle } from '@smappy/cli/ingestion';
 import { cleanDatabase, createDashboardTestData } from '../../src/lib/server/db/seed.js';
+import { db } from '../../src/lib/server/db/index.js';
 
 test.describe('Suggestions Page', () => {
   const projectName = 'dashboard-test-project';
@@ -16,7 +17,7 @@ test.describe('Suggestions Page', () => {
 
     // Set up test data with realistic bundle analysis using seed data
     const { detailedProject } = createDashboardTestData();
-    await ingestBundle(detailedProject);
+    await ingestBundle(db, detailedProject);
   });
 
   test('should display informative empty state when no suggestions are available', async ({

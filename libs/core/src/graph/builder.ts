@@ -19,7 +19,7 @@ import type {
   CallExpression,
   StringLiteral,
 } from "@babel/types";
-import type { ParsedDependency } from "../types.js";
+import type { ParsedDependency } from "../types.ts";
 
 // ============================================================================
 // Types

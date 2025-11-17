@@ -238,17 +238,11 @@ describe("BundlerAdapter", () => {
 
       const opts: BundlerPluginOptions = {
         projectName: "test-project",
-        enableIncremental: true,
-        compareWithPrevious: true,
-        maxHistorySize: 20,
       };
       const adapter = new TestAdapter(baseDir, opts);
       const result = adapter.extract();
       expect(result.options.bundlerType).toBe("webpack");
       expect(result.options.projectName).toBe("test-project");
-      expect(result.options.enableIncremental).toBe(true);
-      expect(result.options.compareWithPrevious).toBe(true);
-      expect(result.options.maxHistorySize).toBe(20);
     });
   });
 });

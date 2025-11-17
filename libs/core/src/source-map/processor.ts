@@ -6,7 +6,7 @@
 
 import { SourceMapConsumer } from "@jridgewell/source-map";
 import type { SourceMapInput } from "@jridgewell/source-map";
-import type { SourceMap } from "../types.js";
+import type { SourceMap } from "../types.ts";
 
 /**
  * Position in source code

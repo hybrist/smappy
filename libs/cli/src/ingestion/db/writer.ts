@@ -3,10 +3,10 @@
  * Handles transaction-safe persistence of analysis results to the database
  */
 
-import { db } from '../../db/index.js';
-import { schema } from '@smappy/store';
-import type { ModuleInput, ChunkInput, BundleInput } from '@smappy/core';
-import type { SymbolWithExport, SymbolFragment } from '@smappy/core';
+import { schema } from "@smappy/store";
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+import type { ModuleInput, ChunkInput, BundleInput } from "@smappy/core";
+import type { SymbolWithExport, SymbolFragment } from "@smappy/core";
 
 // ============================================================================
 // Input Types for Writer Functions
@@ -18,15 +18,16 @@ import type { SymbolWithExport, SymbolFragment } from '@smappy/core';
  */
 export interface IngestionOptions {
   /** Type of bundler that generated this bundle */
-  bundlerType: 'webpack' | 'rollup' | 'esbuild' | 'vite' | 'parcel' | 'nextjs' | 'other';
+  bundlerType:
+    | "webpack"
+    | "rollup"
+    | "esbuild"
+    | "vite"
+    | "parcel"
+    | "nextjs"
+    | "other";
   /** Name of the project being analyzed */
   projectName: string;
-  /** Whether to perform incremental analysis */
-  enableIncremental?: boolean;
-  /** Whether to compare with previous analysis results */
-  compareWithPrevious?: boolean;
-  /** Maximum number of previous results to keep */
-  maxHistorySize?: number;
 }
 
 /**
@@ -38,11 +39,8 @@ export function createMockIngestionOptions(
   overrides?: Partial<IngestionOptions>,
 ): IngestionOptions {
   return {
-    bundlerType: 'webpack',
-    projectName: 'test-project',
-    enableIncremental: false,
-    compareWithPrevious: false,
-    maxHistorySize: 10,
+    bundlerType: "webpack",
+    projectName: "test-project",
     ...overrides,
   };
 }
@@ -109,7 +107,7 @@ export interface DependencyRelationship {
   /** Target module path (imported) */
   importedPath: string;
   /** Import type */
-  type: 'static' | 'dynamic';
+  type: "static" | "dynamic";
   /** Imported symbol names */
   importedSymbols?: string[];
 }
@@ -121,14 +119,14 @@ export interface SuggestionData {
   /** Suggestion type */
   type: string;
   /** Severity level */
-  severity: 'critical' | 'warning' | 'info';
+  severity: "critical" | "warning" | "info";
   /** Title */
   title: string;
   /** Description */
   description: string;
   /** Linked entities (modules, symbols, etc.) */
   links?: Array<{
-    entityType: 'Module' | 'Symbol' | 'Dependency' | 'Chunk';
+    entityType: "Module" | "Symbol" | "Dependency" | "Chunk";
     entityPath?: string; // Will be resolved to ID during write
   }>;
 }
@@ -151,6 +149,8 @@ export interface IngestionWriteResult {
   };
 }
 
+type SmappyDb = BetterSQLite3Database<typeof schema>;
+
 // ============================================================================
 // Main Write Function
 // ============================================================================
@@ -165,7 +165,10 @@ export interface IngestionWriteResult {
  * @returns Result with analysis run ID and statistics
  * @throws Error if transaction fails (all changes will be rolled back)
  */
-export async function writeIngestionData(data: IngestionData): Promise<IngestionWriteResult> {
+export async function writeIngestionData(
+  db: BetterSQLite3Database<typeof schema>,
+  data: IngestionData,
+): Promise<IngestionWriteResult> {
   // better-sqlite3 with drizzle handles transactions synchronously
   // We'll use db.transaction() for atomicity
   return db.transaction((tx) => {
@@ -211,7 +214,12 @@ export async function writeIngestionData(data: IngestionData): Promise<Ingestion
     writeChunkModules(tx, data.chunks, chunkIdMap, moduleIdMap);
 
     // Step 8: Write dependencies
-    const dependencyIdMap = writeDependencies(tx, analysisRunId, data.dependencies, moduleIdMap);
+    const dependencyIdMap = writeDependencies(
+      tx,
+      analysisRunId,
+      data.dependencies,
+      moduleIdMap,
+    );
     stats.dependenciesWritten = dependencyIdMap.size;
 
     // Step 9: Write suggestions (optional, placeholder for now)
@@ -239,7 +247,7 @@ export async function writeIngestionData(data: IngestionData): Promise<Ingestion
  * Write analysis run entry
  */
 function writeAnalysisRun(
-  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  tx: Parameters<Parameters<SmappyDb["transaction"]>[0]>[0],
   options: IngestionOptions,
 ): number {
   const result = tx
@@ -258,7 +266,7 @@ function writeAnalysisRun(
  * Write modules and return path->ID mapping
  */
 function writeModules(
-  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  tx: Parameters<Parameters<SmappyDb["transaction"]>[0]>[0],
   analysisRunId: number,
   modules: ModuleWithAnalysis[],
 ): Map<string, number> {
@@ -282,7 +290,9 @@ function writeModules(
         packageName: module.packageName,
         packageVersion: module.packageVersion,
         exports: module.exports ? JSON.stringify(module.exports) : null,
-        usedExports: module.usedExports ? JSON.stringify(module.usedExports) : null,
+        usedExports: module.usedExports
+          ? JSON.stringify(module.usedExports)
+          : null,
       })
       .returning({ id: schema.module.id })
       .get();
@@ -297,7 +307,7 @@ function writeModules(
  * Write symbols for all modules
  */
 function writeSymbols(
-  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  tx: Parameters<Parameters<SmappyDb["transaction"]>[0]>[0],
   modules: ModuleWithAnalysis[],
   moduleIdMap: Map<string, number>,
 ): Map<string, number> {
@@ -344,7 +354,7 @@ function writeSymbols(
  * Write bundles and return filename->ID mapping
  */
 function writeBundles(
-  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  tx: Parameters<Parameters<SmappyDb["transaction"]>[0]>[0],
   analysisRunId: number,
   bundles: BundleWithMetadata[],
 ): Map<string, number> {
@@ -377,7 +387,7 @@ function writeBundles(
  * Write source map entries that link symbols to bundle byte ranges
  */
 function writeSourceMapEntries(
-  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  tx: Parameters<Parameters<SmappyDb["transaction"]>[0]>[0],
   modules: ModuleWithAnalysis[],
   moduleIdMap: Map<string, number>,
   symbolIdMap: Map<string, number>,
@@ -426,7 +436,7 @@ function writeSourceMapEntries(
  * Write chunks and return name->ID mapping
  */
 function writeChunks(
-  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  tx: Parameters<Parameters<SmappyDb["transaction"]>[0]>[0],
   analysisRunId: number,
   chunks: ChunkInput[],
 ): Map<string, number> {
@@ -459,7 +469,7 @@ function writeChunks(
  * Write chunk-module relationships (many-to-many junction table)
  */
 function writeChunkModules(
-  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  tx: Parameters<Parameters<SmappyDb["transaction"]>[0]>[0],
   chunks: ChunkInput[],
   chunkIdMap: Map<string, number>,
   moduleIdMap: Map<string, number>,
@@ -490,7 +500,7 @@ function writeChunkModules(
  * Write dependencies between modules and return dependency path->ID mapping
  */
 function writeDependencies(
-  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  tx: Parameters<Parameters<SmappyDb["transaction"]>[0]>[0],
   analysisRunId: number,
   dependencies: DependencyRelationship[],
   moduleIdMap: Map<string, number>,
@@ -513,7 +523,9 @@ function writeDependencies(
         importerModuleId: importerId,
         importedModuleId: importedId,
         importType: dep.type,
-        importedSymbols: dep.importedSymbols ? JSON.stringify(dep.importedSymbols) : null,
+        importedSymbols: dep.importedSymbols
+          ? JSON.stringify(dep.importedSymbols)
+          : null,
       })
       .returning({ id: schema.dependency.id })
       .get();
@@ -530,7 +542,7 @@ function writeDependencies(
  * Write AI-generated suggestions with entity links
  */
 function writeSuggestions(
-  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  tx: Parameters<Parameters<SmappyDb["transaction"]>[0]>[0],
   analysisRunId: number,
   suggestions: SuggestionData[],
   moduleIdMap: Map<string, number>,
@@ -568,20 +580,20 @@ function writeSuggestions(
 
         // Resolve entity ID based on entity type
         switch (link.entityType) {
-          case 'Module': {
+          case "Module": {
             entityId = moduleIdMap.get(link.entityPath);
             break;
           }
-          case 'Symbol': {
+          case "Symbol": {
             // Symbol path format: "modulePath:symbolName"
             entityId = symbolIdMap.get(link.entityPath);
             break;
           }
-          case 'Chunk': {
+          case "Chunk": {
             entityId = chunkIdMap.get(link.entityPath);
             break;
           }
-          case 'Dependency': {
+          case "Dependency": {
             // Dependency path format: "importerPath:importedPath"
             entityId = dependencyIdMap.get(link.entityPath);
             break;
@@ -620,8 +632,11 @@ function writeSuggestions(
  * @param projectName - Project name
  * @returns Analysis run ID or null if not found
  */
-export async function getPreviousAnalysisRun(projectName: string): Promise<number | null> {
-  const { eq, desc } = await import('drizzle-orm');
+export async function getPreviousAnalysisRun(
+  db: BetterSQLite3Database<typeof schema>,
+  projectName: string,
+): Promise<number | null> {
+  const { eq, desc } = await import("drizzle-orm");
 
   const result = await db
     .select({ id: schema.analysisRun.id })

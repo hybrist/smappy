@@ -8,7 +8,8 @@ export default defineConfig({
     "src/size/index.ts",
     "src/source-map/index.ts",
   ],
-  dts: true,
+  format: "esm",
+  dts: false,
   sourcemap: true,
   tsconfig: "./tsconfig.json",
   exports: {

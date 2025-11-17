@@ -207,9 +207,6 @@ export abstract class BundlerAdapter {
     return {
       bundlerType,
       projectName: this.options.projectName,
-      enableIncremental: this.options.enableIncremental,
-      compareWithPrevious: this.options.compareWithPrevious,
-      maxHistorySize: this.options.maxHistorySize,
     };
   }
 

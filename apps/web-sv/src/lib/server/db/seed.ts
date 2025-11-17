@@ -3,7 +3,7 @@
  * Provides realistic example analysis data that can be used across tests and for manual seeding
  */
 
-import { ingestBundle, type BundleIngestionInput } from '../ingestion/index.js';
+import { ingestBundle, type BundleIngestionInput } from '@smappy/cli/ingestion';
 import type { BundleInput, ModuleInput, ChunkInput } from '@smappy/core';
 import { db } from './index.js';
 import { sql } from 'drizzle-orm';
@@ -63,7 +63,6 @@ export function createMinimalSeedData(): BundleIngestionInput {
     options: {
       bundlerType: 'vite',
       projectName: 'minimal-example',
-      enableIncremental: false,
     },
     bundles,
     modules,
@@ -222,7 +221,6 @@ export function formatCurrency(amount: number, currency = 'USD'): string {
     options: {
       bundlerType: 'vite',
       projectName,
-      enableIncremental: false,
     },
     bundles,
     modules,
@@ -242,7 +240,6 @@ export function createComprehensiveSeedData(): BundleIngestionInput[] {
       options: {
         bundlerType: 'webpack',
         projectName: 'legacy-webapp',
-        enableIncremental: false,
       },
       bundles: [
         {
@@ -320,7 +317,7 @@ export async function seedDatabase(profile: SeedProfile = 'realistic', clean = t
 
   for (const dataset of datasets) {
     console.log(`  📦 Ingesting project: ${dataset.options.projectName}`);
-    await ingestBundle(dataset);
+    await ingestBundle(db, dataset);
   }
 
   console.log('✅ Database seeded successfully!');
@@ -337,7 +334,6 @@ export function createDashboardTestData() {
       options: {
         bundlerType: 'vite',
         projectName,
-        enableIncremental: false,
       },
       bundles: [
         {
@@ -369,7 +365,6 @@ export function createDashboardTestData() {
     options: {
       bundlerType: 'vite',
       projectName: 'dashboard-test-project',
-      enableIncremental: false,
     },
     bundles: [
       {
