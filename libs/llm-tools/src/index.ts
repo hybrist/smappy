@@ -104,7 +104,9 @@ const listSortSchema = z.object({
     .describe('Sort order: "size" (default) or "name"'),
 });
 const chunkDetailsSchema = z.object({
-  chunkName: z.string().describe('The name of the chunk file (e.g., "main.js")'),
+  chunkName: z
+    .string()
+    .describe('The name of the chunk file (e.g., "main.js")'),
 });
 const sourceFileAnalysisSchema = z.object({
   filePath: z
@@ -120,7 +122,9 @@ const fragmentSearchSchema = z.object({
 /**
  * Create a set of tool definitions backed by @smappy/store data.
  */
-export function createBundleTools(context: BundleToolContext): LlmToolDefinitions {
+export function createBundleTools(
+  context: BundleToolContext,
+): LlmToolDefinitions {
   const ctx = normalizeContext(context);
 
   return {
@@ -136,7 +140,7 @@ export function createBundleTools(context: BundleToolContext): LlmToolDefinition
     },
     list_bundle_chunks: {
       description:
-        'List all chunks (output files) in the bundle with their sizes. Useful when the user wants to see what chunks exist or which chunks are largest. Can sort by size (default) or name.',
+        "List all chunks (output files) in the bundle with their sizes. Useful when the user wants to see what chunks exist or which chunks are largest. Can sort by size (default) or name.",
       inputSchema: listSortSchema,
       type: "function",
       execute: async (input) => {
@@ -166,7 +170,7 @@ export function createBundleTools(context: BundleToolContext): LlmToolDefinition
     },
     get_source_file_analysis: {
       description:
-        'Get detailed analysis of a specific source file showing all functions, classes, and other code fragments. Use this when the user asks about what is in a specific source file.',
+        "Get detailed analysis of a specific source file showing all functions, classes, and other code fragments. Use this when the user asks about what is in a specific source file.",
       inputSchema: sourceFileAnalysisSchema,
       type: "function",
       execute: async (input) => {
@@ -198,7 +202,9 @@ function normalizeContext(context: BundleToolContext): NormalizedContext {
   const db = context.db ?? context.store?.db;
 
   if (!db) {
-    throw new Error("A store or database instance is required to create LLM tools.");
+    throw new Error(
+      "A store or database instance is required to create LLM tools.",
+    );
   }
 
   if (!Number.isFinite(context.analysisId)) {
@@ -217,7 +223,9 @@ function normalizeContext(context: BundleToolContext): NormalizedContext {
   };
 }
 
-async function getBundleOverview(context: NormalizedContext): Promise<BundleOverview> {
+async function getBundleOverview(
+  context: NormalizedContext,
+): Promise<BundleOverview> {
   const { db, analysisId, bundle } = context;
 
   const analysis = db
@@ -235,24 +243,24 @@ async function getBundleOverview(context: NormalizedContext): Promise<BundleOver
 
   const selectedBundle = getBundleById(db, analysisId, bundle.id);
 
-  const bundleStats =
-    db
-      .select({
-        totalSize: sql<number>`coalesce(sum(${schema.bundle.size}), 0)`.as("totalSize"),
-        chunkCount: sql<number>`count(*)`.as("chunkCount"),
-      })
-      .from(schema.bundle)
-      .where(eq(schema.bundle.analysisRunId, analysisId))
-      .get() ?? { totalSize: 0, chunkCount: 0 };
+  const bundleStats = db
+    .select({
+      totalSize: sql<number>`coalesce(sum(${schema.bundle.size}), 0)`.as(
+        "totalSize",
+      ),
+      chunkCount: sql<number>`count(*)`.as("chunkCount"),
+    })
+    .from(schema.bundle)
+    .where(eq(schema.bundle.analysisRunId, analysisId))
+    .get() ?? { totalSize: 0, chunkCount: 0 };
 
-  const sourceCount =
-    db
-      .select({
-        count: sql<number>`count(*)`.as("count"),
-      })
-      .from(schema.module)
-      .where(eq(schema.module.analysisRunId, analysisId))
-      .get() ?? { count: 0 };
+  const sourceCount = db
+    .select({
+      count: sql<number>`count(*)`.as("count"),
+    })
+    .from(schema.module)
+    .where(eq(schema.module.analysisRunId, analysisId))
+    .get() ?? { count: 0 };
 
   const largestChunks = db
     .select({
@@ -293,7 +301,11 @@ async function listBundleChunks(
     })
     .from(schema.bundle)
     .where(eq(schema.bundle.analysisRunId, analysisId))
-    .orderBy(sortBy === "name" ? asc(schema.bundle.fileName) : desc(schema.bundle.size))
+    .orderBy(
+      sortBy === "name"
+        ? asc(schema.bundle.fileName)
+        : desc(schema.bundle.size),
+    )
     .all();
 
   return rows.map((row) => {
@@ -313,14 +325,18 @@ async function getChunkDetails(
   const { db, analysisId } = context;
   const bundleRow = getBundleByName(db, analysisId, chunkName);
 
-  const moduleSizeColumn = sql<number>`sum(${schema.sourceMapEntry.byteLength})`.as("totalSize");
+  const moduleSizeColumn =
+    sql<number>`sum(${schema.sourceMapEntry.byteLength})`.as("totalSize");
   const moduleRows = db
     .select({
       filePath: schema.module.filePath,
       totalSize: moduleSizeColumn,
     })
     .from(schema.sourceMapEntry)
-    .innerJoin(schema.symbol, eq(schema.sourceMapEntry.symbolId, schema.symbol.id))
+    .innerJoin(
+      schema.symbol,
+      eq(schema.sourceMapEntry.symbolId, schema.symbol.id),
+    )
     .innerJoin(schema.module, eq(schema.symbol.moduleId, schema.module.id))
     .where(
       and(
@@ -331,7 +347,9 @@ async function getChunkDetails(
     .groupBy(schema.module.id)
     .all();
 
-  moduleRows.sort((a, b) => Number(b.totalSize ?? 0) - Number(a.totalSize ?? 0));
+  moduleRows.sort(
+    (a, b) => Number(b.totalSize ?? 0) - Number(a.totalSize ?? 0),
+  );
 
   return {
     name: bundleRow.fileName ?? chunkName,
@@ -407,7 +425,10 @@ async function getSourceFileAnalysis(
     })
     .from(schema.symbol)
     .where(eq(schema.symbol.moduleId, targetModule.id))
-    .orderBy(asc(schema.symbol.sourceStartLine), asc(schema.symbol.sourceStartCol))
+    .orderBy(
+      asc(schema.symbol.sourceStartLine),
+      asc(schema.symbol.sourceStartCol),
+    )
     .all();
 
   const fragments: SourceFragment[] = rows.map((fragment) => {
@@ -515,7 +536,9 @@ function getBundleByName(db: StoreDb, analysisId: number, chunkName: string) {
     .get();
 
   if (!row) {
-    throw new Error(`Chunk ${chunkName} was not found in analysis ${analysisId}`);
+    throw new Error(
+      `Chunk ${chunkName} was not found in analysis ${analysisId}`,
+    );
   }
 
   return row;

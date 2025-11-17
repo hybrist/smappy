@@ -6,6 +6,7 @@ import { schema } from '@smappy/store';
 import { desc, eq } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
 import type { AnalysisSummary } from '$lib/server/query/types';
+import type { ChatStreamEvent } from '$lib/chat/stream-schema';
 
 function createSystemPrompt(context?: {
   projectName?: string;
@@ -144,7 +145,7 @@ export const POST: RequestHandler = async ({ request }) => {
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
-        const send = (payload: unknown) => {
+        const send = (payload: ChatStreamEvent) => {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`));
         };
 

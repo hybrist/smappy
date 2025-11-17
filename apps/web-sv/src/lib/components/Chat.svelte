@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { AnalysisSummary } from '$lib/server/query/types';
   import { marked } from 'marked';
+  import { chatStreamEventSchema } from '$lib/chat/stream-schema';
+  import * as v from 'valibot';
 
   interface ToolCall {
     toolCallId: string;
@@ -128,8 +130,16 @@
     }
   }
 
-  function handleStreamEvent(data: any) {
-    switch (data?.type) {
+  function handleStreamEvent(raw: unknown) {
+    const parsed = v.safeParse(chatStreamEventSchema, raw);
+    if (!parsed.success) {
+      console.warn('Chat stream parse error', parsed.issues);
+      return;
+    }
+
+    const data = parsed.output;
+
+    switch (data.type) {
       case 'text': {
         const updated = [...messages];
         const last = updated[updated.length - 1];

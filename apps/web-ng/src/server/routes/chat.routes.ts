@@ -1,8 +1,8 @@
+import { createBundleTools } from '@smappy/llm-tools';
+import { createStore } from '@smappy/store';
 import { stepCountIs, streamText } from 'ai';
 import { Router } from 'express';
 import { ollama } from 'ollama-ai-provider-v2';
-import { createBundleTools } from '@smappy/llm-tools';
-import { createStore } from '@smappy/store';
 
 const router = Router();
 const store = createStore();
@@ -23,7 +23,10 @@ router.post('/', async (req, res) => {
     const parsedAnalysisId = Number(analysisId);
     const parsedBundleId = Number(bundleId);
 
-    if (!Number.isFinite(parsedAnalysisId) || !Number.isFinite(parsedBundleId)) {
+    if (
+      !Number.isFinite(parsedAnalysisId) ||
+      !Number.isFinite(parsedBundleId)
+    ) {
       res
         .status(400)
         .json({ error: 'analysisId and bundleId are required numeric values' });
