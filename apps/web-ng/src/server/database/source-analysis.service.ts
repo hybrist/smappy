@@ -273,10 +273,7 @@ export class ServerSourceAnalysisService {
       const fragmentsJson = JSON.stringify(fragments);
       insertAnalysis.run(bundleId, filePath, fragmentsJson);
     } catch (error) {
-      console.error(
-        `Failed to store source analysis for ${filePath}:`,
-        error,
-      );
+      console.error(`Failed to store source analysis for ${filePath}:`, error);
     }
   }
 
@@ -300,10 +297,7 @@ export class ServerSourceAnalysisService {
         return JSON.parse(result.fragments);
       }
     } catch (error) {
-      console.error(
-        `Failed to load source analysis for ${filePath}:`,
-        error,
-      );
+      console.error(`Failed to load source analysis for ${filePath}:`, error);
     }
 
     return null;

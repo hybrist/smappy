@@ -1,15 +1,24 @@
-import { Component, inject, signal, effect, viewChild, ElementRef } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { JsonPipe } from '@angular/common';
+import {
+  Component,
+  effect,
+  ElementRef,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { ChatService } from '../../services/chat.service';
 import { MarkdownPipe } from '../../pipes/markdown-pipe';
+import { ChatService } from '../../services/chat.service';
 
 @Component({
   selector: 'app-chat',
   imports: [FormsModule, JsonPipe, MarkdownPipe],
   template: `
-    <div class="flex flex-col h-[calc(100vh-7rem)] bg-white rounded-lg border border-gray-200 shadow-sm">
+    <div
+      class="flex flex-col h-[calc(100vh-7rem)] bg-white rounded-lg border border-gray-200 shadow-sm"
+    >
       <!-- Header -->
       <div class="bg-white shadow-sm border-b border-gray-200 p-4">
         <div class="max-w-4xl mx-auto flex items-center justify-between">
@@ -48,18 +57,26 @@ import { MarkdownPipe } from '../../pipes/markdown-pipe';
             </div>
           }
 
-          @for (message of chatService.messages(); track $index; let messageIndex = $index) {
+          @for (
+            message of chatService.messages();
+            track $index;
+            let messageIndex = $index
+          ) {
             @if (message.role === 'user') {
               <!-- User Message -->
               <div class="flex justify-end">
-                <div class="max-w-3xl bg-blue-600 text-white rounded-lg px-4 py-3">
+                <div
+                  class="max-w-3xl bg-blue-600 text-white rounded-lg px-4 py-3"
+                >
                   <div class="whitespace-pre-wrap">{{ message.content }}</div>
                 </div>
               </div>
             } @else {
               <!-- Assistant Message -->
               <div class="flex justify-start">
-                <div class="max-w-3xl bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-sm">
+                <div
+                  class="max-w-3xl bg-white border border-gray-200 rounded-lg px-4 py-3 shadow-sm"
+                >
                   <div class="flex items-start">
                     <svg
                       class="w-5 h-5 text-gray-600 mr-2 flex-shrink-0 mt-0.5"
@@ -75,50 +92,103 @@ import { MarkdownPipe } from '../../pipes/markdown-pipe';
                     </svg>
                     <div class="flex-1">
                       @if (message.content) {
-                        <div class="prose prose-sm max-w-none" [innerHTML]="message.content | markdown"></div>
+                        <div
+                          class="prose prose-sm max-w-none"
+                          [innerHTML]="message.content | markdown"
+                        ></div>
                       }
 
                       @if (message.toolCalls && message.toolCalls.length > 0) {
                         <div class="mt-3 space-y-2">
-                          @for (toolCall of message.toolCalls; track $index; let toolIndex = $index) {
-                            <div class="border border-gray-200 rounded bg-gray-50">
+                          @for (
+                            toolCall of message.toolCalls;
+                            track $index;
+                            let toolIndex = $index
+                          ) {
+                            <div
+                              class="border border-gray-200 rounded bg-gray-50"
+                            >
                               <button
-                                (click)="toggleToolCall(messageIndex, toolIndex)"
+                                (click)="
+                                  toggleToolCall(messageIndex, toolIndex)
+                                "
                                 class="w-full flex items-center justify-between p-2 text-sm hover:bg-gray-100 rounded"
                               >
                                 <div class="flex items-center gap-2">
-                                  <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                  <svg
+                                    class="w-4 h-4 text-blue-600"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round"
+                                      stroke-width="2"
+                                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                                    ></path>
+                                    <path
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round"
+                                      stroke-width="2"
+                                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                    ></path>
                                   </svg>
-                                  <span class="font-medium text-gray-700">{{ toolCall.toolName }}</span>
+                                  <span class="font-medium text-gray-700">{{
+                                    toolCall.toolName
+                                  }}</span>
                                   @if (!toolCall.output) {
-                                    <span class="text-xs text-gray-500">(running...)</span>
+                                    <span class="text-xs text-gray-500"
+                                      >(running...)</span
+                                    >
                                   }
                                 </div>
                                 <svg
                                   class="w-4 h-4 text-gray-500 transition-transform"
-                                  [class.rotate-180]="isToolCallExpanded(messageIndex, toolIndex)"
+                                  [class.rotate-180]="
+                                    isToolCallExpanded(messageIndex, toolIndex)
+                                  "
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
                                 >
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                  <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M19 9l-7 7-7-7"
+                                  ></path>
                                 </svg>
                               </button>
 
-                              @if (isToolCallExpanded(messageIndex, toolIndex)) {
+                              @if (
+                                isToolCallExpanded(messageIndex, toolIndex)
+                              ) {
                                 <div class="px-3 pb-3 space-y-2">
                                   @if (hasInputParams(toolCall.input)) {
                                     <div>
-                                      <div class="text-xs font-semibold text-gray-600 mb-1">Input:</div>
-                                      <pre class="text-xs bg-white border border-gray-200 rounded p-2 overflow-x-auto">{{ toolCall.input | json }}</pre>
+                                      <div
+                                        class="text-xs font-semibold text-gray-600 mb-1"
+                                      >
+                                        Input:
+                                      </div>
+                                      <pre
+                                        class="text-xs bg-white border border-gray-200 rounded p-2 overflow-x-auto"
+                                        >{{ toolCall.input | json }}</pre
+                                      >
                                     </div>
                                   }
                                   @if (toolCall.output) {
                                     <div>
-                                      <div class="text-xs font-semibold text-gray-600 mb-1">Output:</div>
-                                      <pre class="text-xs bg-white border border-gray-200 rounded p-2 overflow-x-auto max-h-60 overflow-y-auto">{{ toolCall.output | json }}</pre>
+                                      <div
+                                        class="text-xs font-semibold text-gray-600 mb-1"
+                                      >
+                                        Output:
+                                      </div>
+                                      <pre
+                                        class="text-xs bg-white border border-gray-200 rounded p-2 overflow-x-auto max-h-60 overflow-y-auto"
+                                        >{{ toolCall.output | json }}</pre
+                                      >
                                     </div>
                                   }
                                 </div>
@@ -135,7 +205,9 @@ import { MarkdownPipe } from '../../pipes/markdown-pipe';
           }
 
           @if (chatService.error()) {
-            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            <div
+              class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg"
+            >
               <div class="flex items-start">
                 <svg
                   class="w-5 h-5 mr-2 flex-shrink-0"

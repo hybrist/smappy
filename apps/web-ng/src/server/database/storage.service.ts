@@ -228,7 +228,8 @@ export class ServerStorageService {
   ): void {
     // Find all chunk files (non-map files)
     const chunkFiles = files.filter(
-      (file) => !file.name.endsWith('.map') && !file.name.endsWith('.sourcemap'),
+      (file) =>
+        !file.name.endsWith('.map') && !file.name.endsWith('.sourcemap'),
     );
 
     for (const chunkFile of chunkFiles) {

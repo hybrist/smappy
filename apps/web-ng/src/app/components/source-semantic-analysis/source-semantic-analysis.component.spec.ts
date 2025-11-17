@@ -1,16 +1,16 @@
 import {
   inputBinding,
   provideZonelessChangeDetection,
-  signal,
   resource,
+  signal,
 } from '@angular/core';
-import { TestBed, ComponentFixture, tick, flush } from '@angular/core/testing';
+import { ComponentFixture, flush, TestBed, tick } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
+import { BundleAnalysis } from '../../models/bundle.models';
 import {
   SourceAnalysisResult,
   SourceFragment,
 } from '../../models/source-analysis.models';
-import { BundleAnalysis } from '../../models/bundle.models';
 import { BundleService } from '../../services/bundle.service';
 import { SourceAnalysisService } from '../../services/source-analysis.service';
 import { SourceSemanticAnalysisComponent } from './source-semantic-analysis.component';

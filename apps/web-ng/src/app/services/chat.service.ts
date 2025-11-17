@@ -148,10 +148,14 @@ export class ChatService {
               this.messages.update((messages) => {
                 const updated = [...messages];
                 const lastMessage = updated[updated.length - 1];
-                if (lastMessage && lastMessage.role === 'assistant' && lastMessage.toolCalls) {
+                if (
+                  lastMessage &&
+                  lastMessage.role === 'assistant' &&
+                  lastMessage.toolCalls
+                ) {
                   // Find the tool call with matching ID
                   const toolCall = lastMessage.toolCalls.find(
-                    (tc) => tc.toolCallId === data.toolCallId
+                    (tc) => tc.toolCallId === data.toolCallId,
                   );
                   if (toolCall) {
                     toolCall.output = data.output;

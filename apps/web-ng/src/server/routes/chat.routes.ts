@@ -3,12 +3,12 @@ import { Router } from 'express';
 import { ollama } from 'ollama-ai-provider-v2';
 import { z } from 'zod';
 import {
-  getBundleOverview,
-  listBundleChunks,
-  getChunkDetails,
-  listSourceFiles,
-  getSourceFileAnalysis,
   findFragment,
+  getBundleOverview,
+  getChunkDetails,
+  getSourceFileAnalysis,
+  listBundleChunks,
+  listSourceFiles,
 } from '../services/chat-tools.service.js';
 
 const router = Router();

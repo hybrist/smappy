@@ -1,5 +1,5 @@
-import { serverStorageService } from '../database/storage.service.js';
 import { getDatabase } from '../database/db.js';
+import { serverStorageService } from '../database/storage.service.js';
 
 /**
  * Chat tools service - implements tool functions that the LLM can call
@@ -52,7 +52,9 @@ export async function getBundleOverview(
   // Count source files from source_analysis table
   const db = getDatabase();
   const sourceCount = db
-    .prepare('SELECT COUNT(DISTINCT file_path) as count FROM source_analysis WHERE bundle_id = ?')
+    .prepare(
+      'SELECT COUNT(DISTINCT file_path) as count FROM source_analysis WHERE bundle_id = ?',
+    )
     .get(bundleId) as { count: number } | undefined;
 
   return {
@@ -97,9 +99,7 @@ export async function listBundleChunks(
   const chunks = chunkFiles.map((file) => ({
     name: file.name,
     size: fileContents.get(file.storagePath)?.length || 0,
-    sizeFormatted: formatBytes(
-      fileContents.get(file.storagePath)?.length || 0,
-    ),
+    sizeFormatted: formatBytes(fileContents.get(file.storagePath)?.length || 0),
   }));
 
   if (sortBy === 'size') {
@@ -142,9 +142,7 @@ export async function getChunkDetails(
   const size = chunkContent?.length || 0;
 
   // Try to find source map for this chunk
-  const sourceMapFile = bundle.files.find(
-    (f) => f.name === `${chunkName}.map`,
-  );
+  const sourceMapFile = bundle.files.find((f) => f.name === `${chunkName}.map`);
 
   let sourceFiles: string[] = [];
   if (sourceMapFile) {
@@ -187,7 +185,9 @@ export async function listSourceFiles(
 
   // Get all source files from source_analysis table
   const rows = db
-    .prepare('SELECT DISTINCT file_path FROM source_analysis WHERE bundle_id = ?')
+    .prepare(
+      'SELECT DISTINCT file_path FROM source_analysis WHERE bundle_id = ?',
+    )
     .all(bundleId) as { file_path: string }[];
 
   const sourceFiles: SourceFileInfo[] = rows.map((row) => ({
@@ -300,7 +300,9 @@ export async function findFragment(
   const db = getDatabase();
 
   const rows = db
-    .prepare('SELECT file_path, fragments FROM source_analysis WHERE bundle_id = ?')
+    .prepare(
+      'SELECT file_path, fragments FROM source_analysis WHERE bundle_id = ?',
+    )
     .all(bundleId) as { file_path: string; fragments: string }[];
 
   const results: FragmentSearchResult[] = [];

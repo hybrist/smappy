@@ -1,16 +1,11 @@
 import {
   inputBinding,
   provideZonelessChangeDetection,
+  resource,
   signal,
 } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, provideRouter, Router } from '@angular/router';
-import {
-  ComponentFixture,
-  flush,
-  tick,
-} from '@angular/core/testing';
-import { resource } from '@angular/core';
+import { ComponentFixture, flush, TestBed, tick } from '@angular/core/testing';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 import { BundleAnalysis } from '../../models/bundle.models';
 import { BundleService } from '../../services/bundle.service';
 import {
@@ -83,7 +78,12 @@ describe('SourceFileListComponent', () => {
 
   it('should display badges when provided', () => {
     mockFiles.set([
-      { path: 'src/test.ts', size: 100, displayName: 'test.ts', badge: 'Content Available' },
+      {
+        path: 'src/test.ts',
+        size: 100,
+        displayName: 'test.ts',
+        badge: 'Content Available',
+      },
     ]);
 
     fixture.detectChanges();
@@ -101,7 +101,12 @@ describe('SourceFileListComponent', () => {
   it('should handle clickable and non-clickable files correctly', () => {
     mockFiles.set([
       { path: 'src/default.ts', size: 100, displayName: 'default.ts' }, // Default is clickable
-      { path: 'src/non-clickable.ts', size: 100, displayName: 'non-clickable.ts', clickable: false },
+      {
+        path: 'src/non-clickable.ts',
+        size: 100,
+        displayName: 'non-clickable.ts',
+        clickable: false,
+      },
     ]);
 
     fixture.detectChanges();
