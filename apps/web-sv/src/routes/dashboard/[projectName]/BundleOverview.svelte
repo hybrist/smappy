@@ -3,7 +3,6 @@
   import TreemapVisualization from './TreemapVisualization.svelte';
   import Badge from '$lib/components/ui/Badge.svelte';
   import EmptyState from '$lib/components/ui/EmptyState.svelte';
-  import Card from '$lib/components/ui/Card.svelte';
 
   interface Props {
     bundleBreakdown: Record<string, { count: number; totalSize: number; totalGzipSize: number }>;
