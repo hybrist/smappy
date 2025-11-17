@@ -124,53 +124,9 @@
 </script>
 
 <div class="bundle-overview">
-  <!-- Bundle Breakdown by File Type -->
-  <section class="section" aria-label="Bundle breakdown by file type">
-    <h2 class="section-title">Bundle Breakdown</h2>
-    <div class="breakdown-grid">
-      {#each bundleFileTypes as fileType (fileType)}
-        {@const stats = bundleBreakdown[fileType]}
-        <Card>
-          <div class="flex flex-col gap-3">
-            <div class="flex items-center justify-between">
-              <span
-                class="inline-block rounded-md px-3 py-1 text-xs font-medium capitalize"
-                style="background-color: {getFileTypeColor(fileType)}20; color: {getFileTypeColor(
-                  fileType,
-                )}"
-              >
-                {fileType}
-              </span>
-              <span class="text-sm text-gray-600 dark:text-gray-400"
-                >{stats.count} file{stats.count !== 1 ? 's' : ''}</span
-              >
-            </div>
-            <div class="flex flex-col gap-2">
-              <div class="flex items-center justify-between">
-                <span class="text-sm text-gray-600 dark:text-gray-400">Size:</span>
-                <span class="font-semibold text-gray-900 dark:text-white"
-                  >{formatBytes(stats.totalSize)}</span
-                >
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="text-sm text-gray-600 dark:text-gray-400">Gzip:</span>
-                <span class="font-semibold text-gray-900 dark:text-white"
-                  >{formatBytes(stats.totalGzipSize)}</span
-                >
-              </div>
-            </div>
-          </div>
-        </Card>
-      {/each}
-    </div>
-  </section>
-
   <!-- Treemap Visualization -->
   <section class="section" aria-label="Module size treemap">
     <h2 class="section-title">Module Size Treemap</h2>
-    <p class="section-description">
-      Interactive visualization of module sizes. Click on folders to drill down, hover for details.
-    </p>
     <TreemapVisualization {analysisId} />
   </section>
 
@@ -446,25 +402,6 @@
     .section-title {
       color: #ffffff;
     }
-  }
-
-  .section-description {
-    margin: 0;
-    font-size: 0.875rem;
-    color: #6b7280;
-    line-height: 1.5;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .section-description {
-      color: #9ca3af;
-    }
-  }
-
-  .breakdown-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1rem;
   }
 
   .file-type-badge.small {
