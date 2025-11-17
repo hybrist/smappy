@@ -37,7 +37,6 @@
     "@jridgewell/gen-mapping": "^0.3.13",
     "@jridgewell/source-map": "^0.3.11",
     "@jridgewell/trace-mapping": "^0.3.31",
-    "@oxc-parser/binding-wasm32-wasi": "^0.73.2",
     "@tailwindcss/postcss": "^4.1.16",
     "ai": "^5.0.86",
     "better-sqlite3": "^12.4.1",
