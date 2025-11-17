@@ -29,7 +29,7 @@ export interface DatabaseOptions {
  */
 function resolveDatabasePath(options?: DatabaseOptions): string {
   // Check environment variable first
-  const envPath = process.env['SMAPPY_DB_PATH'];
+  const envPath = process.env["SMAPPY_DB_PATH"];
   if (envPath) {
     return expandPath(envPath);
   }

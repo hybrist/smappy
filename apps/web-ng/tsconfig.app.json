@@ -4,8 +4,19 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/app",
-    "types": ["@angular/localize", "node"]
+    "types": [
+      "@angular/localize",
+      "node"
+    ]
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.spec.ts"]
+  "include": [
+    "src/**/*.ts",
+    "../../libs/store/src/**/*.ts",
+    "../../libs/llm-tools/src/**/*.ts"
+  ],
+  "exclude": [
+    "src/**/*.spec.ts",
+    "../../libs/store/src/**/*.spec.ts",
+    "../../libs/llm-tools/src/**/*.spec.ts"
+  ]
 }

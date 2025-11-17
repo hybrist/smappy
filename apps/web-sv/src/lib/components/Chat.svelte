@@ -303,7 +303,7 @@
               </div>
               <div class="text-sm break-words whitespace-pre-wrap">
                 {#if message.role === 'assistant'}
-                  <div class="prose prose-sm max-w-none dark:prose-invert">
+                  <div class="prose prose-sm dark:prose-invert max-w-none">
                     <!-- Sanitized via DOMPurify before rendering -->
                     <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                     {@html renderMarkdown(message.content)}
