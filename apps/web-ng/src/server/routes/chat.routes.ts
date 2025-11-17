@@ -1,17 +1,11 @@
 import { stepCountIs, streamText } from 'ai';
 import { Router } from 'express';
 import { ollama } from 'ollama-ai-provider-v2';
-import { z } from 'zod';
-import {
-  findFragment,
-  getBundleOverview,
-  getChunkDetails,
-  getSourceFileAnalysis,
-  listBundleChunks,
-  listSourceFiles,
-} from '../services/chat-tools.service.js';
+import { createBundleTools } from '@smappy/llm-tools';
+import { createStore } from '@smappy/store';
 
 const router = Router();
+const store = createStore();
 
 /**
  * POST /api/chat
@@ -19,10 +13,33 @@ const router = Router();
  */
 router.post('/', async (req, res) => {
   try {
-    const { messages, bundleId } = req.body;
+    const { messages, analysisId, bundleId } = req.body;
 
     if (!messages || !Array.isArray(messages)) {
       res.status(400).json({ error: 'Messages array is required' });
+      return;
+    }
+
+    const parsedAnalysisId = Number(analysisId);
+    const parsedBundleId = Number(bundleId);
+
+    if (!Number.isFinite(parsedAnalysisId) || !Number.isFinite(parsedBundleId)) {
+      res
+        .status(400)
+        .json({ error: 'analysisId and bundleId are required numeric values' });
+      return;
+    }
+
+    let tools;
+    try {
+      tools = createBundleTools({
+        store,
+        analysisId: parsedAnalysisId,
+        bundle: { id: parsedBundleId },
+      });
+    } catch (toolError) {
+      console.error('Failed to initialize LLM tools:', toolError);
+      res.status(400).json({ error: 'Invalid bundle or analysis context' });
       return;
     }
 
@@ -40,88 +57,7 @@ router.post('/', async (req, res) => {
               You are given a message from a user about a JavaScript bundle.
               It consists of a set of chunks that are loaded together.`,
       stopWhen: stepCountIs(10),
-      tools: {
-        get_bundle_overview: {
-          description:
-            'Get a high-level overview of the bundle including total size, chunk count, source file count, and the largest chunks. Use this when the user asks about bundle size, contents, or general information.',
-          inputSchema: z.object({}),
-          type: 'function',
-          execute: async () => {
-            return await getBundleOverview(bundleId);
-          },
-        },
-        list_bundle_chunks: {
-          description:
-            'List all chunks in the bundle with their sizes. Useful when the user wants to see what chunks exist or which chunks are largest. Can sort by size (default) or name.',
-          inputSchema: z.object({
-            sortBy: z
-              .enum(['size', 'name'])
-              .optional()
-              .describe('Sort order: "size" (default) or "name"'),
-          }),
-          type: 'function',
-          execute: async ({ sortBy }) => {
-            return await listBundleChunks(bundleId, sortBy);
-          },
-        },
-        get_chunk_details: {
-          description:
-            'Get detailed information about a specific chunk including its size and source files it contains. Use this when the user asks about a particular chunk file.',
-          inputSchema: z.object({
-            chunkName: z
-              .string()
-              .describe('The name of the chunk file (e.g., "main.js")'),
-          }),
-          type: 'function',
-          execute: async ({ chunkName }) => {
-            return await getChunkDetails(bundleId, chunkName);
-          },
-        },
-        list_source_files: {
-          description:
-            'List all source files in the bundle with their estimated sizes. Use this when the user wants to see what source files are in the bundle or which source files are largest.',
-          inputSchema: z.object({
-            sortBy: z
-              .enum(['size', 'name'])
-              .optional()
-              .describe('Sort order: "size" (default) or "name"'),
-          }),
-          type: 'function',
-          execute: async ({ sortBy }) => {
-            return await listSourceFiles(bundleId, sortBy);
-          },
-        },
-        get_source_file_analysis: {
-          description:
-            'Get detailed analysis of a specific source file showing all classes, functions, methods, and other code fragments. Use this when the user asks about what is in a specific source file.',
-          inputSchema: z.object({
-            filePath: z
-              .string()
-              .describe(
-                'The path to the source file (e.g., "src/components/App.tsx")',
-              ),
-          }),
-          type: 'function',
-          execute: async ({ filePath }) => {
-            return await getSourceFileAnalysis(bundleId, filePath);
-          },
-        },
-        find_fragment: {
-          description:
-            'Search for functions, classes, methods, or other code fragments by name across all source files. Use this when the user is looking for a specific function or class.',
-          inputSchema: z.object({
-            searchTerm: z
-              .string()
-              .describe(
-                'The search term to find in fragment names (case-insensitive)',
-              ),
-          }),
-          type: 'function',
-          execute: async ({ searchTerm }) => {
-            return await findFragment(bundleId, searchTerm);
-          },
-        },
-      },
+      tools,
     });
 
     // Stream all parts from AI SDK to SSE format (includes text and tool calls)
