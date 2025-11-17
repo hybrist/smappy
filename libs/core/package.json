@@ -3,35 +3,20 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./src/index.ts"
-    },
-    "./ast": {
-      "types": "./dist/ast/index.d.ts",
-      "default": "./src/ast/index.ts"
-    },
-    "./graph": {
-      "types": "./dist/graph/index.d.ts",
-      "default": "./src/graph/index.ts"
-    },
-    "./size": {
-      "types": "./dist/size/index.d.ts",
-      "default": "./src/size/index.ts"
-    },
-    "./source-map": {
-      "types": "./dist/source-map/index.d.ts",
-      "default": "./src/source-map/index.ts"
-    },
+    ".": "./src/index.ts",
+    "./ast": "./src/ast/index.ts",
+    "./graph": "./src/graph/index.ts",
+    "./size": "./src/size/index.ts",
+    "./source-map": "./src/source-map/index.ts",
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsdown && tsc -p tsconfig.build.json && find dist -name '*.d.ts' -exec sed -i'' -e 's/from \"\\.\\.\\?\\(.*\\)\\.ts\"/from \".\\1.js\"/g' {} \\;",
+    "build": "tsdown && tsc -p tsconfig.build.json && node scripts/fix-dts-imports.cjs",
     "check": "tsdown --no-clean --report false && prettier --check . && tsc",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "test": "vitest --run",
-    "prepare": "tsdown && tsc -p tsconfig.build.json && find dist -name '*.d.ts' -exec sed -i'' -e 's/from \"\\.\\.\\?\\(.*\\)\\.ts\"/from \".\\1.js\"/g' {} \\;"
+    "prepare": "tsdown && tsc -p tsconfig.build.json && node scripts/fix-dts-imports.cjs"
   },
   "dependencies": {
     "@babel/parser": "^7.28.5",
