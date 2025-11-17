@@ -19,6 +19,10 @@ export interface BundleInput {
   type: "js" | "mjs" | "cjs" | "jsx" | "tsx" | "ts";
   /** Optional reference to source map content */
   sourceMapReference?: string;
+  /** Optional size in bytes (used when content is not available) */
+  size?: number;
+  /** Optional gzip size in bytes (used when content is not available) */
+  gzipSize?: number;
 }
 
 /**

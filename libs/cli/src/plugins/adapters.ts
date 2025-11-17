@@ -189,6 +189,8 @@ export abstract class BundlerAdapter {
         content: bundleContent,
         type: bundleType,
         sourceMapReference,
+        size: bundlerBundle.size,
+        gzipSize: bundlerBundle.gzipSize,
       });
     }
 
