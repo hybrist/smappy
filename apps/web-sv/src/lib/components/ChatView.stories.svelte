@@ -20,7 +20,8 @@
   });
 </script>
 
-<script>
+<script lang="ts">
+  import type { UIMessage } from 'ai';
   const baseArgs = {
     input: '',
     isLoading: false,
@@ -35,34 +36,55 @@
   };
 
   const messages = [
-    { role: 'user', content: 'Hello, who are you?' },
     {
-      role: 'assistant',
-      content: 'I am a large language model, trained by Google. What can I do for you today?',
+      id: '1',
+      role: 'user',
+      parts: [{ type: 'text', text: 'Hello, who are you?' }],
     },
-    { role: 'user', content: 'Can you help me with some code?' },
-  ];
+    {
+      id: '2',
+      role: 'assistant',
+      parts: [
+        {
+          type: 'text',
+          text: 'I am a large language model, trained by Google. What can I do for you today?',
+        },
+      ],
+    },
+    {
+      id: '3',
+      role: 'user',
+      parts: [{ type: 'text', text: 'Can you help me with some code?' }],
+    },
+  ] satisfies UIMessage[];
 
   const toolCallMessages = [
     ...messages,
     {
+      id: '4',
       role: 'assistant',
-      content: 'I can help with that. I will call a tool to get the file content first.',
-      toolCalls: [
+      parts: [
         {
-          toolCallId: '123',
-          toolName: 'readFile',
-          input: { path: './src/main.ts' },
+          type: 'text',
+          text: 'I can help with that. I will call a tool to get the file content first.',
         },
         {
+          type: 'tool-readFile',
+          toolCallId: '123',
+          state: 'output-available',
+          input: { path: './src/main.ts' },
+          output: { content: '/* main.ts content */' },
+        },
+        {
+          type: 'tool-writeFile',
           toolCallId: '456',
-          toolName: 'writeFile',
+          state: 'output-available',
           input: { path: './src/main.ts', content: 'console.log("hello world")' },
           output: { success: true },
         },
       ],
     },
-  ];
+  ] satisfies UIMessage[];
 </script>
 
 <Story name="Empty" args={{ ...baseArgs, messages: [] }} />

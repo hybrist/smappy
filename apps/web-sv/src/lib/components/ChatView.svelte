@@ -1,19 +1,7 @@
 <script lang="ts">
   import { marked } from 'marked';
   import DOMPurify from 'isomorphic-dompurify';
-
-  interface ToolCall {
-    toolCallId: string;
-    toolName: string;
-    input: unknown;
-    output?: unknown;
-  }
-
-  import type { ChatMessage } from '$lib/chat/request-schema';
-
-  type Message = ChatMessage & {
-    toolCalls?: ToolCall[];
-  };
+  import { isToolOrDynamicToolUIPart, type UIMessage } from 'ai';
 
   let {
     messages,
@@ -28,7 +16,7 @@
     onModelChange,
     onToggleToolCall,
   }: {
-    messages: Message[];
+    messages: UIMessage[];
     input: string;
     isLoading: boolean;
     error: string | null;
@@ -155,69 +143,64 @@
                 </span>
               </div>
               <div class="text-sm break-words whitespace-pre-wrap">
-                {#if message.role === 'assistant'}
-                  <div class="prose prose-sm dark:prose-invert max-w-none">
-                    <!-- Sanitized via DOMPurify before rendering -->
-                    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                    {@html renderMarkdown(message.content)}
-                  </div>
-                {:else}
-                  <div>{message.content}</div>
-                {/if}
-              </div>
-              {#if message.toolCalls && message.toolCalls.length > 0}
-                <div class="mt-3 space-y-2">
-                  {#each message.toolCalls as toolCall, toolIndex (toolCall.toolCallId)}
-                    <div
-                      class="rounded-md bg-white/80 text-xs text-gray-800 dark:bg-gray-900/70 dark:text-gray-100"
-                    >
-                      <button
-                        type="button"
-                        class="flex w-full items-center justify-between gap-3 border-b border-gray-200 px-3 py-2 text-left dark:border-gray-800"
-                        onclick={() => onToggleToolCall(index, toolIndex)}
+                <div class="prose prose-sm dark:prose-invert max-w-none">
+                  {#each message.parts as part, partIndex (partIndex)}
+                    {#if part.type === 'text'}
+                      <!-- Sanitized via DOMPurify before rendering -->
+                      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                      {@html renderMarkdown(part.text)}
+                    {:else if isToolOrDynamicToolUIPart(part)}
+                      <div
+                        class="rounded-md bg-white/80 text-xs text-gray-800 dark:bg-gray-900/70 dark:text-gray-100"
                       >
-                        <div class="font-semibold">
-                          🔧 {toolCall.toolName}
-                          <span class="ml-2 text-[10px] tracking-wide text-gray-500 uppercase">
-                            {toolCall.output === undefined ? 'pending' : 'done'}
+                        <button
+                          type="button"
+                          class="flex w-full items-center justify-between gap-3 border-b border-gray-200 px-3 py-2 text-left dark:border-gray-800"
+                          onclick={() => onToggleToolCall(index, partIndex)}
+                        >
+                          <div class="font-semibold">
+                            🔧 {'toolName' in part ? part.toolName : part.type.slice(5)}
+                            <span class="ml-2 text-[10px] tracking-wide text-gray-500 uppercase">
+                              {part.output === undefined ? 'pending' : 'done'}
+                            </span>
+                          </div>
+                          <span class="text-[11px] font-medium text-blue-600 dark:text-blue-300">
+                            {isToolCallExpanded(index, partIndex) ? 'Hide' : 'Show'}
                           </span>
-                        </div>
-                        <span class="text-[11px] font-medium text-blue-600 dark:text-blue-300">
-                          {isToolCallExpanded(index, toolIndex) ? 'Hide' : 'Show'}
-                        </span>
-                      </button>
-                      {#if isToolCallExpanded(index, toolIndex)}
-                        <div class="space-y-3 px-3 py-3">
-                          {#if hasInputParams(toolCall.input)}
-                            <div>
-                              <div class="text-[11px] tracking-wide text-gray-500 uppercase">
-                                Input
+                        </button>
+                        {#if isToolCallExpanded(index, partIndex)}
+                          <div class="space-y-3 px-3 py-3">
+                            {#if hasInputParams(part.input)}
+                              <div>
+                                <div class="text-[11px] tracking-wide text-gray-500 uppercase">
+                                  Input
+                                </div>
+                                <pre
+                                  class="mt-1 rounded bg-gray-900/80 p-2 text-[11px] text-gray-100 dark:bg-black/40">{formatJSON(
+                                    part.input,
+                                  )}</pre>
                               </div>
-                              <pre
-                                class="mt-1 rounded bg-gray-900/80 p-2 text-[11px] text-gray-100 dark:bg-black/40">{formatJSON(
-                                  toolCall.input,
-                                )}</pre>
-                            </div>
-                          {/if}
-                          {#if toolCall.output !== undefined}
-                            <div>
-                              <div class="text-[11px] tracking-wide text-gray-500 uppercase">
-                                Result
+                            {/if}
+                            {#if part.output !== undefined}
+                              <div>
+                                <div class="text-[11px] tracking-wide text-gray-500 uppercase">
+                                  Result
+                                </div>
+                                <pre
+                                  class="mt-1 rounded bg-gray-900/80 p-2 text-[11px] text-gray-100 dark:bg-black/40">{formatJSON(
+                                    part.output,
+                                  )}</pre>
                               </div>
-                              <pre
-                                class="mt-1 rounded bg-gray-900/80 p-2 text-[11px] text-gray-100 dark:bg-black/40">{formatJSON(
-                                  toolCall.output,
-                                )}</pre>
-                            </div>
-                          {:else}
-                            <div class="text-gray-500">Waiting for result…</div>
-                          {/if}
-                        </div>
-                      {/if}
-                    </div>
+                            {:else}
+                              <div class="text-gray-500">Waiting for result…</div>
+                            {/if}
+                          </div>
+                        {/if}
+                      </div>
+                    {/if}
                   {/each}
                 </div>
-              {/if}
+              </div>
             </div>
           </div>
         {/each}

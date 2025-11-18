@@ -80,6 +80,7 @@
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.42",
     "@ai-sdk/openai": "^2.0.64",
+    "@ai-sdk/svelte": "^3.0.93",
     "@smappy/core": "workspace:*",
     "@smappy/llm-tools": "workspace:*",
     "@smappy/store": "workspace:*",
