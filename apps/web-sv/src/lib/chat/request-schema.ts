@@ -1,10 +1,5 @@
 import * as v from 'valibot';
 
-export const chatMessageSchema = v.object({
-  role: v.picklist(['user', 'assistant']),
-  content: v.string(),
-});
-
 const numericIdSchema = v.pipe(
   v.union([v.number(), v.string()]),
   v.transform((value) => (typeof value === 'string' ? Number(value) : value)),
@@ -31,12 +26,11 @@ export const chatContextSchema = v.object({
 });
 
 export const chatRequestSchema = v.object({
-  messages: v.array(chatMessageSchema),
+  messages: v.array(v.unknown()),
   model: v.optional(v.string()),
   context: v.optional(chatContextSchema),
   analysisId: v.optional(numericIdSchema),
   bundleId: v.optional(numericIdSchema),
 });
 
-export type ChatMessage = v.InferOutput<typeof chatMessageSchema>;
 export type ChatRequestBody = v.InferOutput<typeof chatRequestSchema>;
