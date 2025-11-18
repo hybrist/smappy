@@ -16,3 +16,6 @@ project.inlang
 # Miscellaneous
 /static/
 /drizzle/
+
+*storybook.log
+storybook-static
