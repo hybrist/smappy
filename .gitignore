@@ -31,11 +31,7 @@ project.inlang/
 # Playwright
 test-results/
 playwright-report/
+.playwright-mcp/
 
 # SQLite
 *.db
-
-# Playwright
-test-results/
-playwright-report/
-.playwright-mcp/
