@@ -1,0 +1,9 @@
+node_modules
+.vinxi
+dist
+.DS_Store
+*.log
+.env
+.env.local
+.turbo
+*.timestamp_*.js
