@@ -7,7 +7,6 @@ import {
   ArrowRight,
   ChevronRight,
   Layers,
-  AlertCircle,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -29,7 +28,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 // Mock Data for Modules
@@ -92,9 +90,6 @@ const mockModules = [
 
 export function RawModulesView() {
   const [search, setSearch] = useState("");
-  const [selectedModule, setSelectedModule] = useState<
-    (typeof mockModules)[0] | null
-  >(null);
 
   const filteredModules = mockModules.filter(
     (m) =>
@@ -143,11 +138,7 @@ export function RawModulesView() {
           </TableHeader>
           <TableBody>
             {filteredModules.map((module) => (
-              <TableRow
-                key={module.id}
-                className="group cursor-pointer hover:bg-muted/30"
-                onClick={() => setSelectedModule(module)}
-              >
+              <TableRow key={module.id} className="group hover:bg-muted/30">
                 <TableCell className="font-medium">
                   <div className="flex items-start gap-3">
                     <div

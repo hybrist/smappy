@@ -13,19 +13,10 @@ import DashboardPage from "@/routes/dashboard";
 
 const rootRoute = createRootRoute({
   component: () => (
-    <html>
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Smappy - Bundle Analyzer</title>
-      </head>
-      <body>
-        <ThemeProvider defaultTheme="dark" storageKey="smappy-ui-theme">
-          <Outlet />
-        </ThemeProvider>
-        <ScrollRestoration />
-      </body>
-    </html>
+    <ThemeProvider defaultTheme="dark" storageKey="smappy-ui-theme">
+      <Outlet />
+      <ScrollRestoration />
+    </ThemeProvider>
   ),
 });
 
