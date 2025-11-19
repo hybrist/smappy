@@ -1,29 +1,28 @@
-import { useNavigate } from '@tanstack/react-router'
-import { Navbar } from '@/components/layout/navbar'
-import { FileUpload } from '@/components/file-upload'
-import { Mascot } from '@/components/mascot'
-import { Zap, Search, Layers } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { useNavigate } from "@tanstack/react-router";
+import { Navbar } from "@/components/layout/navbar";
+import { FileUpload } from "@/components/file-upload";
+import { Mascot } from "@/components/mascot";
+import { Zap, Search, Layers } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function Home() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const handleUpload = () => {
     // Simulate upload delay then redirect
     setTimeout(() => {
-      navigate({ to: '/dashboard' })
-    }, 1500)
-  }
+      navigate({ to: "/dashboard" });
+    }, 1500);
+  };
 
   return (
     <div className="min-h-screen bg-background font-sans selection:bg-primary/20">
       <Navbar />
-      
+
       <main className="container mx-auto px-4 pt-20 pb-32">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          
           {/* Left Column: Text & CTA */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -35,10 +34,16 @@ export default function Home() {
                 v2.0 AI-Powered Analysis
               </div>
               <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-foreground">
-                Deep dive into your <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-600">bundles</span>.
+                Deep dive into your{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-600">
+                  bundles
+                </span>
+                .
               </h1>
               <p className="text-xl text-muted-foreground max-w-lg leading-relaxed">
-                Smappy visualizes your web application bundles, identifies bloat, and suggests AI-powered optimizations to make your site fly.
+                Smappy visualizes your web application bundles, identifies
+                bloat, and suggests AI-powered optimizations to make your site
+                fly.
               </p>
             </div>
 
@@ -61,7 +66,7 @@ export default function Home() {
           </motion.div>
 
           {/* Right Column: Visuals */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, delay: 0.2 }}
@@ -74,14 +79,16 @@ export default function Home() {
             {/* Mascot & Interface Mockup */}
             <div className="relative z-10 flex flex-col items-center">
               <Mascot className="w-64 h-64 mb-[-40px] z-20 hover:scale-105 transition-transform duration-300" />
-              
+
               {/* Mock Card behind mascot */}
               <div className="w-full max-w-md bg-card/80 backdrop-blur-sm border border-border rounded-2xl shadow-2xl p-6 transform rotate-[-2deg] hover:rotate-0 transition-transform duration-500">
                 <div className="flex items-center gap-2 mb-4 border-b pb-4">
                   <div className="w-3 h-3 rounded-full bg-red-500" />
                   <div className="w-3 h-3 rounded-full bg-yellow-500" />
                   <div className="w-3 h-3 rounded-full bg-green-500" />
-                  <div className="ml-auto font-mono text-xs text-muted-foreground">bundle-analyzer.js</div>
+                  <div className="ml-auto font-mono text-xs text-muted-foreground">
+                    bundle-analyzer.js
+                  </div>
                 </div>
                 <div className="space-y-3 font-mono text-xs">
                   <div className="flex justify-between">
@@ -93,7 +100,9 @@ export default function Home() {
                   </div>
                   <div className="flex justify-between pt-2">
                     <span className="text-muted-foreground">Unused Code</span>
-                    <span className="text-destructive font-bold">450 KB (18%)</span>
+                    <span className="text-destructive font-bold">
+                      450 KB (18%)
+                    </span>
                   </div>
                   <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
                     <div className="bg-destructive w-[18%] h-full" />
@@ -105,6 +114,5 @@ export default function Home() {
         </div>
       </main>
     </div>
-  )
+  );
 }
-

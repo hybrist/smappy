@@ -1,11 +1,15 @@
-import { createRouter as createTanStackRouter, createRootRoute, createRoute } from '@tanstack/react-router'
-import { Outlet, ScrollRestoration } from '@tanstack/react-router'
-import { ThemeProvider } from '@/components/theme-provider'
-import '@/app.css'
+import {
+  createRouter as createTanStackRouter,
+  createRootRoute,
+  createRoute,
+} from "@tanstack/react-router";
+import { Outlet, ScrollRestoration } from "@tanstack/react-router";
+import { ThemeProvider } from "@/components/theme-provider";
+import "@/app.css";
 
 // Import page components
-import HomePage from '@/routes/index'
-import DashboardPage from '@/routes/dashboard'
+import HomePage from "@/routes/index";
+import DashboardPage from "@/routes/dashboard";
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -23,31 +27,30 @@ const rootRoute = createRootRoute({
       </body>
     </html>
   ),
-})
+});
 
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/',
+  path: "/",
   component: HomePage,
-})
+});
 
 const dashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/dashboard',
+  path: "/dashboard",
   component: DashboardPage,
-})
+});
 
-const routeTree = rootRoute.addChildren([indexRoute, dashboardRoute])
+const routeTree = rootRoute.addChildren([indexRoute, dashboardRoute]);
 
 export function createRouter() {
   return createTanStackRouter({
     routeTree,
-  })
+  });
 }
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface Register {
-    router: ReturnType<typeof createRouter>
+    router: ReturnType<typeof createRouter>;
   }
 }
-

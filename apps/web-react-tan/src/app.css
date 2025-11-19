@@ -1,57 +1,58 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: 0 0% 100%;
-  --color-foreground: 222.2 84% 4.9%;
-  --color-primary: 147 51% 47%;
+  /* Light Mode - Smappy Green Theme */
+  --color-background: 120 20% 98%; /* Mint White Background */
+  --color-foreground: 0 0% 11%; /* Charcoal Text */
+  --color-primary: 146 50% 36%; /* Crocodile Green #2E8B57 */
   --color-primary-foreground: 0 0% 100%;
-  --color-secondary: 210 40% 98%;
-  --color-secondary-foreground: 222.2 47.4% 11.2%;
-  --color-destructive: 0 84.2% 60.2%;
-  --color-destructive-foreground: 0 0% 100%;
-  --color-muted: 210 40% 96.1%;
-  --color-muted-foreground: 215.4 16.3% 46.9%;
-  --color-accent: 210 40% 96.1%;
-  --color-accent-foreground: 222.2 47.4% 11.2%;
+  --color-secondary: 51 100% 50%; /* Playful Yellow */
+  --color-secondary-foreground: 0 0% 11%;
+  --color-destructive: 0 84% 60%;
+  --color-destructive-foreground: 0 0% 98%;
+  --color-muted: 146 10% 90%; /* Muted Grayish Green */
+  --color-muted-foreground: 146 10% 40%;
+  --color-accent: 0 100% 71%; /* Coral */
+  --color-accent-foreground: 0 0% 100%;
   --color-card: 0 0% 100%;
-  --color-card-foreground: 222.2 84% 4.9%;
+  --color-card-foreground: 0 0% 11%;
   --color-popover: 0 0% 100%;
-  --color-popover-foreground: 222.2 84% 4.9%;
-  --color-border: 214.3 31.8% 91.4%;
-  --color-input: 214.3 31.8% 91.4%;
-  --color-ring: 147 51% 47%;
+  --color-popover-foreground: 0 0% 11%;
+  --color-border: 146 20% 90%;
+  --color-input: 146 20% 90%;
+  --color-ring: 146 50% 36%;
   --radius: 0.5rem;
 
-  --color-chart-1: 12 76% 61%;
-  --color-chart-2: 173 58% 39%;
-  --color-chart-3: 197 37% 24%;
-  --color-chart-4: 43 74% 66%;
-  --color-chart-5: 27 87% 67%;
+  --color-chart-1: 146 50% 36%; /* Green */
+  --color-chart-2: 51 100% 50%; /* Yellow */
+  --color-chart-3: 0 100% 71%; /* Coral */
+  --color-chart-4: 211 71% 59%; /* Tech Blue */
+  --color-chart-5: 262 83% 58%; /* Purple */
 }
 
 .dark {
-  --color-background: 222.2 84% 4.9%;
-  --color-foreground: 210 40% 98%;
-  --color-primary: 147 51% 47%;
-  --color-primary-foreground: 222.2 84% 4.9%;
-  --color-secondary: 217.2 32.6% 17.5%;
-  --color-secondary-foreground: 210 40% 98%;
-  --color-destructive: 0 62.8% 30.6%;
-  --color-destructive-foreground: 210 40% 98%;
-  --color-muted: 217.2 32.6% 17.5%;
-  --color-muted-foreground: 215 20.2% 65.1%;
-  --color-accent: 217.2 32.6% 17.5%;
-  --color-accent-foreground: 210 40% 98%;
-  --color-card: 222.2 84% 4.9%;
-  --color-card-foreground: 210 40% 98%;
-  --color-popover: 222.2 84% 4.9%;
-  --color-popover-foreground: 210 40% 98%;
-  --color-border: 217.2 32.6% 17.5%;
-  --color-input: 217.2 32.6% 17.5%;
-  --color-ring: 147 51% 47%;
-  
-  --color-sidebar: 240 5.9% 10%;
-  --color-sidebar-accent: 240 3.7% 15.9%;
-  --color-sidebar-accent-foreground: 0 0% 98%;
-}
+  /* Dark Mode - Deep Forest Green Theme */
+  --color-background: 146 30% 10%; /* Deep Forest Green */
+  --color-foreground: 146 10% 95%;
+  --color-primary: 146 50% 45%; /* Slightly lighter green */
+  --color-primary-foreground: 0 0% 100%;
+  --color-secondary: 51 100% 50%;
+  --color-secondary-foreground: 0 0% 11%;
+  --color-destructive: 0 62% 30%;
+  --color-destructive-foreground: 0 0% 98%;
+  --color-muted: 146 20% 20%;
+  --color-muted-foreground: 146 10% 70%;
+  --color-accent: 0 100% 71%;
+  --color-accent-foreground: 0 0% 100%;
+  --color-card: 146 30% 13%;
+  --color-card-foreground: 146 10% 95%;
+  --color-popover: 146 30% 13%;
+  --color-popover-foreground: 146 10% 95%;
+  --color-border: 146 20% 20%;
+  --color-input: 146 20% 20%;
+  --color-ring: 146 50% 45%;
 
+  --color-sidebar: 146 30% 11%;
+  --color-sidebar-accent: 146 20% 20%;
+  --color-sidebar-accent-foreground: 146 10% 95%;
+}
