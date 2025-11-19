@@ -6,3 +6,4 @@ dist
 .env
 .env.local
 .turbo
+*.timestamp_*.js
