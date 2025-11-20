@@ -39,21 +39,32 @@ export default function Dashboard() {
 
         {/* Projects Grid */}
         <div className="grid gap-4 md:grid-cols-3">
-          {projects.map((project) => (
-            <Card key={project.projectName}>
-              <CardHeader>
-                <CardTitle>{project.projectName}</CardTitle>
-                <CardDescription>
-                  {project.totalRuns} analyses
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Link to={`/projects/${project.projectName}`}>
-                  <Button>View Analyses</Button>
-                </Link>
-              </CardContent>
-            </Card>
-          ))}
+          {projects.length === 0 ? (
+            <div className="col-span-3 flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+              <LayoutDashboard className="w-12 h-12 mb-4 text-muted-foreground" />
+              <h2 className="text-lg font-semibold mb-2">No projects found</h2>
+              <p className="mb-4">
+                You don't have any projects yet. Create a new project to get
+                started.
+              </p>
+            </div>
+          ) : (
+            projects.map((project) => (
+              <Card key={project.projectName}>
+                <CardHeader>
+                  <CardTitle>{project.projectName}</CardTitle>
+                  <CardDescription>
+                    {project.totalRuns} analyses
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Link to={`/projects/${project.projectName}`}>
+                    <Button>View Analyses</Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ))
+          )}
         </div>
       </div>
     );

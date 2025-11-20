@@ -7,6 +7,10 @@ import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import * as schema from "./schema.ts";
 import { eq, desc, and, gte, sql } from "drizzle-orm";
 
+export interface AnalysisModuleFilters {
+  // TODO: Define filter properties
+}
+
 /**
  * Options for listing analysis runs
  */
@@ -263,6 +267,12 @@ export function getLatestAnalysisRun(
   return runs.length > 0 ? runs[0] : null;
 }
 
+/**
+ * Get an analysis run by ID
+ * @param db - Database instance
+ * @param id - Analysis run ID
+ * @returns Analysis run or null if not found
+ */
 export function getAnalysisDetails(
   db: BetterSQLite3Database<typeof schema>,
   id: number
@@ -270,15 +280,28 @@ export function getAnalysisDetails(
   return getAnalysisRunById(db, id);
 }
 
+/**
+ * Get the modules for an analysis run
+ * @param db - Database instance
+ * @param id - Analysis run ID
+ * @param filters - Optional filters
+ * @returns Array of modules
+ */
 export function getAnalysisModules(
   db: BetterSQLite3Database<typeof schema>,
   id: number,
-  filters?: any
+  filters?: AnalysisModuleFilters
 ) {
   // TODO: Implement
   return [];
 }
 
+/**
+ * Get the bundles for an analysis run
+ * @param db - Database instance
+ * @param id - Analysis run ID
+ * @returns Array of bundles
+ */
 export function getAnalysisBundles(
   db: BetterSQLite3Database<typeof schema>,
   id: number
@@ -287,6 +310,12 @@ export function getAnalysisBundles(
   return [];
 }
 
+/**
+ * Get the dependency graph for an analysis run
+ * @param db - Database instance
+ * @param id - Analysis run ID
+ * @returns Dependency graph
+ */
 export function getAnalysisDependencyGraph(
   db: BetterSQLite3Database<typeof schema>,
   id: number
@@ -295,6 +324,12 @@ export function getAnalysisDependencyGraph(
   return {};
 }
 
+/**
+ * Get the treemap data for an analysis run
+ * @param db - Database instance
+ * @param id - Analysis run ID
+ * @returns Treemap data
+ */
 export function getAnalysisTreemap(
   db: BetterSQLite3Database<typeof schema>,
   id: number

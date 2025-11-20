@@ -7,8 +7,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { useLoaderData, useParams } from "@tanstack/react-router";
-import { Link } from "@tanstack/react-router";
+import { useLoaderData, useParams, Link } from "@tanstack/react-router";
 
 export default function ProjectAnalysesPage() {
   const analyses = useLoaderData({ from: "/projects/$projectName" });

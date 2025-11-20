@@ -40,8 +40,12 @@ export const getProjectAnalyses = createServerFn(
 );
 
 export const getAnalysisDetails = createServerFn("GET", async (id: string) => {
+  const numericId = parseInt(id);
+  if (isNaN(numericId)) {
+    throw new Error(`Invalid analysis ID: "${id}"`);
+  }
   try {
-    return getAnalysisDetailsQuery(db, parseInt(id));
+    return getAnalysisDetailsQuery(db, numericId);
   } catch (error) {
     console.error(`Failed to fetch analysis details for id "${id}":`, error);
     throw new Error(`Failed to fetch analysis details for id "${id}"`);
@@ -51,8 +55,12 @@ export const getAnalysisDetails = createServerFn("GET", async (id: string) => {
 export const getAnalysisModules = createServerFn(
   "GET",
   async (id: string, filters?: any) => {
+    const numericId = parseInt(id);
+    if (isNaN(numericId)) {
+      throw new Error(`Invalid analysis ID: "${id}"`);
+    }
     try {
-      return getAnalysisModulesQuery(db, parseInt(id), filters);
+      return getAnalysisModulesQuery(db, numericId, filters);
     } catch (error) {
       console.error(`Failed to fetch analysis modules for id "${id}":`, error);
       throw new Error(`Failed to fetch analysis modules for id "${id}"`);
@@ -61,8 +69,12 @@ export const getAnalysisModules = createServerFn(
 );
 
 export const getAnalysisBundles = createServerFn("GET", async (id: string) => {
+  const numericId = parseInt(id);
+  if (isNaN(numericId)) {
+    throw new Error(`Invalid analysis ID: "${id}"`);
+  }
   try {
-    return getAnalysisBundlesQuery(db, parseInt(id));
+    return getAnalysisBundlesQuery(db, numericId);
   } catch (error) {
     console.error(`Failed to fetch analysis bundles for id "${id}":`, error);
     throw new Error(`Failed to fetch analysis bundles for id "${id}"`);
@@ -72,8 +84,12 @@ export const getAnalysisBundles = createServerFn("GET", async (id: string) => {
 export const getAnalysisDependencyGraph = createServerFn(
   "GET",
   async (id: string) => {
+    const numericId = parseInt(id);
+    if (isNaN(numericId)) {
+      throw new Error(`Invalid analysis ID: "${id}"`);
+    }
     try {
-      return getAnalysisDependencyGraphQuery(db, parseInt(id));
+      return getAnalysisDependencyGraphQuery(db, numericId);
     } catch (error) {
       console.error(
         `Failed to fetch analysis dependency graph for id "${id}":`,
@@ -87,8 +103,12 @@ export const getAnalysisDependencyGraph = createServerFn(
 );
 
 export const getAnalysisTreemap = createServerFn("GET", async (id: string) => {
+  const numericId = parseInt(id);
+  if (isNaN(numericId)) {
+    throw new Error(`Invalid analysis ID: "${id}"`);
+  }
   try {
-    return getAnalysisTreemapQuery(db, parseInt(id));
+    return getAnalysisTreemapQuery(db, numericId);
   } catch (error) {
     console.error(`Failed to fetch analysis treemap for id "${id}":`, error);
     throw new Error(`Failed to fetch analysis treemap for id "${id}"`);

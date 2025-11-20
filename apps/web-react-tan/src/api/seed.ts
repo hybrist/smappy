@@ -1,4 +1,3 @@
-import { createDatabase } from "@smappy/store";
 import { saveAnalysisRun } from "@smappy/store/queries";
 import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import type * as schema from "@smappy/store/schema";
