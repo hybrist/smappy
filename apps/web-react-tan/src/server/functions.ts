@@ -109,6 +109,22 @@ export interface TreemapNode {
 }
 
 // ============================================================================
+// Helper Functions
+// ============================================================================
+
+/**
+ * Safely parse JSON string, returning null on error
+ */
+function safeJsonParse<T>(jsonString: string | null): T | null {
+  if (!jsonString) return null;
+  try {
+    return JSON.parse(jsonString) as T;
+  } catch {
+    return null;
+  }
+}
+
+// ============================================================================
 // Server Functions
 // ============================================================================
 
@@ -374,9 +390,13 @@ export async function getAnalysisModules(
     search,
     sortBy = "filePath",
     sortOrder = "asc",
-    page = 1,
-    pageSize = 50,
+    page: rawPage = 1,
+    pageSize: rawPageSize = 50,
   } = filters || {};
+
+  // Validate page and pageSize to prevent negative or unreasonably large values
+  const page = Math.max(1, rawPage);
+  const pageSize = Math.min(Math.max(1, rawPageSize), 1000);
 
   // Build where conditions
   const conditions = [eq(schema.module.analysisRunId, analysisId)];
@@ -442,8 +462,8 @@ export async function getAnalysisModules(
   // Parse JSON fields
   const parsedModules: Module[] = modules.map((m) => ({
     ...m,
-    exports: m.exports ? JSON.parse(m.exports) : null,
-    usedExports: m.usedExports ? JSON.parse(m.usedExports) : null,
+    exports: safeJsonParse<string[]>(m.exports),
+    usedExports: safeJsonParse<string[]>(m.usedExports),
   }));
 
   return {
@@ -545,9 +565,7 @@ export async function getAnalysisDependencyGraph(
       targetModuleId: dep.importedModuleId,
       targetPath: importedPath,
       importType: dep.importType as "static" | "dynamic",
-      importedSymbols: dep.importedSymbols
-        ? JSON.parse(dep.importedSymbols)
-        : null,
+      importedSymbols: safeJsonParse<string[]>(dep.importedSymbols),
     };
 
     // Add as dependency of importer
@@ -563,9 +581,7 @@ export async function getAnalysisDependencyGraph(
         targetModuleId: dep.importerModuleId,
         targetPath: importerPath,
         importType: dep.importType as "static" | "dynamic",
-        importedSymbols: dep.importedSymbols
-          ? JSON.parse(dep.importedSymbols)
-          : null,
+        importedSymbols: safeJsonParse<string[]>(dep.importedSymbols),
       };
       importedNode.dependents.push(reverseEdge);
     }
@@ -578,6 +594,7 @@ export async function getAnalysisDependencyGraph(
  * Get treemap data for hierarchical visualization
  * @param id - Analysis run ID (as string for URL compatibility)
  * @returns Hierarchical treemap data structure
+ * @note Limited to 1000 modules for performance. For larger codebases, consider pagination or filtering.
  */
 export async function getAnalysisTreemap(id: string): Promise<TreemapNode> {
   const analysisId = parseInt(id, 10);
@@ -588,7 +605,7 @@ export async function getAnalysisTreemap(id: string): Promise<TreemapNode> {
     };
   }
 
-  // Get modules for the analysis
+  // Get modules for the analysis (limited to 1000 for performance)
   const modules = await db
     .select({
       id: schema.module.id,

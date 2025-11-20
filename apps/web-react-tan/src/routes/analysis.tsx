@@ -9,8 +9,6 @@ import * as api from "@/api";
 import type { AnalysisRun, Bundle, Module, PaginatedResult } from "@/server/functions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Navbar } from "@/components/layout/navbar";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
 
 type LoaderData = {
   analysis: AnalysisRun | null;
@@ -43,7 +41,6 @@ export const analysisRoute = createRoute({
 function AnalysisPage() {
   // Access loader data with explicit type
   const { analysis, bundles, modules } = analysisRoute.useLoaderData() as LoaderData;
-  const [page, setPage] = useState(1);
 
   if (!analysis) {
     return (
@@ -182,25 +179,7 @@ function AnalysisPage() {
 
             <div className="mt-4 flex items-center justify-between">
               <div className="text-sm text-muted-foreground">
-                Showing {modules.items.length} of {modules.total} modules
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => setPage(page - 1)}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page >= modules.totalPages}
-                  onClick={() => setPage(page + 1)}
-                >
-                  Next
-                </Button>
+                Showing {modules.items.length} of {modules.total} modules (page {modules.page} of {modules.totalPages})
               </div>
             </div>
           </CardContent>
