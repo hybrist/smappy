@@ -26,11 +26,7 @@ const indexRoute = createRoute({
   component: HomePage,
 });
 
-import {
-  getProjects,
-  getProjectAnalyses,
-  getAnalysisDetails,
-} from "@/api";
+import { getProjects, getProjectAnalyses, getAnalysisDetails } from "@/api";
 import AnalysisDetailsPage from "@/routes/analyses.$analysisId";
 
 const dashboardRoute = createRoute({

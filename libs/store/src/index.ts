@@ -111,5 +111,5 @@ export type {
   ProjectData,
 };
 
-// Re-export schema for advanced use cases
-export { schema };
+// Re-export schema and database for advanced use cases
+export { schema, createDatabase };

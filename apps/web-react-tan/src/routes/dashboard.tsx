@@ -8,12 +8,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import {
-  LayoutDashboard,
-  Bot,
-  Package,
-  Database,
-} from "lucide-react";
+import { LayoutDashboard, Bot, Package, Database } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RawModulesView } from "@/components/raw-modules-view";
 import { Link, useLoaderData } from "@tanstack/react-router";
@@ -49,21 +44,30 @@ export default function Dashboard() {
               </p>
             </div>
           ) : (
-            projects.map((project) => (
-              <Card key={project.projectName}>
-                <CardHeader>
-                  <CardTitle>{project.projectName}</CardTitle>
-                  <CardDescription>
-                    {project.totalRuns} analyses
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Link to={`/projects/${project.projectName}`}>
-                    <Button>View Analyses</Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            ))
+            projects.map(
+              (project: {
+                projectName: string;
+                totalRuns: number;
+                latestRunDate: string | null;
+              }) => (
+                <Card key={project.projectName}>
+                  <CardHeader>
+                    <CardTitle>{project.projectName}</CardTitle>
+                    <CardDescription>
+                      {project.totalRuns} analyses
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Link
+                      to="/projects/$projectName"
+                      params={{ projectName: project.projectName }}
+                    >
+                      <Button>View Analyses</Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              ),
+            )
           )}
         </div>
       </div>
@@ -87,7 +91,7 @@ export default function Dashboard() {
                 className={cn(
                   "w-full justify-start",
                   activeTab === "overview" &&
-                    "bg-sidebar-accent text-sidebar-accent-foreground"
+                    "bg-sidebar-accent text-sidebar-accent-foreground",
                 )}
                 onClick={() => setActiveTab("overview")}
               >
@@ -98,7 +102,7 @@ export default function Dashboard() {
                 className={cn(
                   "w-full justify-start",
                   activeTab === "raw-modules" &&
-                    "bg-sidebar-accent text-sidebar-accent-foreground"
+                    "bg-sidebar-accent text-sidebar-accent-foreground",
                 )}
                 onClick={() => setActiveTab("raw-modules")}
               >
@@ -109,7 +113,7 @@ export default function Dashboard() {
                 className={cn(
                   "w-full justify-start",
                   activeTab === "dependencies" &&
-                    "bg-sidebar-accent text-sidebar-accent-foreground"
+                    "bg-sidebar-accent text-sidebar-accent-foreground",
                 )}
                 onClick={() => setActiveTab("dependencies")}
               >

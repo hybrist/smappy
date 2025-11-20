@@ -29,7 +29,7 @@ export default function ProjectAnalysesPage() {
             </div>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
-            {analyses.map((analysis) => (
+            {analyses.map((analysis: { id: number; createdAt: string }) => (
               <Card key={analysis.id}>
                 <CardHeader>
                   <CardTitle>Analysis #{analysis.id}</CardTitle>
@@ -38,7 +38,10 @@ export default function ProjectAnalysesPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Link to={`/analyses/${analysis.id}`}>
+                  <Link
+                    to="/analyses/$analysisId"
+                    params={{ analysisId: String(analysis.id) }}
+                  >
                     <Button>View Details</Button>
                   </Link>
                 </CardContent>

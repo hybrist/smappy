@@ -249,6 +249,9 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: ^1.2.8
         version: 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.6))(@types/react@19.2.6)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@smappy/store':
+        specifier: workspace:*
+        version: link:../../libs/store
       '@tanstack/react-router':
         specifier: ^1.136.18
         version: 1.136.18(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -289,6 +292,9 @@ importers:
       '@tailwindcss/vite':
         specifier: ^4.1.16
         version: 4.1.17(vite@7.2.2(@types/node@22.19.1)(jiti@2.6.1)(lightningcss@1.30.2)(sass@1.93.2)(terser@5.44.1)(tsx@4.20.6))
+      '@types/better-sqlite3':
+        specifier: ^7.6.12
+        version: 7.6.13
       '@types/node':
         specifier: ^22.19.0
         version: 22.19.1

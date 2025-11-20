@@ -18,7 +18,9 @@ const db = createDatabase({
 
 seedDatabase(db);
 
-export const getProjects = createServerFn("GET", async () => {
+export const getProjects = createServerFn({
+  method: "GET",
+}).handler(async () => {
   try {
     return listProjects(db);
   } catch (error) {
@@ -27,19 +29,23 @@ export const getProjects = createServerFn("GET", async () => {
   }
 });
 
-export const getProjectAnalyses = createServerFn(
-  "GET",
-  async (projectName: string) => {
-    try {
-      return listAnalysisRuns(db, { projectName });
-    } catch (error) {
-      console.error(`Failed to fetch analyses for project "${projectName}":`, error);
-      throw new Error(`Failed to fetch analyses for project "${projectName}"`);
-    }
+export const getProjectAnalyses = createServerFn({
+  method: "GET",
+}).handler(async (projectName: string) => {
+  try {
+    return listAnalysisRuns(db, { projectName });
+  } catch (error) {
+    console.error(
+      `Failed to fetch analyses for project "${projectName}":`,
+      error,
+    );
+    throw new Error(`Failed to fetch analyses for project "${projectName}"`);
   }
-);
+});
 
-export const getAnalysisDetails = createServerFn("GET", async (id: string) => {
+export const getAnalysisDetails = createServerFn({
+  method: "GET",
+}).handler(async (id: string) => {
   const numericId = parseInt(id);
   if (isNaN(numericId)) {
     throw new Error(`Invalid analysis ID: "${id}"`);
@@ -52,23 +58,24 @@ export const getAnalysisDetails = createServerFn("GET", async (id: string) => {
   }
 });
 
-export const getAnalysisModules = createServerFn(
-  "GET",
-  async (id: string, filters?: any) => {
-    const numericId = parseInt(id);
-    if (isNaN(numericId)) {
-      throw new Error(`Invalid analysis ID: "${id}"`);
-    }
-    try {
-      return getAnalysisModulesQuery(db, numericId, filters);
-    } catch (error) {
-      console.error(`Failed to fetch analysis modules for id "${id}":`, error);
-      throw new Error(`Failed to fetch analysis modules for id "${id}"`);
-    }
+export const getAnalysisModules = createServerFn({
+  method: "GET",
+}).handler(async (id: string, filters?: any) => {
+  const numericId = parseInt(id);
+  if (isNaN(numericId)) {
+    throw new Error(`Invalid analysis ID: "${id}"`);
   }
-);
+  try {
+    return getAnalysisModulesQuery(db, numericId, filters);
+  } catch (error) {
+    console.error(`Failed to fetch analysis modules for id "${id}":`, error);
+    throw new Error(`Failed to fetch analysis modules for id "${id}"`);
+  }
+});
 
-export const getAnalysisBundles = createServerFn("GET", async (id: string) => {
+export const getAnalysisBundles = createServerFn({
+  method: "GET",
+}).handler(async (id: string) => {
   const numericId = parseInt(id);
   if (isNaN(numericId)) {
     throw new Error(`Invalid analysis ID: "${id}"`);
@@ -81,28 +88,27 @@ export const getAnalysisBundles = createServerFn("GET", async (id: string) => {
   }
 });
 
-export const getAnalysisDependencyGraph = createServerFn(
-  "GET",
-  async (id: string) => {
-    const numericId = parseInt(id);
-    if (isNaN(numericId)) {
-      throw new Error(`Invalid analysis ID: "${id}"`);
-    }
-    try {
-      return getAnalysisDependencyGraphQuery(db, numericId);
-    } catch (error) {
-      console.error(
-        `Failed to fetch analysis dependency graph for id "${id}":`,
-        error
-      );
-      throw new Error(
-        `Failed to fetch analysis dependency graph for id "${id}"`
-      );
-    }
+export const getAnalysisDependencyGraph = createServerFn({
+  method: "GET",
+}).handler(async (id: string) => {
+  const numericId = parseInt(id);
+  if (isNaN(numericId)) {
+    throw new Error(`Invalid analysis ID: "${id}"`);
   }
-);
+  try {
+    return getAnalysisDependencyGraphQuery(db, numericId);
+  } catch (error) {
+    console.error(
+      `Failed to fetch analysis dependency graph for id "${id}":`,
+      error,
+    );
+    throw new Error(`Failed to fetch analysis dependency graph for id "${id}"`);
+  }
+});
 
-export const getAnalysisTreemap = createServerFn("GET", async (id: string) => {
+export const getAnalysisTreemap = createServerFn({
+  method: "GET",
+}).handler(async (id: string) => {
   const numericId = parseInt(id);
   if (isNaN(numericId)) {
     throw new Error(`Invalid analysis ID: "${id}"`);
