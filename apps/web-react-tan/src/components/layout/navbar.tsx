@@ -1,11 +1,12 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Github, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
-import { Mascot } from "@/components/mascot";
 
 export function Navbar() {
+  const location = useLocation();
   const { theme, setTheme } = useTheme();
+  const isDashboard = location.pathname === "/dashboard";
 
   return (
     <nav className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
@@ -15,14 +16,18 @@ export function Navbar() {
           className="flex items-center gap-2 font-mono font-bold text-xl text-primary hover:opacity-80 transition-opacity"
         >
           <div className="relative w-8 h-8 overflow-hidden rounded-md bg-primary/10 border border-primary/20">
-            <Mascot className="w-full h-full" />
+            <img
+              src="/crocodile-mascot.png"
+              alt="Smappy Mascot"
+              className="w-full h-full object-cover"
+            />
           </div>
           <span>Smappy</span>
         </Link>
 
         <div className="flex items-center gap-4">
           <a
-            href="https://github.com/hybrist/smappy"
+            href="https://github.com"
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
@@ -42,14 +47,16 @@ export function Navbar() {
             <span className="sr-only">Toggle theme</span>
           </Button>
 
-          <Link to="/dashboard">
-            <Button
-              size="sm"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
-            >
-              Launch App
-            </Button>
-          </Link>
+          {!isDashboard && (
+            <Link to="/dashboard">
+              <Button
+                size="sm"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+              >
+                Launch App
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
     </nav>
