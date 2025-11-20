@@ -22,30 +22,37 @@ The server functions architecture consists of:
 ## Available Functions
 
 ### `getProjects()`
+
 Get all projects with summary information including bundle sizes, module counts, and change percentages.
 
 **Returns**: `Promise<Project[]>`
 
 ### `getProjectAnalyses(projectName: string)`
+
 Get analysis history for a specific project, ordered by date (newest first).
 
 **Parameters**:
+
 - `projectName`: Name of the project
 
 **Returns**: `Promise<AnalysisRun[]>`
 
 ### `getAnalysisDetails(id: string)`
+
 Get detailed information about a specific analysis run.
 
 **Parameters**:
+
 - `id`: Analysis run ID
 
 **Returns**: `Promise<AnalysisRun | null>`
 
 ### `getAnalysisModules(id: string, filters?: ModuleFilters)`
+
 Get modules for an analysis with optional filtering, sorting, and pagination.
 
 **Parameters**:
+
 - `id`: Analysis run ID
 - `filters`: Optional filters including:
   - `fileType`: Filter by file type
@@ -60,25 +67,31 @@ Get modules for an analysis with optional filtering, sorting, and pagination.
 **Returns**: `Promise<PaginatedResult<Module>>`
 
 ### `getAnalysisBundles(id: string)`
+
 Get all bundles for an analysis, ordered by size (largest first).
 
 **Parameters**:
+
 - `id`: Analysis run ID
 
 **Returns**: `Promise<Bundle[]>`
 
 ### `getAnalysisDependencyGraph(id: string)`
+
 Get the dependency graph showing relationships between modules.
 
 **Parameters**:
+
 - `id`: Analysis run ID
 
 **Returns**: `Promise<Map<number, DependencyNode>>`
 
 ### `getAnalysisTreemap(id: string)`
+
 Get hierarchical treemap data for visualization, organized by directory structure.
 
 **Parameters**:
+
 - `id`: Analysis run ID
 
 **Returns**: `Promise<TreemapNode>`

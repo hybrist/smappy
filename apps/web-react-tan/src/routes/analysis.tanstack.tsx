@@ -10,7 +10,12 @@ import {
   getAnalysisBundles,
   getAnalysisModules,
 } from "@/server/functions.tanstack";
-import type { AnalysisRun, Bundle, Module, PaginatedResult } from "@/server/functions.tanstack";
+import type {
+  AnalysisRun,
+  Bundle,
+  Module,
+  PaginatedResult,
+} from "@/server/functions.tanstack";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Navbar } from "@/components/layout/navbar";
 
@@ -44,7 +49,8 @@ export const analysisRoute = createRoute({
 
 function AnalysisPage() {
   // Access loader data with explicit type
-  const { analysis, bundles, modules } = analysisRoute.useLoaderData() as LoaderData;
+  const { analysis, bundles, modules } =
+    analysisRoute.useLoaderData() as LoaderData;
 
   if (!analysis) {
     return (
@@ -183,7 +189,8 @@ function AnalysisPage() {
 
             <div className="mt-4 flex items-center justify-between">
               <div className="text-sm text-muted-foreground">
-                Showing {modules.items.length} of {modules.total} modules (page {modules.page} of {modules.totalPages})
+                Showing {modules.items.length} of {modules.total} modules (page{" "}
+                {modules.page} of {modules.totalPages})
               </div>
             </div>
           </CardContent>

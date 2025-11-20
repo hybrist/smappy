@@ -5,12 +5,14 @@ This guide explains how to complete the migration to TanStack Start once Node.js
 ## Current Status
 
 ✅ **Completed:**
+
 - Node.js 24 requirement documented (`.nvmrc`, `package.json` engines)
 - TanStack Start server functions created (`src/server/functions.tanstack.ts`)
 - Example routes updated for TanStack Start (`src/routes/*.tanstack.tsx`)
 - Configuration file created (`app.config.ts`)
 
 ⏳ **Pending (requires Node.js 24):**
+
 - Install TanStack Start packages
 - Replace Express implementation
 - Update package.json scripts
@@ -93,6 +95,7 @@ Replace the scripts in `apps/web-react-tan/package.json`:
 ```
 
 **Remove these scripts:**
+
 - `dev:api` (no longer needed)
 - `dev:all` (no longer needed)
 - `preview` (use `start` instead)

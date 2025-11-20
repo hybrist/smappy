@@ -1,7 +1,7 @@
 /**
  * Client-side API wrapper for server functions
  * Provides type-safe client-side functions that call server endpoints
- * 
+ *
  * Import types from server to ensure end-to-end type safety
  */
 
@@ -21,7 +21,10 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 /**
  * Generic fetch wrapper with error handling
  */
-async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
+async function fetchAPI<T>(
+  endpoint: string,
+  options?: RequestInit,
+): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers: {
@@ -53,7 +56,9 @@ export async function getProjects(): Promise<Project[]> {
 export async function getProjectAnalyses(
   projectName: string,
 ): Promise<AnalysisRun[]> {
-  return fetchAPI<AnalysisRun[]>(`/api/projects/${encodeURIComponent(projectName)}/analyses`);
+  return fetchAPI<AnalysisRun[]>(
+    `/api/projects/${encodeURIComponent(projectName)}/analyses`,
+  );
 }
 
 /**

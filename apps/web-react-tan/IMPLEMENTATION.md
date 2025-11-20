@@ -30,15 +30,15 @@ This PR implements a complete type-safe server function architecture for the web
 
 ### Server Functions Implemented
 
-| Function | Purpose |
-|----------|---------|
-| `getProjects()` | List all projects with summaries |
-| `getProjectAnalyses(name)` | Get analysis history for a project |
-| `getAnalysisDetails(id)` | Get detailed analysis information |
+| Function                          | Purpose                               |
+| --------------------------------- | ------------------------------------- |
+| `getProjects()`                   | List all projects with summaries      |
+| `getProjectAnalyses(name)`        | Get analysis history for a project    |
+| `getAnalysisDetails(id)`          | Get detailed analysis information     |
 | `getAnalysisModules(id, filters)` | Get modules with pagination/filtering |
-| `getAnalysisBundles(id)` | Get bundle information |
-| `getAnalysisDependencyGraph(id)` | Get dependency relationships |
-| `getAnalysisTreemap(id)` | Get hierarchical treemap data |
+| `getAnalysisBundles(id)`          | Get bundle information                |
+| `getAnalysisDependencyGraph(id)`  | Get dependency relationships          |
+| `getAnalysisTreemap(id)`          | Get hierarchical treemap data         |
 
 ### Integration Examples
 
@@ -82,6 +82,7 @@ Created two example routes demonstrating TanStack Router integration:
 ## Architecture Benefits
 
 ### Type Safety
+
 ```typescript
 // Server function with full types
 export async function getProjects(): Promise<Project[]> { ... }
@@ -91,10 +92,11 @@ const projects = await api.getProjects(); // projects: Project[]
 ```
 
 ### No REST Boilerplate
+
 ```typescript
 // Traditional REST
-const response = await fetch('/api/projects');
-const data = await response.json() as unknown;
+const response = await fetch("/api/projects");
+const data = (await response.json()) as unknown;
 const projects = data as Project[]; // Unsafe cast
 
 // Server Functions
@@ -102,11 +104,12 @@ const projects = await api.getProjects(); // Type-safe!
 ```
 
 ### Router Integration
+
 ```typescript
 const route = createRoute({
   path: "/projects",
   loader: async () => ({
-    projects: await api.getProjects() // Fully typed!
+    projects: await api.getProjects(), // Fully typed!
   }),
   component: ProjectsPage,
 });
@@ -133,6 +136,7 @@ pnpm test
 ### Environment Setup
 
 Create `.env` file:
+
 ```env
 DATABASE_URL=:memory:  # or ./smappy.db for file-based
 PORT=3001
@@ -215,12 +219,14 @@ apps/web-react-tan/
 ## Dependencies Added
 
 ### Production
+
 - `express` - API server
 - `better-sqlite3` - SQLite database
 - `drizzle-orm` - ORM for type-safe queries
 - `@smappy/store` - Shared database schema
 
 ### Development
+
 - `@types/express` - TypeScript types
 - `@types/better-sqlite3` - TypeScript types
 - `dotenv` - Environment variables
@@ -231,19 +237,20 @@ apps/web-react-tan/
 
 ## Comparison to Traditional REST
 
-| Feature | Traditional REST | Server Functions |
-|---------|-----------------|------------------|
-| Type Safety | ❌ Manual types | ✅ Automatic |
-| API Contracts | ❌ OpenAPI needed | ✅ TypeScript |
-| Boilerplate | ❌ Controllers, routes | ✅ Minimal |
-| Error Handling | ❌ Manual | ✅ Built-in |
-| Development Speed | ❌ Slower | ✅ Faster |
-| Refactoring | ❌ Risky | ✅ Safe |
-| Testing | ❌ Complex | ✅ Simple |
+| Feature           | Traditional REST       | Server Functions |
+| ----------------- | ---------------------- | ---------------- |
+| Type Safety       | ❌ Manual types        | ✅ Automatic     |
+| API Contracts     | ❌ OpenAPI needed      | ✅ TypeScript    |
+| Boilerplate       | ❌ Controllers, routes | ✅ Minimal       |
+| Error Handling    | ❌ Manual              | ✅ Built-in      |
+| Development Speed | ❌ Slower              | ✅ Faster        |
+| Refactoring       | ❌ Risky               | ✅ Safe          |
+| Testing           | ❌ Complex             | ✅ Simple        |
 
 ## Conclusion
 
 This implementation provides a complete, production-ready API layer with:
+
 - Full type safety from database to UI
 - No REST boilerplate
 - Comprehensive documentation

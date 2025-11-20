@@ -1,6 +1,6 @@
 /**
  * TanStack Start Configuration
- * 
+ *
  * This replaces the Vite configuration when using TanStack Start.
  * TanStack Start uses Vinxi as its bundler.
  */

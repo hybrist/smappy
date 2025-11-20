@@ -1,11 +1,21 @@
 /**
  * TanStack Start Server Functions
  * Type-safe server-side functions using TanStack Start's createServerFn
- * 
+ *
+ * IMPORTANT: This file requires @tanstack/start package which needs Node.js 24+
+ * This is a preparation file for when TanStack Start is activated.
+ *
+ * To activate:
+ * 1. Ensure Node.js 24 is installed (nvm use 24)
+ * 2. Install packages: pnpm add @tanstack/start @tanstack/react-start vinxi
+ * 3. Rename this file to functions.ts (replacing the Express version)
+ * 4. See TANSTACK_START_GUIDE.md for complete instructions
+ *
  * These functions can be called directly from the client with full type safety.
  * No REST API, no fetch calls - just direct function invocations.
  */
 
+// @ts-nocheck - Package not installed yet (requires Node 24)
 import { createServerFn } from "@tanstack/start";
 import { db } from "./db";
 import { schema } from "@smappy/store";
@@ -131,109 +141,112 @@ function safeJsonParse<T>(jsonString: string | null): T | null {
 
 /**
  * Get all projects with summary information
- * 
+ *
  * Usage in component/loader:
  * const projects = await getProjects();
  */
-export const getProjects = createServerFn("GET", async (): Promise<Project[]> => {
-  // Get all unique project names
-  const projects = await db
-    .select({ projectName: schema.analysisRun.projectName })
-    .from(schema.analysisRun)
-    .where(sql`${schema.analysisRun.projectName} IS NOT NULL`);
+export const getProjects = createServerFn(
+  "GET",
+  async (): Promise<Project[]> => {
+    // Get all unique project names
+    const projects = await db
+      .select({ projectName: schema.analysisRun.projectName })
+      .from(schema.analysisRun)
+      .where(sql`${schema.analysisRun.projectName} IS NOT NULL`);
 
-  const uniqueProjects = [
-    ...new Set(projects.map((p) => p.projectName).filter(Boolean)),
-  ] as string[];
+    const uniqueProjects = [
+      ...new Set(projects.map((p) => p.projectName).filter(Boolean)),
+    ] as string[];
 
-  const STALE_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000;
+    const STALE_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000;
 
-  // Get summary for each project
-  const summaries = await Promise.all(
-    uniqueProjects.map(async (projectName) => {
-      const latestRuns = await db
-        .select({
-          id: schema.analysisRun.id,
-          createdAt: schema.analysisRun.createdAt,
-          bundler: schema.analysisRun.bundler,
-        })
-        .from(schema.analysisRun)
-        .where(eq(schema.analysisRun.projectName, projectName))
-        .orderBy(
-          desc(schema.analysisRun.createdAt),
-          desc(schema.analysisRun.id),
-        )
-        .limit(2);
+    // Get summary for each project
+    const summaries = await Promise.all(
+      uniqueProjects.map(async (projectName) => {
+        const latestRuns = await db
+          .select({
+            id: schema.analysisRun.id,
+            createdAt: schema.analysisRun.createdAt,
+            bundler: schema.analysisRun.bundler,
+          })
+          .from(schema.analysisRun)
+          .where(eq(schema.analysisRun.projectName, projectName))
+          .orderBy(
+            desc(schema.analysisRun.createdAt),
+            desc(schema.analysisRun.id),
+          )
+          .limit(2);
 
-      if (latestRuns.length === 0) {
+        if (latestRuns.length === 0) {
+          return {
+            name: projectName,
+            bundler: null,
+            moduleCount: null,
+            bundleCount: null,
+            totalSize: null,
+            totalGzipSize: null,
+            lastAnalyzedAt: null,
+            changePercent: null,
+            isStale: false,
+          };
+        }
+
+        const [latestRunRecord, previousRunRecord] = latestRuns;
+        const latestRun = await getAnalysisByIdInternal(latestRunRecord.id);
+        const previousRun = previousRunRecord
+          ? await getAnalysisByIdInternal(previousRunRecord.id)
+          : null;
+
+        const latestTotalSize = latestRun?.totalSize ?? null;
+        const previousTotalSize = previousRun?.totalSize ?? null;
+
+        let changePercent: number | null = null;
+        if (
+          latestTotalSize !== null &&
+          previousTotalSize !== null &&
+          previousTotalSize > 0 &&
+          latestTotalSize !== previousTotalSize
+        ) {
+          changePercent =
+            ((latestTotalSize - previousTotalSize) / previousTotalSize) * 100;
+        }
+
+        const lastAnalyzedAt =
+          latestRun?.createdAt ?? latestRunRecord.createdAt ?? null;
+
+        const isStale =
+          lastAnalyzedAt !== null
+            ? Date.now() - new Date(lastAnalyzedAt).getTime() >
+              STALE_THRESHOLD_MS
+            : false;
+
         return {
           name: projectName,
-          bundler: null,
-          moduleCount: null,
-          bundleCount: null,
-          totalSize: null,
-          totalGzipSize: null,
-          lastAnalyzedAt: null,
-          changePercent: null,
-          isStale: false,
+          bundler: latestRun?.bundler ?? latestRunRecord.bundler ?? null,
+          moduleCount: latestRun?.moduleCount ?? null,
+          bundleCount: latestRun?.bundleCount ?? null,
+          totalSize: latestTotalSize,
+          totalGzipSize: latestRun?.totalGzipSize ?? null,
+          lastAnalyzedAt,
+          changePercent,
+          isStale,
         };
-      }
-
-      const [latestRunRecord, previousRunRecord] = latestRuns;
-      const latestRun = await getAnalysisByIdInternal(latestRunRecord.id);
-      const previousRun = previousRunRecord
-        ? await getAnalysisByIdInternal(previousRunRecord.id)
-        : null;
-
-      const latestTotalSize = latestRun?.totalSize ?? null;
-      const previousTotalSize = previousRun?.totalSize ?? null;
-
-      let changePercent: number | null = null;
-      if (
-        latestTotalSize !== null &&
-        previousTotalSize !== null &&
-        previousTotalSize > 0 &&
-        latestTotalSize !== previousTotalSize
-      ) {
-        changePercent =
-          ((latestTotalSize - previousTotalSize) / previousTotalSize) * 100;
-      }
-
-      const lastAnalyzedAt =
-        latestRun?.createdAt ?? latestRunRecord.createdAt ?? null;
-
-      const isStale =
-        lastAnalyzedAt !== null
-          ? Date.now() - new Date(lastAnalyzedAt).getTime() >
-            STALE_THRESHOLD_MS
-          : false;
-
-      return {
-        name: projectName,
-        bundler: latestRun?.bundler ?? latestRunRecord.bundler ?? null,
-        moduleCount: latestRun?.moduleCount ?? null,
-        bundleCount: latestRun?.bundleCount ?? null,
-        totalSize: latestTotalSize,
-        totalGzipSize: latestRun?.totalGzipSize ?? null,
-        lastAnalyzedAt,
-        changePercent,
-        isStale,
-      };
-    }),
-  );
-
-  return summaries.sort((a, b) => {
-    if (a.lastAnalyzedAt === b.lastAnalyzedAt) {
-      return a.name.localeCompare(b.name);
-    }
-    if (a.lastAnalyzedAt === null) return 1;
-    if (b.lastAnalyzedAt === null) return -1;
-    return (
-      new Date(b.lastAnalyzedAt).getTime() -
-      new Date(a.lastAnalyzedAt).getTime()
+      }),
     );
-  });
-});
+
+    return summaries.sort((a, b) => {
+      if (a.lastAnalyzedAt === b.lastAnalyzedAt) {
+        return a.name.localeCompare(b.name);
+      }
+      if (a.lastAnalyzedAt === null) return 1;
+      if (b.lastAnalyzedAt === null) return -1;
+      return (
+        new Date(b.lastAnalyzedAt).getTime() -
+        new Date(a.lastAnalyzedAt).getTime()
+      );
+    });
+  },
+);
 
 /**
  * Get analysis history for a specific project
@@ -265,9 +278,12 @@ export const getProjectAnalyses = createServerFn(
           db
             .select({
               bundleCount: sql<number>`count(*)`.as("bundleCount"),
-              totalSize: sql<number>`sum(${schema.bundle.size})`.as("totalSize"),
-              totalGzipSize:
-                sql<number>`sum(${schema.bundle.gzipSize})`.as("totalGzipSize"),
+              totalSize: sql<number>`sum(${schema.bundle.size})`.as(
+                "totalSize",
+              ),
+              totalGzipSize: sql<number>`sum(${schema.bundle.gzipSize})`.as(
+                "totalGzipSize",
+              ),
             })
             .from(schema.bundle)
             .where(eq(schema.bundle.analysisRunId, run.id)),
@@ -311,7 +327,9 @@ export const getAnalysisDetails = createServerFn(
 /**
  * Internal helper to get analysis by ID
  */
-async function getAnalysisByIdInternal(id: number): Promise<AnalysisRun | null> {
+async function getAnalysisByIdInternal(
+  id: number,
+): Promise<AnalysisRun | null> {
   const runs = await db
     .select({
       id: schema.analysisRun.id,
@@ -341,8 +359,9 @@ async function getAnalysisByIdInternal(id: number): Promise<AnalysisRun | null> 
       .select({
         bundleCount: sql<number>`count(*)`.as("bundleCount"),
         totalSize: sql<number>`sum(${schema.bundle.size})`.as("totalSize"),
-        totalGzipSize:
-          sql<number>`sum(${schema.bundle.gzipSize})`.as("totalGzipSize"),
+        totalGzipSize: sql<number>`sum(${schema.bundle.gzipSize})`.as(
+          "totalGzipSize",
+        ),
       })
       .from(schema.bundle)
       .where(eq(schema.bundle.analysisRunId, id)),
@@ -417,7 +436,8 @@ export const getAnalysisModules = createServerFn(
       conditions.push(like(schema.module.filePath, `%${search}%`));
     }
 
-    const whereClause = conditions.length > 1 ? and(...conditions) : conditions[0];
+    const whereClause =
+      conditions.length > 1 ? and(...conditions) : conditions[0];
 
     // Get total count
     const countResult = await db
@@ -435,7 +455,8 @@ export const getAnalysisModules = createServerFn(
           ? schema.module.bundledSize
           : schema.module.filePath;
 
-    const orderByClause = sortOrder === "desc" ? desc(sortField) : asc(sortField);
+    const orderByClause =
+      sortOrder === "desc" ? desc(sortField) : asc(sortField);
 
     // Get paginated results
     const offset = (page - 1) * pageSize;

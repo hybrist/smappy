@@ -1,7 +1,7 @@
 /**
  * Server Functions for Bundle Analysis Data Access
  * Type-safe server-side functions that can be called from client-side code
- * 
+ *
  * These functions provide direct database access with full TypeScript support,
  * eliminating the need for a traditional REST API layer.
  */
@@ -201,8 +201,7 @@ export async function getProjects(): Promise<Project[]> {
 
       const isStale =
         lastAnalyzedAt !== null
-          ? Date.now() - new Date(lastAnalyzedAt).getTime() >
-            STALE_THRESHOLD_MS
+          ? Date.now() - new Date(lastAnalyzedAt).getTime() > STALE_THRESHOLD_MS
           : false;
 
       return {
@@ -265,8 +264,9 @@ export async function getProjectAnalyses(
           .select({
             bundleCount: sql<number>`count(*)`.as("bundleCount"),
             totalSize: sql<number>`sum(${schema.bundle.size})`.as("totalSize"),
-            totalGzipSize:
-              sql<number>`sum(${schema.bundle.gzipSize})`.as("totalGzipSize"),
+            totalGzipSize: sql<number>`sum(${schema.bundle.gzipSize})`.as(
+              "totalGzipSize",
+            ),
           })
           .from(schema.bundle)
           .where(eq(schema.bundle.analysisRunId, run.id)),
@@ -340,8 +340,9 @@ async function getAnalysisById(id: number): Promise<AnalysisRun | null> {
       .select({
         bundleCount: sql<number>`count(*)`.as("bundleCount"),
         totalSize: sql<number>`sum(${schema.bundle.size})`.as("totalSize"),
-        totalGzipSize:
-          sql<number>`sum(${schema.bundle.gzipSize})`.as("totalGzipSize"),
+        totalGzipSize: sql<number>`sum(${schema.bundle.gzipSize})`.as(
+          "totalGzipSize",
+        ),
       })
       .from(schema.bundle)
       .where(eq(schema.bundle.analysisRunId, id)),
@@ -417,7 +418,8 @@ export async function getAnalysisModules(
     conditions.push(like(schema.module.filePath, `%${search}%`));
   }
 
-  const whereClause = conditions.length > 1 ? and(...conditions) : conditions[0];
+  const whereClause =
+    conditions.length > 1 ? and(...conditions) : conditions[0];
 
   // Get total count
   const countResult = await db

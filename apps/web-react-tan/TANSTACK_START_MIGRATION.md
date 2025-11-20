@@ -5,22 +5,26 @@ This document outlines the migration from Express-based REST API to TanStack Sta
 ## Prerequisites
 
 **Important**: TanStack Start requires Node.js 24+. The project now specifies this in:
+
 - `.nvmrc` file (contains `24`)
 - `package.json` engines field (`"node": ">=24.0.0"`)
 
 ## What Changed
 
 ### Removed
+
 - Express API server (`src/server/api.ts`)
 - Fetch-based API client (`src/api/client.ts`)
 - Express-related dependencies (express, @types/express, dotenv, tsx, concurrently)
 
 ### Added
+
 - TanStack Start packages (`@tanstack/start`, `@tanstack/react-router`)
 - Vinxi bundler (required by TanStack Start)
 - Server functions using TanStack Start's `createServerFn` pattern
 
 ### Modified
+
 - `src/server/functions.ts` - Converted to TanStack Start server functions
 - Route files - Updated to use server functions directly
 - Build configuration - Using TanStack Start instead of Vite

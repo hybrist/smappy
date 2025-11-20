@@ -25,7 +25,7 @@ const projectsRoute = createRoute({
 function ProjectsPage() {
   // Access loader data with full type safety
   const { projects } = projectsRoute.useLoaderData();
-  
+
   return (
     <div>
       {projects.map(project => (
@@ -56,11 +56,11 @@ const analysisRoute = createRoute({
 
 function AnalysisPage() {
   const { analysis } = analysisRoute.useLoaderData();
-  
+
   if (!analysis) {
     return <div>Analysis not found</div>;
   }
-  
+
   return (
     <div>
       <h1>{analysis.projectName}</h1>
@@ -81,13 +81,13 @@ const analysisDetailRoute = createRoute({
     const [analysis, bundles, modules, treemap] = await Promise.all([
       api.getAnalysisDetails(params.analysisId),
       api.getAnalysisBundles(params.analysisId),
-      api.getAnalysisModules(params.analysisId, { 
-        page: 1, 
-        pageSize: 10 
+      api.getAnalysisModules(params.analysisId, {
+        page: 1,
+        pageSize: 10,
       }),
       api.getAnalysisTreemap(params.analysisId),
     ]);
-    
+
     return { analysis, bundles, modules, treemap };
   },
   component: AnalysisDetailPage,
@@ -112,7 +112,7 @@ const modulesRoute = createRoute({
       search: search.search,
       pageSize: 50,
     });
-    
+
     return { modules };
   },
   component: ModulesPage,
@@ -128,16 +128,16 @@ const analysisRoute = createRoute({
   loader: async ({ params }) => {
     try {
       const analysis = await api.getAnalysisDetails(params.analysisId);
-      
+
       if (!analysis) {
         throw new Error("Analysis not found");
       }
-      
+
       return { analysis, error: null };
     } catch (error) {
-      return { 
-        analysis: null, 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      return {
+        analysis: null,
+        error: error instanceof Error ? error.message : "Unknown error"
       };
     }
   },
@@ -146,11 +146,11 @@ const analysisRoute = createRoute({
 
 function AnalysisPage() {
   const { analysis, error } = analysisRoute.useLoaderData();
-  
+
   if (error) {
     return <div>Error: {error}</div>;
   }
-  
+
   return <div>{/* render analysis */}</div>;
 }
 ```
@@ -162,7 +162,7 @@ import { Link } from "@tanstack/react-router";
 
 function ProjectsList() {
   const { projects } = projectsRoute.useLoaderData();
-  
+
   return (
     <div>
       {projects.map(project => (
@@ -188,12 +188,12 @@ import { useRouter } from "@tanstack/react-router";
 
 function ProjectActions({ projectName }: { projectName: string }) {
   const router = useRouter();
-  
+
   const handleRefresh = async () => {
     // Trigger a refresh of the current route's loader
     await router.invalidate();
   };
-  
+
   return (
     <button onClick={handleRefresh}>
       Refresh Data
@@ -219,7 +219,7 @@ const projectRoute = createRoute({
     const [analyses] = await Promise.all([
       api.getProjectAnalyses(params.projectName),
     ]);
-    
+
     return { projectName: params.projectName, analyses };
   },
   component: ProjectPage,
@@ -227,11 +227,11 @@ const projectRoute = createRoute({
 
 function ProjectPage() {
   const { projectName, analyses } = projectRoute.useLoaderData();
-  
+
   return (
     <div>
       <h1>Project: {projectName}</h1>
-      
+
       <div>
         <h2>Analysis History</h2>
         {analyses.map(analysis => (
@@ -256,8 +256,8 @@ function ProjectPage() {
 // Register route
 // Add to router.tsx:
 // const routeTree = rootRoute.addChildren([
-//   indexRoute, 
-//   dashboardRoute, 
+//   indexRoute,
+//   dashboardRoute,
 //   projectRoute
 // ]);
 ```
@@ -287,15 +287,13 @@ import * as api from "@/api";
 
 describe("Route Loaders", () => {
   it("should load projects", async () => {
-    const mockProjects = [
-      { name: "test-project", totalSize: 1000 }
-    ];
-    
+    const mockProjects = [{ name: "test-project", totalSize: 1000 }];
+
     vi.spyOn(api, "getProjects").mockResolvedValue(mockProjects);
-    
+
     const loader = projectsRoute.options.loader;
     const result = await loader({ params: {} });
-    
+
     expect(result.projects).toEqual(mockProjects);
   });
 });

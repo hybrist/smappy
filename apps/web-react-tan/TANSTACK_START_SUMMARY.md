@@ -5,6 +5,7 @@
 ### 1. Node.js Version Requirements (Commit 3f9bac4)
 
 Added clear signals for Node.js 24 requirement:
+
 - **`.nvmrc`** - Contains `24` for automatic version managers
 - **`package.json` engines** - `"node": ">=24.0.0"` enforces requirement
 - **`NODE_VERSION.md`** - Complete setup instructions for all version managers
@@ -14,23 +15,27 @@ Added clear signals for Node.js 24 requirement:
 Created complete TanStack Start implementation:
 
 **Configuration:**
+
 - `app.config.ts` - TanStack Start configuration replacing Vite config
 
 **Server Functions:**
+
 - `src/server/functions.tanstack.ts` - All 7 server functions using `createServerFn`:
   - `getProjects()` - List all projects
   - `getProjectAnalyses(projectName)` - Analysis history
-  - `getAnalysisDetails(id)` - Analysis details  
+  - `getAnalysisDetails(id)` - Analysis details
   - `getAnalysisModules(id, filters)` - Modules with filtering/pagination
   - `getAnalysisBundles(id)` - Bundle data
   - `getAnalysisDependencyGraph(id)` - Dependency relationships
   - `getAnalysisTreemap(id)` - Treemap data
 
 **Example Routes:**
+
 - `src/routes/projects.tanstack.tsx` - Direct server function usage
 - `src/routes/analysis.tanstack.tsx` - Parallel server function calls
 
 **Documentation:**
+
 - `TANSTACK_START_MIGRATION.md` - Why migration was needed
 - `TANSTACK_START_GUIDE.md` - Step-by-step activation guide
 
@@ -69,6 +74,7 @@ Client → Server Functions → Database
 ### Before (Express)
 
 **Server (src/server/api.ts):**
+
 ```typescript
 app.get("/api/projects", async (req, res) => {
   const projects = await serverFunctions.getProjects();
@@ -77,6 +83,7 @@ app.get("/api/projects", async (req, res) => {
 ```
 
 **Client (src/api/client.ts):**
+
 ```typescript
 export async function getProjects() {
   return fetchAPI<Project[]>("/api/projects");
@@ -84,6 +91,7 @@ export async function getProjects() {
 ```
 
 **Component:**
+
 ```typescript
 import * as api from "@/api";
 const projects = await api.getProjects(); // HTTP request
@@ -92,6 +100,7 @@ const projects = await api.getProjects(); // HTTP request
 ### After (TanStack Start)
 
 **Server (src/server/functions.ts):**
+
 ```typescript
 export const getProjects = createServerFn("GET", async () => {
   // ... database query
@@ -100,6 +109,7 @@ export const getProjects = createServerFn("GET", async () => {
 ```
 
 **Component:**
+
 ```typescript
 import { getProjects } from "@/server/functions";
 const projects = await getProjects(); // Direct call!
@@ -153,6 +163,7 @@ apps/web-react-tan/
 ## Current Status
 
 ✅ **Completed:**
+
 - Node.js 24 requirement documented
 - TanStack Start implementation created
 - Migration guide written
@@ -160,6 +171,7 @@ apps/web-react-tan/
 - Example routes updated
 
 ⏳ **Pending (requires Node 24 environment):**
+
 - Install TanStack Start packages
 - Activate TanStack Start files
 - Remove Express implementation

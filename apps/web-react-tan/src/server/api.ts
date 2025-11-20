@@ -18,7 +18,9 @@ const PORT = process.env.PORT || 3001;
 app.use(express.json());
 
 // CORS middleware for development
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173'];
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
+  "http://localhost:5173",
+];
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (origin && allowedOrigins.includes(origin)) {
@@ -29,24 +31,25 @@ app.use((req, res, next) => {
     "Origin, X-Requested-With, Content-Type, Accept",
   );
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  
-  if (req.method === 'OPTIONS') {
+
+  if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
-  
+
   next();
 });
 
 // Error handling wrapper
-const asyncHandler = (
-  fn: (req: Request, res: Response) => Promise<void>,
-) => {
+const asyncHandler = (fn: (req: Request, res: Response) => Promise<void>) => {
   return (req: Request, res: Response) => {
     Promise.resolve(fn(req, res)).catch((error) => {
       console.error("API Error:", error);
       res.status(500).json({
         error: "Internal Server Error",
-        message: process.env.NODE_ENV === "production" ? "An error occurred" : error.message,
+        message:
+          process.env.NODE_ENV === "production"
+            ? "An error occurred"
+            : error.message,
       });
     });
   };
@@ -122,19 +125,15 @@ app.get(
     const filters: serverFunctions.ModuleFilters = {
       fileType: fileType as string | undefined,
       isThirdParty:
-        isThirdParty !== undefined
-          ? isThirdParty === "true"
-          : undefined,
+        isThirdParty !== undefined ? isThirdParty === "true" : undefined,
       packageName: packageName as string | undefined,
       search: search as string | undefined,
-      sortBy: sortBy as
-        | "filePath"
-        | "originalSize"
-        | "bundledSize"
-        | undefined,
+      sortBy: sortBy as "filePath" | "originalSize" | "bundledSize" | undefined,
       sortOrder: sortOrder as "asc" | "desc" | undefined,
       page: page ? Math.max(1, parseInt(page as string, 10)) : undefined,
-      pageSize: pageSize ? Math.min(Math.max(1, parseInt(pageSize as string, 10)), 1000) : undefined,
+      pageSize: pageSize
+        ? Math.min(Math.max(1, parseInt(pageSize as string, 10)), 1000)
+        : undefined,
     };
 
     const modules = await serverFunctions.getAnalysisModules(id, filters);

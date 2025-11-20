@@ -1,7 +1,7 @@
 /**
  * Server Functions Tests
  * Tests for type-safe server functions
- * 
+ *
  * Note: Tests run with an empty in-memory database, so they verify
  * structure and error handling rather than actual data.
  */
@@ -32,13 +32,13 @@ describe("Server Functions", () => {
   describe("getAnalysisModules", () => {
     it("should return paginated result structure", async () => {
       const result = await serverFunctions.getAnalysisModules("99999");
-      
+
       expect(result).toHaveProperty("items");
       expect(result).toHaveProperty("total");
       expect(result).toHaveProperty("page");
       expect(result).toHaveProperty("pageSize");
       expect(result).toHaveProperty("totalPages");
-      
+
       expect(Array.isArray(result.items)).toBe(true);
       expect(typeof result.total).toBe("number");
       expect(typeof result.page).toBe("number");
@@ -51,14 +51,14 @@ describe("Server Functions", () => {
         page: 2,
         pageSize: 10,
       });
-      
+
       expect(result.page).toBe(2);
       expect(result.pageSize).toBe(10);
     });
 
     it("should handle invalid analysis ID", async () => {
       const result = await serverFunctions.getAnalysisModules("invalid");
-      
+
       expect(result.items).toEqual([]);
       expect(result.total).toBe(0);
     });
@@ -91,7 +91,7 @@ describe("Server Functions", () => {
   describe("getAnalysisTreemap", () => {
     it("should return treemap structure", async () => {
       const treemap = await serverFunctions.getAnalysisTreemap("99999");
-      
+
       expect(treemap).toHaveProperty("name");
       expect(treemap).toHaveProperty("children");
       expect(treemap.name).toBe("root");
@@ -100,7 +100,7 @@ describe("Server Functions", () => {
 
     it("should handle invalid ID", async () => {
       const treemap = await serverFunctions.getAnalysisTreemap("invalid");
-      
+
       expect(treemap.name).toBe("root");
       expect(treemap.children).toEqual([]);
     });
@@ -118,7 +118,7 @@ describe("Type Safety", () => {
       page: 1,
       pageSize: 20,
     };
-    
+
     expect(filters).toBeDefined();
     expect(filters.fileType).toBe("javascript");
   });
@@ -133,7 +133,7 @@ describe("Type Safety", () => {
       pageSize: 10,
       totalPages: 0,
     };
-    
+
     expect(moduleFilters).toBeDefined();
     expect(paginatedResult).toBeDefined();
   });
