@@ -263,6 +263,46 @@ export function getLatestAnalysisRun(
   return runs.length > 0 ? runs[0] : null;
 }
 
+export function getAnalysisDetails(
+  db: BetterSQLite3Database<typeof schema>,
+  id: number
+): AnalysisRunData | null {
+  return getAnalysisRunById(db, id);
+}
+
+export function getAnalysisModules(
+  db: BetterSQLite3Database<typeof schema>,
+  id: number,
+  filters?: any
+) {
+  // TODO: Implement
+  return [];
+}
+
+export function getAnalysisBundles(
+  db: BetterSQLite3Database<typeof schema>,
+  id: number
+) {
+  // TODO: Implement
+  return [];
+}
+
+export function getAnalysisDependencyGraph(
+  db: BetterSQLite3Database<typeof schema>,
+  id: number
+) {
+  // TODO: Implement
+  return {};
+}
+
+export function getAnalysisTreemap(
+  db: BetterSQLite3Database<typeof schema>,
+  id: number
+) {
+  // TODO: Implement
+  return {};
+}
+
 /**
  * Get an analysis run by ID
  * @param db - Database instance
