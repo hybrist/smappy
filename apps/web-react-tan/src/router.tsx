@@ -11,7 +11,8 @@ import "@/app.css";
 import HomePage from "@/routes/index";
 import DashboardPage from "@/routes/dashboard";
 
-const rootRoute = createRootRoute({
+// Export rootRoute for use in other route files
+export const rootRoute = createRootRoute({
   component: () => (
     <ThemeProvider defaultTheme="dark" storageKey="smappy-ui-theme">
       <Outlet />
