@@ -1,7 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import mascotImage from "@assets/generated_images/Flat_vector_crocodile_mascot_for_dev_tool_9d63dcf4.png";
 import { Button } from "@/components/ui/button";
-import { Github, BookOpen, Moon, Sun } from "lucide-react";
+import { Github, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 
 export function Navbar() {
@@ -18,7 +17,7 @@ export function Navbar() {
         >
           <div className="relative w-8 h-8 overflow-hidden rounded-md bg-primary/10 border border-primary/20">
             <img
-              src={mascotImage}
+              src="/crocodile-mascot.png"
               alt="Smappy Mascot"
               className="w-full h-full object-cover"
             />
@@ -27,13 +26,6 @@ export function Navbar() {
         </Link>
 
         <div className="flex items-center gap-4">
-          <Link
-            to="/docs"
-            className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
-          >
-            <BookOpen className="w-4 h-4" />
-            <span className="hidden sm:inline">Docs</span>
-          </Link>
           <a
             href="https://github.com"
             target="_blank"

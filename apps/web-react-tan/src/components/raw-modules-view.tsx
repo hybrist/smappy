@@ -90,7 +90,9 @@ const mockModules = [
 
 export function RawModulesView() {
   const [search, setSearch] = useState("");
-  const [selectedModule, setSelectedModule] = useState<typeof mockModules[0] | null>(null);
+  const [selectedModule, setSelectedModule] = useState<
+    (typeof mockModules)[0] | null
+  >(null);
 
   const filteredModules = mockModules.filter(
     (m) =>
@@ -139,7 +141,11 @@ export function RawModulesView() {
           </TableHeader>
           <TableBody>
             {filteredModules.map((module) => (
-              <TableRow key={module.id} className="group cursor-pointer hover:bg-muted/30" onClick={() => setSelectedModule(module)}>
+              <TableRow
+                key={module.id}
+                className="group cursor-pointer hover:bg-muted/30"
+                onClick={() => setSelectedModule(module)}
+              >
                 <TableCell className="font-medium">
                   <div className="flex items-start gap-3">
                     <div
