@@ -1,16 +1,16 @@
 packages:
-  - "apps/*"
-  - "libs/*"
-  - "examples/*"
+  - apps/*
+  - libs/*
+  - examples/*
 
 catalog:
   prettier: ^3.6.2
   tsdown: ^0.16.3
   typescript: ^5.9.3
   vite: ^7.1.12
-  vitest: ^4.0.12
+  vitest: 4.0.12
 
 onlyBuiltDependencies:
   - esbuild
-  - "@tailwindcss/oxide"
+  - '@tailwindcss/oxide'
   - better-sqlite3
