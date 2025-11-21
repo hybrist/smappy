@@ -13,16 +13,9 @@ import {
   getAnalysisTreemap as getAnalysisTreemapQuery,
 } from "@smappy/store/queries";
 
-// @ts-ignore - Server-only imports
-import { seedDatabase } from "./seed";
-
-// @ts-ignore - Server-only code
 const db = createDatabase({
   dbPath: process.env.DATABASE_URL || ":memory:",
 }).db;
-
-// @ts-ignore - Server-only code
-seedDatabase(db);
 
 export const getProjects = createServerFn({
   method: "GET",
