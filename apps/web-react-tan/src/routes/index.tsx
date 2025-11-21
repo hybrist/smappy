@@ -1,11 +1,15 @@
-import { useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Navbar } from "@/components/layout/navbar";
 import { FileUpload } from "@/components/file-upload";
 import { Mascot } from "@/components/mascot";
 import { Zap, Search, Layers } from "lucide-react";
 import { motion } from "framer-motion";
 
-export default function Home() {
+export const Route = createFileRoute("/")({
+  component: HomePage,
+});
+
+function HomePage() {
   const navigate = useNavigate();
 
   const handleUpload = () => {

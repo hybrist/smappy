@@ -7,6 +7,23 @@ import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import * as schema from "./schema.ts";
 import { eq, desc, and, gte, sql } from "drizzle-orm";
 
+export interface AnalysisModuleFilters {
+  /** Filter by file type (e.g., 'javascript', 'css') */
+  fileType?: string;
+  /** Filter by third-party status */
+  isThirdParty?: boolean;
+  /** Search by file path */
+  search?: string;
+  /** Page number for pagination (1-based) */
+  page?: number;
+  /** Number of results per page */
+  pageSize?: number;
+  /** Sort field */
+  sortBy?: "filePath" | "originalSize" | "bundledSize";
+  /** Sort direction */
+  sortOrder?: "asc" | "desc";
+}
+
 /**
  * Options for listing analysis runs
  */
@@ -261,6 +278,287 @@ export function getLatestAnalysisRun(
 ): AnalysisRunData | null {
   const runs = listAnalysisRuns(db, { projectName, limit: 1 });
   return runs.length > 0 ? runs[0] : null;
+}
+
+/**
+ * Get an analysis run by ID
+ * @param db - Database instance
+ * @param id - Analysis run ID
+ * @returns Analysis run or null if not found
+ */
+export function getAnalysisDetails(
+  db: BetterSQLite3Database<typeof schema>,
+  id: number,
+): AnalysisRunData | null {
+  return getAnalysisRunById(db, id);
+}
+
+/**
+ * Get the modules for an analysis run
+ * @param db - Database instance
+ * @param id - Analysis run ID
+ * @param filters - Optional filters
+ * @returns Array of modules with pagination info
+ */
+export function getAnalysisModules(
+  db: BetterSQLite3Database<typeof schema>,
+  id: number,
+  filters?: AnalysisModuleFilters,
+) {
+  const {
+    fileType,
+    isThirdParty,
+    search,
+    page = 1,
+    pageSize = 50,
+    sortBy = "bundledSize",
+    sortOrder = "desc",
+  } = filters || {};
+
+  // Build WHERE conditions
+  const conditions = [eq(schema.module.analysisRunId, id)];
+
+  if (fileType) {
+    conditions.push(eq(schema.module.fileType, fileType));
+  }
+
+  if (isThirdParty !== undefined) {
+    conditions.push(eq(schema.module.isThirdParty, isThirdParty));
+  }
+
+  // Add search filter to conditions
+  if (search) {
+    conditions.push(sql`${schema.module.filePath} LIKE ${`%${search}%`}`);
+  }
+
+  // Get total count
+  const totalCount = db
+    .select({ count: sql<number>`count(*)` })
+    .from(schema.module)
+    .where(and(...conditions))
+    .get();
+
+  // Build query
+  let query = db
+    .select({
+      id: schema.module.id,
+      filePath: schema.module.filePath,
+      fileType: schema.module.fileType,
+      originalSize: schema.module.originalSize,
+      bundledSize: schema.module.bundledSize,
+      isThirdParty: schema.module.isThirdParty,
+      packageName: schema.module.packageName,
+      packageVersion: schema.module.packageVersion,
+      exports: schema.module.exports,
+      usedExports: schema.module.usedExports,
+    })
+    .from(schema.module)
+    .where(and(...conditions));
+
+  // Apply sorting
+  const sortColumn =
+    sortBy === "filePath"
+      ? schema.module.filePath
+      : sortBy === "originalSize"
+        ? schema.module.originalSize
+        : schema.module.bundledSize;
+
+  query =
+    sortOrder === "asc"
+      ? (query.orderBy(sortColumn) as typeof query)
+      : (query.orderBy(desc(sortColumn)) as typeof query);
+
+  // Apply pagination
+  const offset = (page - 1) * pageSize;
+  query = query.limit(pageSize).offset(offset) as typeof query;
+
+  const modules = query.all();
+
+  return {
+    modules: modules.map((m) => ({
+      ...m,
+      exports: m.exports ? JSON.parse(m.exports) : null,
+      usedExports: m.usedExports ? JSON.parse(m.usedExports) : null,
+    })),
+    pagination: {
+      page,
+      pageSize,
+      totalCount: totalCount?.count ?? 0,
+      totalPages: Math.ceil((totalCount?.count ?? 0) / pageSize),
+    },
+  };
+}
+
+/**
+ * Get the bundles for an analysis run
+ * @param db - Database instance
+ * @param id - Analysis run ID
+ * @returns Array of bundles
+ */
+export function getAnalysisBundles(
+  db: BetterSQLite3Database<typeof schema>,
+  id: number,
+) {
+  return db
+    .select({
+      id: schema.bundle.id,
+      fileName: schema.bundle.fileName,
+      fileType: schema.bundle.fileType,
+      size: schema.bundle.size,
+      gzipSize: schema.bundle.gzipSize,
+    })
+    .from(schema.bundle)
+    .where(eq(schema.bundle.analysisRunId, id))
+    .orderBy(desc(schema.bundle.size))
+    .all();
+}
+
+/**
+ * Get the dependency graph for an analysis run
+ * @param db - Database instance
+ * @param id - Analysis run ID
+ * @returns Dependency graph with nodes and edges
+ */
+export function getAnalysisDependencyGraph(
+  db: BetterSQLite3Database<typeof schema>,
+  id: number,
+) {
+  // Get all modules for this analysis
+  const modules = db
+    .select({
+      id: schema.module.id,
+      filePath: schema.module.filePath,
+      bundledSize: schema.module.bundledSize,
+      isThirdParty: schema.module.isThirdParty,
+      packageName: schema.module.packageName,
+    })
+    .from(schema.module)
+    .where(eq(schema.module.analysisRunId, id))
+    .all();
+
+  // Get all dependencies
+  const dependencies = db
+    .select({
+      id: schema.dependency.id,
+      importerModuleId: schema.dependency.importerModuleId,
+      importedModuleId: schema.dependency.importedModuleId,
+      importType: schema.dependency.importType,
+      importedSymbols: schema.dependency.importedSymbols,
+    })
+    .from(schema.dependency)
+    .where(eq(schema.dependency.analysisRunId, id))
+    .all();
+
+  return {
+    nodes: modules.map((m) => ({
+      id: m.id,
+      filePath: m.filePath,
+      bundledSize: m.bundledSize,
+      isThirdParty: m.isThirdParty,
+      packageName: m.packageName,
+    })),
+    edges: dependencies.map((d) => ({
+      id: d.id,
+      source: d.importerModuleId,
+      target: d.importedModuleId,
+      importType: d.importType,
+      importedSymbols: d.importedSymbols ? JSON.parse(d.importedSymbols) : null,
+    })),
+  };
+}
+
+/**
+ * Get the treemap data for an analysis run
+ * @param db - Database instance
+ * @param id - Analysis run ID
+ * @returns Treemap data organized hierarchically
+ */
+export function getAnalysisTreemap(
+  db: BetterSQLite3Database<typeof schema>,
+  id: number,
+) {
+  // Get all modules
+  const modules = db
+    .select({
+      filePath: schema.module.filePath,
+      bundledSize: schema.module.bundledSize,
+      isThirdParty: schema.module.isThirdParty,
+      packageName: schema.module.packageName,
+    })
+    .from(schema.module)
+    .where(eq(schema.module.analysisRunId, id))
+    .all();
+
+  // Build hierarchical structure
+  // Group by package for third-party, or by directory for first-party
+  const root: any = {
+    name: "root",
+    children: [],
+  };
+
+  const thirdPartyMap = new Map<string, any>();
+  const firstPartyMap = new Map<string, any>();
+
+  for (const module of modules) {
+    if (module.isThirdParty && module.packageName) {
+      // Group third-party modules by package
+      if (!thirdPartyMap.has(module.packageName)) {
+        thirdPartyMap.set(module.packageName, {
+          name: module.packageName,
+          value: 0,
+          children: [],
+        });
+      }
+      const packageNode = thirdPartyMap.get(module.packageName)!;
+      packageNode.value += module.bundledSize;
+      packageNode.children.push({
+        name: module.filePath,
+        value: module.bundledSize,
+      });
+    } else {
+      // Group first-party modules by top-level directory
+      const parts = module.filePath.split("/");
+      const topDir = parts[0] || "root";
+
+      if (!firstPartyMap.has(topDir)) {
+        firstPartyMap.set(topDir, {
+          name: topDir,
+          value: 0,
+          children: [],
+        });
+      }
+      const dirNode = firstPartyMap.get(topDir)!;
+      dirNode.value += module.bundledSize;
+      dirNode.children.push({
+        name: module.filePath,
+        value: module.bundledSize,
+      });
+    }
+  }
+
+  // Add third-party packages to root
+  if (thirdPartyMap.size > 0) {
+    const thirdPartyNode = {
+      name: "node_modules",
+      children: Array.from(thirdPartyMap.values()),
+      value: Array.from(thirdPartyMap.values()).reduce(
+        (sum, pkg) => sum + pkg.value,
+        0,
+      ),
+    };
+    root.children.push(thirdPartyNode);
+  }
+
+  // Add first-party directories to root
+  root.children.push(...Array.from(firstPartyMap.values()));
+
+  // Calculate root value
+  root.value = root.children.reduce(
+    (sum: number, child: any) => sum + child.value,
+    0,
+  );
+
+  return root;
 }
 
 /**

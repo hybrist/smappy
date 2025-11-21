@@ -33,5 +33,10 @@
     "@smappy/cli": "workspace:*",
     "prettier": "catalog:",
     "vitest": "catalog:"
+  },
+  "pnpm": {
+    "overrides": {
+      "@tanstack/react-router": "^1.136.18"
+    }
   }
 }
