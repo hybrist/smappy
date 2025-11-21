@@ -1,6 +1,15 @@
 # Server Functions API
 
-This directory contains TanStack Start server functions that provide type-safe data access for the Smappy web application.
+⚠️ **IMPORTANT: Server functions are currently NOT functional** ⚠️
+
+This directory contains TanStack Start server function definitions, but they require proper SSR setup to work. See `vite.config.ts` for detailed setup instructions.
+
+**Current State**: Stub implementations for CI purposes
+**Required**: Full TanStack Start SSR configuration (file-based routing, SSR entry points)
+
+---
+
+This directory will contain TanStack Start server functions that provide type-safe data access for the Smappy web application.
 
 ## Overview
 

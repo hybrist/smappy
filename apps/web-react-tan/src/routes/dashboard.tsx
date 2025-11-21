@@ -15,7 +15,13 @@ import { Link, useLoaderData } from "@tanstack/react-router";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("overview");
-  const projects = useLoaderData({ from: "/dashboard" });
+  // TODO: Re-enable when TanStack Start SSR is set up
+  // const projects = useLoaderData({ from: "/dashboard" });
+  const projects: Array<{
+    projectName: string;
+    totalRuns: number;
+    latestRunDate: string | null;
+  }> = [];
 
   const renderContent = () => {
     if (activeTab === "raw-modules") {

@@ -19,9 +19,9 @@ export interface AnalysisModuleFilters {
   /** Number of results per page */
   pageSize?: number;
   /** Sort field */
-  sortBy?: 'filePath' | 'originalSize' | 'bundledSize';
+  sortBy?: "filePath" | "originalSize" | "bundledSize";
   /** Sort direction */
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
 }
 
 /**
@@ -288,7 +288,7 @@ export function getLatestAnalysisRun(
  */
 export function getAnalysisDetails(
   db: BetterSQLite3Database<typeof schema>,
-  id: number
+  id: number,
 ): AnalysisRunData | null {
   return getAnalysisRunById(db, id);
 }
@@ -303,7 +303,7 @@ export function getAnalysisDetails(
 export function getAnalysisModules(
   db: BetterSQLite3Database<typeof schema>,
   id: number,
-  filters?: AnalysisModuleFilters
+  filters?: AnalysisModuleFilters,
 ) {
   const {
     fileType,
@@ -311,8 +311,8 @@ export function getAnalysisModules(
     search,
     page = 1,
     pageSize = 50,
-    sortBy = 'bundledSize',
-    sortOrder = 'desc',
+    sortBy = "bundledSize",
+    sortOrder = "desc",
   } = filters || {};
 
   // Build WHERE conditions
@@ -357,14 +357,14 @@ export function getAnalysisModules(
 
   // Apply sorting
   const sortColumn =
-    sortBy === 'filePath'
+    sortBy === "filePath"
       ? schema.module.filePath
-      : sortBy === 'originalSize'
+      : sortBy === "originalSize"
         ? schema.module.originalSize
         : schema.module.bundledSize;
 
   query =
-    sortOrder === 'asc'
+    sortOrder === "asc"
       ? (query.orderBy(sortColumn) as typeof query)
       : (query.orderBy(desc(sortColumn)) as typeof query);
 
@@ -397,7 +397,7 @@ export function getAnalysisModules(
  */
 export function getAnalysisBundles(
   db: BetterSQLite3Database<typeof schema>,
-  id: number
+  id: number,
 ) {
   return db
     .select({
@@ -421,7 +421,7 @@ export function getAnalysisBundles(
  */
 export function getAnalysisDependencyGraph(
   db: BetterSQLite3Database<typeof schema>,
-  id: number
+  id: number,
 ) {
   // Get all modules for this analysis
   const modules = db
@@ -475,7 +475,7 @@ export function getAnalysisDependencyGraph(
  */
 export function getAnalysisTreemap(
   db: BetterSQLite3Database<typeof schema>,
-  id: number
+  id: number,
 ) {
   // Get all modules
   const modules = db
@@ -492,7 +492,7 @@ export function getAnalysisTreemap(
   // Build hierarchical structure
   // Group by package for third-party, or by directory for first-party
   const root: any = {
-    name: 'root',
+    name: "root",
     children: [],
   };
 
@@ -517,8 +517,8 @@ export function getAnalysisTreemap(
       });
     } else {
       // Group first-party modules by top-level directory
-      const parts = module.filePath.split('/');
-      const topDir = parts[0] || 'root';
+      const parts = module.filePath.split("/");
+      const topDir = parts[0] || "root";
 
       if (!firstPartyMap.has(topDir)) {
         firstPartyMap.set(topDir, {
@@ -539,11 +539,11 @@ export function getAnalysisTreemap(
   // Add third-party packages to root
   if (thirdPartyMap.size > 0) {
     const thirdPartyNode = {
-      name: 'node_modules',
+      name: "node_modules",
       children: Array.from(thirdPartyMap.values()),
       value: Array.from(thirdPartyMap.values()).reduce(
         (sum, pkg) => sum + pkg.value,
-        0
+        0,
       ),
     };
     root.children.push(thirdPartyNode);
@@ -555,7 +555,7 @@ export function getAnalysisTreemap(
   // Calculate root value
   root.value = root.children.reduce(
     (sum: number, child: any) => sum + child.value,
-    0
+    0,
   );
 
   return root;
