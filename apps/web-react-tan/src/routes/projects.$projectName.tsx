@@ -1,3 +1,4 @@
+import { getProjectAnalyses } from "@/api";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,9 +8,19 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { useLoaderData, useParams, Link } from "@tanstack/react-router";
+import {
+  useLoaderData,
+  useParams,
+  Link,
+  createFileRoute,
+} from "@tanstack/react-router";
 
-export default function ProjectAnalysesPage() {
+export const Route = createFileRoute("/projects/$projectName")({
+  component: ProjectAnalysesPage,
+  loader: ({ params: { projectName } }) => getProjectAnalyses(projectName),
+});
+
+function ProjectAnalysesPage() {
   const analyses = useLoaderData({ from: "/projects/$projectName" });
   const { projectName } = useParams({ from: "/projects/$projectName" });
 

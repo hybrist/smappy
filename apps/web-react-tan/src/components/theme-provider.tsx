@@ -20,6 +20,13 @@ const initialState: ThemeProviderState = {
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
+function getLocalStorage() {
+  if (typeof localStorage !== "undefined") {
+    return localStorage;
+  }
+  return null;
+}
+
 export function ThemeProvider({
   children,
   defaultTheme = "dark",
@@ -27,7 +34,7 @@ export function ThemeProvider({
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme,
+    () => (getLocalStorage()?.getItem(storageKey) as Theme) || defaultTheme,
   );
 
   useEffect(() => {
@@ -51,7 +58,7 @@ export function ThemeProvider({
   const value = {
     theme,
     setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme);
+      getLocalStorage()?.setItem(storageKey, theme);
       setTheme(theme);
     },
   };

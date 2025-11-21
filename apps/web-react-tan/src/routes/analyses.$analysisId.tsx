@@ -1,7 +1,17 @@
+import { getProjectAnalyses } from "@/api";
 import { Navbar } from "@/components/layout/navbar";
-import { useLoaderData, useParams } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  useLoaderData,
+  useParams,
+} from "@tanstack/react-router";
 
-export default function AnalysisDetailsPage() {
+export const Route = createFileRoute("/analyses/$analysisId")({
+  component: AnalysisDetailsPage,
+  loader: ({ params: { projectName } }) => getProjectAnalyses(projectName),
+});
+
+function AnalysisDetailsPage() {
   const analysis = useLoaderData({ from: "/analyses/$analysisId" });
   const { analysisId } = useParams({ from: "/analyses/$analysisId" });
 

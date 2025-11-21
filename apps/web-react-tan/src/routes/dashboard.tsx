@@ -1,27 +1,28 @@
-import { useState } from "react";
+import { getProjects } from "@/api";
 import { Navbar } from "@/components/layout/navbar";
+import { RawModulesView } from "@/components/raw-modules-view";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
-import { LayoutDashboard, Bot, Package, Database } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { RawModulesView } from "@/components/raw-modules-view";
-import { Link, useLoaderData } from "@tanstack/react-router";
+import { createFileRoute, Link, useLoaderData } from "@tanstack/react-router";
+import { Bot, Database, LayoutDashboard, Package } from "lucide-react";
+import { useState } from "react";
 
-export default function Dashboard() {
+export const Route = createFileRoute("/dashboard")({
+  component: DashboardPage,
+  loader: () => getProjects(),
+});
+
+function DashboardPage() {
   const [activeTab, setActiveTab] = useState("overview");
   // TODO: Re-enable when TanStack Start SSR is set up
-  // const projects = useLoaderData({ from: "/dashboard" });
-  const projects: Array<{
-    projectName: string;
-    totalRuns: number;
-    latestRunDate: string | null;
-  }> = [];
+  const projects = useLoaderData({ from: "/dashboard" });
 
   const renderContent = () => {
     if (activeTab === "raw-modules") {
