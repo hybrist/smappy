@@ -8,3 +8,4 @@ dist
 .turbo
 *.timestamp_*.js
 .tanstack
+/src/routeTree.gen.ts
