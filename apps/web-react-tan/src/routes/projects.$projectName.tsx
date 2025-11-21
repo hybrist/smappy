@@ -17,7 +17,8 @@ import {
 
 export const Route = createFileRoute("/projects/$projectName")({
   component: ProjectAnalysesPage,
-  loader: ({ params: { projectName } }) => getProjectAnalyses(projectName),
+  loader: ({ params: { projectName } }) =>
+    getProjectAnalyses({ data: { projectName } }),
 });
 
 function ProjectAnalysesPage() {

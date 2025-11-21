@@ -1,4 +1,4 @@
-import { getProjectAnalyses } from "@/api";
+import { getAnalysisDetails } from "@/api";
 import { Navbar } from "@/components/layout/navbar";
 import {
   createFileRoute,
@@ -8,12 +8,26 @@ import {
 
 export const Route = createFileRoute("/analyses/$analysisId")({
   component: AnalysisDetailsPage,
-  loader: ({ params: { projectName } }) => getProjectAnalyses(projectName),
+  loader: ({ params: { analysisId } }) =>
+    getAnalysisDetails({ data: { id: analysisId } }),
 });
 
 function AnalysisDetailsPage() {
   const analysis = useLoaderData({ from: "/analyses/$analysisId" });
   const { analysisId } = useParams({ from: "/analyses/$analysisId" });
+
+  if (!analysis) {
+    return (
+      <div className="min-h-screen bg-background font-sans flex flex-col">
+        <Navbar />
+        <main className="flex-1 overflow-auto p-6">
+          <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
+            <p>Analysis not found</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background font-sans flex flex-col">
