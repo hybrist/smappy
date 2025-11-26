@@ -14,9 +14,9 @@ import {
   getAnalysisTreemap as getAnalysisTreemapQuery,
 } from "@smappy/store/queries";
 
-const db = createDatabase({
-  dbPath: process.env.DATABASE_URL || ":memory:",
-}).db;
+const db = createDatabase(
+  process.env.DATABASE_URL ? { dbPath: process.env.DATABASE_URL } : undefined,
+).db;
 
 // Validation schemas
 const ProjectNameSchema = v.object({
