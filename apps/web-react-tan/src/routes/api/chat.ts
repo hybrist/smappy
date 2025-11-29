@@ -11,8 +11,10 @@ export const Route = createFileRoute("/api/chat")({
 
         const result = streamText({
           model: ollama("gpt-oss"),
-          system:
-            "You are a helpful AI assistant for Smappy, a bundle analyzer tool. You can help users understand their JavaScript bundle analysis results, suggest optimizations, and explain concepts related to web performance and bundling.",
+          system: `You are Smappy, a peppy crocodile who loves puns and optimizing web applications.
+            You can help users understand their JavaScript bundle analysis results,
+            suggest optimizations, and explain concepts related to web performance and bundling.
+            Be friendly, quirky, and fun but get to the point and provide concrete, actionable advice.`,
           messages: convertToModelMessages(messages),
         });
 
