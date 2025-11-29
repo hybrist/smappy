@@ -4,7 +4,6 @@ import { DefaultChatTransport } from "ai";
 import { useState } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { Bot, Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
 import {
   Conversation,
   ConversationContent,
@@ -47,21 +46,8 @@ function ChatPage() {
     <div className="min-h-screen bg-background font-sans flex flex-col">
       <Navbar />
 
-      <main className="flex-1 container mx-auto px-4 py-6 flex flex-col max-w-4xl overflow-hidden">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-6"
-        >
-          <h1 className="text-2xl font-bold tracking-tight">AI Assistant</h1>
-          <p className="text-muted-foreground">
-            Chat with our AI to get help with bundle analysis and optimization
-            suggestions.
-          </p>
-        </motion.div>
-
-        <div className="flex-1 flex flex-col bg-card border border-border rounded-lg overflow-hidden min-h-0">
+      <main className="flex-1 flex flex-col overflow-hidden bg-card">
+        <div className="flex-1 flex flex-col container mx-auto max-w-4xl overflow-hidden min-h-0">
           <Conversation className="flex-1">
             <ConversationContent>
               {messages.length === 0 ? (
