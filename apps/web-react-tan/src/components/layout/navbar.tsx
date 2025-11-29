@@ -1,6 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { Github, Moon, Sun } from "lucide-react";
+import { Github, Moon, Sun, MessageSquare } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 
 export function Navbar() {
@@ -26,6 +26,14 @@ export function Navbar() {
         </Link>
 
         <div className="flex items-center gap-4">
+          <Link
+            to="/chat"
+            className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span className="hidden sm:inline">Chat</span>
+          </Link>
+
           <a
             href="https://github.com"
             target="_blank"
