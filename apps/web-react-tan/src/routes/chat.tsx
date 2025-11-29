@@ -3,7 +3,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { useState } from "react";
 import { Navbar } from "@/components/layout/navbar";
-import { Bot } from "lucide-react";
+import { Bot, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   Conversation,
@@ -22,6 +22,11 @@ import {
   PromptInputFooter,
   PromptInputSubmit,
 } from "@/components/ai-elements/prompt-input";
+import {
+  Reasoning,
+  ReasoningTrigger,
+  ReasoningContent,
+} from "@/components/ai-elements/reasoning";
 
 export const Route = createFileRoute("/chat")({
   component: ChatPage,
@@ -66,19 +71,49 @@ function ChatPage() {
                   icon={<Bot className="w-12 h-12 text-primary/50" />}
                 />
               ) : (
-                messages.map((message) => (
-                  <Message key={message.id} from={message.role}>
-                    <MessageContent>
-                      {message.parts.map((part, partIndex) =>
-                        part.type === "text" ? (
-                          <MessageResponse key={partIndex}>
-                            {part.text}
-                          </MessageResponse>
-                        ) : null,
-                      )}
-                    </MessageContent>
-                  </Message>
-                ))
+                <>
+                  {messages.map((message) => (
+                    <Message key={message.id} from={message.role}>
+                      <MessageContent>
+                        {message.parts.map((part, partIndex) => {
+                          if (part.type === "reasoning") {
+                            return (
+                              <Reasoning
+                                key={partIndex}
+                                isStreaming={
+                                  status === "streaming" &&
+                                  message.id ===
+                                    messages[messages.length - 1]?.id
+                                }
+                              >
+                                <ReasoningTrigger />
+                                <ReasoningContent>{part.text}</ReasoningContent>
+                              </Reasoning>
+                            );
+                          }
+                          if (part.type === "text") {
+                            return (
+                              <MessageResponse key={partIndex}>
+                                {part.text}
+                              </MessageResponse>
+                            );
+                          }
+                          return null;
+                        })}
+                      </MessageContent>
+                    </Message>
+                  ))}
+                  {status === "submitted" && (
+                    <Message from="assistant">
+                      <MessageContent>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Thinking...</span>
+                        </div>
+                      </MessageContent>
+                    </Message>
+                  )}
+                </>
               )}
             </ConversationContent>
             <ConversationScrollButton />

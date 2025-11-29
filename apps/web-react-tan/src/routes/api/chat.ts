@@ -16,7 +16,9 @@ export const Route = createFileRoute("/api/chat")({
           messages: convertToModelMessages(messages),
         });
 
-        return result.toUIMessageStreamResponse();
+        return result.toUIMessageStreamResponse({
+          sendReasoning: true,
+        });
       },
     },
   },
