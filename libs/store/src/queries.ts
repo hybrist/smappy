@@ -5,7 +5,7 @@
 
 import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import * as schema from "./schema.ts";
-import { eq, desc, and, gte, sql } from "drizzle-orm";
+import { eq, desc, and, gte, sql, count } from "drizzle-orm";
 
 export interface AnalysisModuleFilters {
   /** Filter by file type (e.g., 'javascript', 'css') */
@@ -216,54 +216,19 @@ export function listProjects(
   db: BetterSQLite3Database<typeof schema>,
 ): ProjectData[] {
   // Get all runs grouped by project name
-  const allRuns = db
+  const projectsWithRunInfo = db
     .select({
       projectName: schema.analysisRun.projectName,
-      createdAt: schema.analysisRun.createdAt,
+      latestRunDate: sql`MAX(${schema.analysisRun.createdAt})`,
+      totalRuns: sql`COUNT(*)`,
     })
     .from(schema.analysisRun)
     .where(sql`${schema.analysisRun.projectName} IS NOT NULL`)
+    .groupBy(schema.analysisRun.projectName)
+    .orderBy(desc(sql`MAX(${schema.analysisRun.createdAt})`))
     .all();
 
-  // Group by project name and calculate stats
-  const projectMap = new Map<
-    string,
-    { latestDate: string | null; count: number }
-  >();
-
-  for (const run of allRuns) {
-    if (!run.projectName) continue;
-
-    const existing = projectMap.get(run.projectName);
-    if (existing) {
-      existing.count++;
-      if (
-        run.createdAt &&
-        (!existing.latestDate || run.createdAt > existing.latestDate)
-      ) {
-        existing.latestDate = run.createdAt;
-      }
-    } else {
-      projectMap.set(run.projectName, {
-        latestDate: run.createdAt || null,
-        count: 1,
-      });
-    }
-  }
-
-  // Convert to array and sort by latest date (most recent first)
-  return Array.from(projectMap.entries())
-    .map(([projectName, stats]) => ({
-      projectName,
-      latestRunDate: stats.latestDate,
-      totalRuns: stats.count,
-    }))
-    .sort((a, b) => {
-      if (!a.latestRunDate && !b.latestRunDate) return 0;
-      if (!a.latestRunDate) return 1;
-      if (!b.latestRunDate) return -1;
-      return b.latestRunDate.localeCompare(a.latestRunDate);
-    });
+  return projectsWithRunInfo as ProjectData[];
 }
 
 /**

@@ -1,4 +1,5 @@
 node_modules
+.pnpm-store
 
 # Output
 .output
@@ -8,6 +9,7 @@ node_modules
 .svelte-kit
 build
 dist
+*.log
 
 # OS
 .DS_Store
