@@ -39,7 +39,7 @@ function HomePage() {
               </div>
               <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-foreground">
                 Deep dive into your{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-600">
+                <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-teal-600">
                   bundles
                 </span>
                 .
@@ -82,10 +82,10 @@ function HomePage() {
 
             {/* Mascot & Interface Mockup */}
             <div className="relative z-10 flex flex-col items-center">
-              <Mascot className="w-64 h-64 mb-[-40px] z-20 hover:scale-105 transition-transform duration-300" />
+              <Mascot className="w-64 h-64 mb-10 z-20 hover:scale-105 transition-transform duration-300" />
 
               {/* Mock Card behind mascot */}
-              <div className="w-full max-w-md bg-card/80 backdrop-blur-sm border border-border rounded-2xl shadow-2xl p-6 transform rotate-[-2deg] hover:rotate-0 transition-transform duration-500">
+              <div className="w-full max-w-md bg-card/80 backdrop-blur-sm border border-border rounded-2xl shadow-2xl p-6 transform -rotate-2 hover:rotate-0 transition-transform duration-500">
                 <div className="flex items-center gap-2 mb-4 border-b pb-4">
                   <div className="w-3 h-3 rounded-full bg-red-500" />
                   <div className="w-3 h-3 rounded-full bg-yellow-500" />
