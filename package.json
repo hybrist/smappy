@@ -36,7 +36,9 @@
   },
   "pnpm": {
     "overrides": {
-      "@tanstack/react-router": "^1.136.18"
+      "@tanstack/react-router": "^1.136.18",
+      "vite": "^7.2.6",
+      "@types/node": "^22.19.0"
     }
   }
 }

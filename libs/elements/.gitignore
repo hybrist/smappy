@@ -1,0 +1,6 @@
+/dist
+/node_modules
+*.log
+
+*storybook.log
+storybook-static

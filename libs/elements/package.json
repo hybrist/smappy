@@ -1,0 +1,57 @@
+{
+  "name": "@smappy/elements",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./file-summary/mcp-app": "./src/file-summary/mcp-app.tsx",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "check": "tsdown --no-clean --report false && prettier --check . && tsc",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest --run",
+    "prepare": "tsdown",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  },
+  "dependencies": {
+    "lucide-react": "^0.545.0",
+    "preact": "^10.28.0",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@chromatic-com/storybook": "^4.1.3",
+    "@storybook/addon-a11y": "^10.1.3",
+    "@storybook/addon-docs": "^10.1.3",
+    "@storybook/addon-vitest": "^10.1.3",
+    "@storybook/preact-vite": "^10.1.3",
+    "@tailwindcss/vite": "^4.1.17",
+    "@testing-library/preact": "^3.2.4",
+    "@vitest/browser-playwright": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "playwright": "catalog:",
+    "prettier": "catalog:",
+    "storybook": "^10.1.3",
+    "tailwindcss": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  },
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "publishConfig": {
+    "exports": {
+      ".": "./dist/index.mjs",
+      "./file-summary/mcp-app": "./dist/file-summary/mcp-app.mjs",
+      "./package.json": "./package.json"
+    }
+  }
+}
