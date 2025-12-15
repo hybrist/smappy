@@ -17,7 +17,7 @@
   "dependencies": {
     "@smappy/store": "workspace:*",
     "drizzle-orm": "^0.44.7",
-    "zod": "^4.1.12"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/node": "^22.19.0",

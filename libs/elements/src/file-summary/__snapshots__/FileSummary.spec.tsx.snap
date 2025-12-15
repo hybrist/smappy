@@ -1,0 +1,264 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`FileSummary > renders correctly 1`] = `
+<div>
+  <div
+    class="w-[400px] sm:w-[540px] flex flex-col h-full"
+  >
+    <div
+      class="pb-6 border-b"
+    >
+      <div
+        class="flex items-center gap-2 font-mono text-lg text-primary"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-file-code w-5 h-5"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M10 12.5 8 15l2 2.5"
+          />
+          <path
+            d="m14 12.5 2 2.5-2 2.5"
+          />
+          <path
+            d="M14 2v4a2 2 0 0 0 2 2h4"
+          />
+          <path
+            d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"
+          />
+        </svg>
+        button.tsx
+      </div>
+      <div>
+        Full path:
+         
+        <code
+          class="bg-muted px-1 py-0.5 rounded text-xs break-all"
+        >
+          src/components/ui/button.tsx
+        </code>
+      </div>
+    </div>
+    <div
+      class="flex-1 -mr-6 pr-6"
+    >
+      <div
+        class="py-6 space-y-8"
+      >
+        <div
+          class="grid grid-cols-2 gap-4"
+        >
+          <div
+            class="p-4 rounded-lg border bg-card"
+          >
+            <div
+              class="text-sm text-muted-foreground mb-1"
+            >
+              Parsed Size
+            </div>
+            <div
+              class="text-2xl font-bold"
+            >
+              4.2 KB
+            </div>
+          </div>
+          <div
+            class="p-4 rounded-lg border bg-card"
+          >
+            <div
+              class="text-sm text-muted-foreground mb-1"
+            >
+              Gzip Size
+            </div>
+            <div
+              class="text-2xl font-bold text-primary"
+            >
+              1.1 KB
+            </div>
+          </div>
+        </div>
+        <div
+          class="space-y-3"
+        >
+          <h3
+            class="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-layers w-4 h-4"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"
+              />
+              <path
+                d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"
+              />
+              <path
+                d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"
+              />
+            </svg>
+            Imported By (Issuers)
+          </h3>
+          <div
+            class="rounded-lg border bg-muted/30 divide-y"
+          >
+            <div
+              class="p-3 text-sm font-mono text-muted-foreground flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-arrow-right w-3 h-3 text-muted-foreground/50"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M5 12h14"
+                />
+                <path
+                  d="m12 5 7 7-7 7"
+                />
+              </svg>
+              src/pages/home.tsx
+            </div>
+            <div
+              class="p-3 text-sm font-mono text-muted-foreground flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-arrow-right w-3 h-3 text-muted-foreground/50"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M5 12h14"
+                />
+                <path
+                  d="m12 5 7 7-7 7"
+                />
+              </svg>
+              src/pages/dashboard.tsx
+            </div>
+            <div
+              class="p-3 text-sm font-mono text-muted-foreground flex items-center gap-2"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-arrow-right w-3 h-3 text-muted-foreground/50"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M5 12h14"
+                />
+                <path
+                  d="m12 5 7 7-7 7"
+                />
+              </svg>
+              src/components/layout/navbar.tsx
+            </div>
+          </div>
+        </div>
+        <div
+          class="space-y-3"
+        >
+          <h3
+            class="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-file-code w-4 h-4"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M10 12.5 8 15l2 2.5"
+              />
+              <path
+                d="m14 12.5 2 2.5-2 2.5"
+              />
+              <path
+                d="M14 2v4a2 2 0 0 0 2 2h4"
+              />
+              <path
+                d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"
+              />
+            </svg>
+            Source Preview
+          </h3>
+          <div
+            class="rounded-lg border bg-[#1e1e1e] text-[#d4d4d4] font-mono text-xs overflow-hidden"
+          >
+            <div
+              class="flex items-center justify-between px-3 py-2 border-b border-[#333] bg-[#252526]"
+            >
+              <span>
+                button.tsx
+              </span>
+              <span
+                class="text-[10px] text-[#858585]"
+              >
+                Read-only
+              </span>
+            </div>
+            <div
+              class="p-4 overflow-x-auto"
+            >
+              <pre>
+                /* Hello World! */
+
+              </pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
