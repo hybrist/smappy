@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@types/babel__traverse": "^7.28.0",
-    "@types/node": "^22.19.0",
+    "@types/node": "^22.19.3",
     "@types/pako": "^2.0.4",
     "prettier": "catalog:",
     "tsdown": "catalog:",

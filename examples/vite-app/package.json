@@ -10,9 +10,9 @@
     "build:dev": "vite build --mode development"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.1",
-    "vite": "^7.1.12",
-    "typescript": "^5.9.3"
+    "@vitejs/plugin-react": "^4.7.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.0"
   },
   "dependencies": {
     "react": "^18.3.1",

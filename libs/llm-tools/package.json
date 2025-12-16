@@ -20,7 +20,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "^22.19.0",
+    "@types/node": "^22.19.3",
     "prettier": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:",
