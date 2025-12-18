@@ -1,9 +1,9 @@
-import { defineConfig } from "tsdown";
+import { defineConfig } from 'tsdown';
 
 export default defineConfig({
-  entry: ["src/main.ts", "src/ingestion/index.ts", "src/webpack/plugin.ts"],
+  entry: ['src/main.ts', 'src/ingestion/index.ts', 'src/webpack/plugin.ts'],
   sourcemap: true,
-  tsconfig: "./tsconfig.json",
+  tsconfig: './tsconfig.json',
   exports: {
     devExports: true,
   },

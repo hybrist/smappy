@@ -3,8 +3,8 @@
  * Provides abstract base classes and interfaces for bundler adapters
  */
 
-import type { BundleInput, ChunkInput, ModuleInput } from "@smappy/core";
-import type { IngestionOptions } from "../ingestion/index.ts";
+import type { BundleInput, ChunkInput, ModuleInput } from '@smappy/core';
+import type { IngestionOptions } from '../ingestion/index.ts';
 import type {
   BundlerPluginOptions,
   PluginConfig,
@@ -12,7 +12,7 @@ import type {
   BundlerModule,
   BundlerChunk,
   BundlerBundle,
-} from "./types.ts";
+} from './types.ts';
 import {
   extractSourceMap,
   detectFileType,
@@ -21,8 +21,8 @@ import {
   shouldExcludeFile,
   shouldIncludeFile,
   isModuleFile,
-} from "./utils.ts";
-import { relative } from "node:path";
+} from './utils.ts';
+import { relative } from 'node:path';
 
 // ============================================================================
 // Abstract Adapter Base Class
@@ -97,7 +97,7 @@ export abstract class BundlerAdapter {
       // Skip third-party modules if configured
       if (
         !this.options.analyzeThirdParty &&
-        bundlerModule.identifier.includes("node_modules")
+        bundlerModule.identifier.includes('node_modules')
       ) {
         continue;
       }
@@ -109,7 +109,7 @@ export abstract class BundlerAdapter {
 
       // Make path relative to baseDir for storage
       const filePath = relative(this.baseDir, absolutePath);
-      const sourceContent = bundlerModule.source || "";
+      const sourceContent = bundlerModule.source || '';
       const fileType = detectFileType(filePath);
 
       modules.push({
@@ -165,19 +165,19 @@ export abstract class BundlerAdapter {
     const bundles: BundleInput[] = [];
 
     for (const bundlerBundle of bundlerBundles) {
-      const bundleContent = bundlerBundle.content || "";
+      const bundleContent = bundlerBundle.content || '';
       const bundlePath = bundlerBundle.fileName;
       const detectedType = detectFileType(bundlePath);
       // BundleInput only accepts JS/TS types, not CSS/JSON
-      const bundleType: BundleInput["type"] =
-        detectedType === "js" ||
-        detectedType === "mjs" ||
-        detectedType === "cjs" ||
-        detectedType === "jsx" ||
-        detectedType === "tsx" ||
-        detectedType === "ts"
+      const bundleType: BundleInput['type'] =
+        detectedType === 'js' ||
+        detectedType === 'mjs' ||
+        detectedType === 'cjs' ||
+        detectedType === 'jsx' ||
+        detectedType === 'tsx' ||
+        detectedType === 'ts'
           ? detectedType
-          : "js";
+          : 'js';
 
       // Extract source map if enabled
       let sourceMapReference: string | undefined;
@@ -214,7 +214,7 @@ export abstract class BundlerAdapter {
    * @returns IngestionOptions
    */
   protected createIngestionOptions(
-    bundlerType: IngestionOptions["bundlerType"],
+    bundlerType: IngestionOptions['bundlerType'],
   ): IngestionOptions {
     return {
       bundlerType,
@@ -332,7 +332,7 @@ export function createDefaultAdapter(
 ): BundlerAdapter {
   return new (class extends BundlerAdapter {
     extract(): PluginExtractionResult {
-      throw new Error("Default adapter cannot extract - must be extended");
+      throw new Error('Default adapter cannot extract - must be extended');
     }
   })(baseDir, options, config);
 }

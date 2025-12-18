@@ -1,6 +1,6 @@
-import "../src/tailwind.css";
+import '../src/tailwind.css';
 
-import type { Preview } from "@storybook/preact-vite";
+import type { Preview } from '@storybook/preact-vite';
 
 const preview: Preview = {
   parameters: {

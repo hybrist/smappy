@@ -2,13 +2,13 @@
  * Tests for dependency analyzer rule
  */
 
-import { describe, it, expect } from "vitest";
-import { createDependencyAnalyzer } from "./dependency-analyzer.js";
-import type { SuggestionContext } from "../types.js";
+import { describe, it, expect } from 'vitest';
+import { createDependencyAnalyzer } from './dependency-analyzer.js';
+import type { SuggestionContext } from '../types.js';
 import type {
   ModuleWithAnalysis,
   DependencyRelationship,
-} from "../../ingestion/db/writer.js";
+} from '../../ingestion/db/writer.js';
 
 /**
  * Helper to create a minimal module with analysis
@@ -17,9 +17,9 @@ function createModule(
   overrides: Partial<ModuleWithAnalysis> = {},
 ): ModuleWithAnalysis {
   return {
-    filePath: "/test/module.js",
-    sourceContent: "export const foo = 1;",
-    fileType: "js",
+    filePath: '/test/module.js',
+    sourceContent: 'export const foo = 1;',
+    fileType: 'js',
     originalSize: 1000,
     bundledSize: 800,
     isThirdParty: false,
@@ -37,7 +37,7 @@ function createModule(
 function createDependency(
   importer: string,
   imported: string,
-  type: "static" | "dynamic" = "static",
+  type: 'static' | 'dynamic' = 'static',
 ): DependencyRelationship {
   return {
     importerPath: importer,
@@ -61,21 +61,21 @@ function createContext(
   };
 }
 
-describe("Dependency Analyzer", () => {
-  describe("createDependencyAnalyzer", () => {
-    it("should create a rule with correct metadata", () => {
+describe('Dependency Analyzer', () => {
+  describe('createDependencyAnalyzer', () => {
+    it('should create a rule with correct metadata', () => {
       expect.assertions(3);
 
       const rule = createDependencyAnalyzer();
 
-      expect(rule.id).toBe("dependency-analyzer");
-      expect(rule.name).toBe("Dependency Analyzer");
-      expect(rule.description).toContain("circular");
+      expect(rule.id).toBe('dependency-analyzer');
+      expect(rule.name).toBe('Dependency Analyzer');
+      expect(rule.description).toContain('circular');
     });
   });
 
-  describe("circular dependency detection", () => {
-    it("should return empty array when no dependencies exist", async () => {
+  describe('circular dependency detection', () => {
+    it('should return empty array when no dependencies exist', async () => {
       expect.assertions(1);
 
       const rule = createDependencyAnalyzer();
@@ -86,160 +86,160 @@ describe("Dependency Analyzer", () => {
       expect(suggestions).toEqual([]);
     });
 
-    it("should return empty array when no circular dependencies exist", async () => {
+    it('should return empty array when no circular dependencies exist', async () => {
       expect.assertions(1);
 
       const rule = createDependencyAnalyzer();
       const context = createContext(
         [
-          createModule({ filePath: "/a.js" }),
-          createModule({ filePath: "/b.js" }),
-          createModule({ filePath: "/c.js" }),
+          createModule({ filePath: '/a.js' }),
+          createModule({ filePath: '/b.js' }),
+          createModule({ filePath: '/c.js' }),
         ],
         [
-          createDependency("/a.js", "/b.js"),
-          createDependency("/b.js", "/c.js"),
+          createDependency('/a.js', '/b.js'),
+          createDependency('/b.js', '/c.js'),
         ],
       );
 
       const suggestions = await rule.execute(context);
 
       expect(
-        suggestions.filter((s) => s.type === "circular-dependency"),
+        suggestions.filter((s) => s.type === 'circular-dependency'),
       ).toEqual([]);
     });
 
-    it("should detect simple circular dependency (A -> B -> A)", async () => {
+    it('should detect simple circular dependency (A -> B -> A)', async () => {
       expect.assertions(5);
 
       const rule = createDependencyAnalyzer();
       const context = createContext(
         [
-          createModule({ filePath: "/a.js" }),
-          createModule({ filePath: "/b.js" }),
+          createModule({ filePath: '/a.js' }),
+          createModule({ filePath: '/b.js' }),
         ],
         [
-          createDependency("/a.js", "/b.js"),
-          createDependency("/b.js", "/a.js"),
+          createDependency('/a.js', '/b.js'),
+          createDependency('/b.js', '/a.js'),
         ],
       );
 
       const suggestions = await rule.execute(context);
 
       const circular = suggestions.filter(
-        (s) => s.type === "circular-dependency",
+        (s) => s.type === 'circular-dependency',
       );
       expect(circular).toHaveLength(1);
-      expect(circular[0].severity).toBe("warning");
-      expect(circular[0].title).toContain("Circular dependency");
-      expect(circular[0].description).toContain("/a.js");
+      expect(circular[0].severity).toBe('warning');
+      expect(circular[0].title).toContain('Circular dependency');
+      expect(circular[0].description).toContain('/a.js');
       expect(circular[0].links).toHaveLength(2); // a.js and b.js
     });
 
-    it("should detect longer circular dependency (A -> B -> C -> A)", async () => {
+    it('should detect longer circular dependency (A -> B -> C -> A)', async () => {
       expect.assertions(3);
 
       const rule = createDependencyAnalyzer();
       const context = createContext(
         [
-          createModule({ filePath: "/a.js" }),
-          createModule({ filePath: "/b.js" }),
-          createModule({ filePath: "/c.js" }),
+          createModule({ filePath: '/a.js' }),
+          createModule({ filePath: '/b.js' }),
+          createModule({ filePath: '/c.js' }),
         ],
         [
-          createDependency("/a.js", "/b.js"),
-          createDependency("/b.js", "/c.js"),
-          createDependency("/c.js", "/a.js"),
+          createDependency('/a.js', '/b.js'),
+          createDependency('/b.js', '/c.js'),
+          createDependency('/c.js', '/a.js'),
         ],
       );
 
       const suggestions = await rule.execute(context);
 
       const circular = suggestions.filter(
-        (s) => s.type === "circular-dependency",
+        (s) => s.type === 'circular-dependency',
       );
       expect(circular).toHaveLength(1);
       expect(circular[0].links).toHaveLength(3); // a, b, c
-      expect(circular[0].description).toContain("→");
+      expect(circular[0].description).toContain('→');
     });
 
-    it("should not duplicate circular dependencies", async () => {
+    it('should not duplicate circular dependencies', async () => {
       expect.assertions(1);
 
       const rule = createDependencyAnalyzer();
       const context = createContext(
         [
-          createModule({ filePath: "/a.js" }),
-          createModule({ filePath: "/b.js" }),
+          createModule({ filePath: '/a.js' }),
+          createModule({ filePath: '/b.js' }),
         ],
         [
-          createDependency("/a.js", "/b.js"),
-          createDependency("/b.js", "/a.js"),
+          createDependency('/a.js', '/b.js'),
+          createDependency('/b.js', '/a.js'),
         ],
       );
 
       const suggestions = await rule.execute(context);
 
       const circular = suggestions.filter(
-        (s) => s.type === "circular-dependency",
+        (s) => s.type === 'circular-dependency',
       );
       expect(circular).toHaveLength(1);
     });
 
-    it("should handle multiple independent circular dependencies", async () => {
+    it('should handle multiple independent circular dependencies', async () => {
       expect.assertions(2);
 
       const rule = createDependencyAnalyzer();
       const context = createContext(
         [
-          createModule({ filePath: "/a.js" }),
-          createModule({ filePath: "/b.js" }),
-          createModule({ filePath: "/c.js" }),
-          createModule({ filePath: "/d.js" }),
+          createModule({ filePath: '/a.js' }),
+          createModule({ filePath: '/b.js' }),
+          createModule({ filePath: '/c.js' }),
+          createModule({ filePath: '/d.js' }),
         ],
         [
-          createDependency("/a.js", "/b.js"),
-          createDependency("/b.js", "/a.js"),
-          createDependency("/c.js", "/d.js"),
-          createDependency("/d.js", "/c.js"),
+          createDependency('/a.js', '/b.js'),
+          createDependency('/b.js', '/a.js'),
+          createDependency('/c.js', '/d.js'),
+          createDependency('/d.js', '/c.js'),
         ],
       );
 
       const suggestions = await rule.execute(context);
 
       const circular = suggestions.filter(
-        (s) => s.type === "circular-dependency",
+        (s) => s.type === 'circular-dependency',
       );
       expect(circular).toHaveLength(2);
       expect(circular.every((s) => s.links?.length === 2)).toBe(true);
     });
   });
 
-  describe("unused third-party dependency detection", () => {
-    it("should return empty array when no third-party modules exist", async () => {
+  describe('unused third-party dependency detection', () => {
+    it('should return empty array when no third-party modules exist', async () => {
       expect.assertions(1);
 
       const rule = createDependencyAnalyzer();
-      const context = createContext([createModule({ filePath: "/a.js" })]);
+      const context = createContext([createModule({ filePath: '/a.js' })]);
 
       const suggestions = await rule.execute(context);
 
       expect(
-        suggestions.filter((s) => s.type === "unused-third-party"),
+        suggestions.filter((s) => s.type === 'unused-third-party'),
       ).toEqual([]);
     });
 
-    it("should detect unused third-party dependency", async () => {
+    it('should detect unused third-party dependency', async () => {
       expect.assertions(4);
 
       const rule = createDependencyAnalyzer();
       const context = createContext(
         [
-          createModule({ filePath: "/a.js" }),
+          createModule({ filePath: '/a.js' }),
           createModule({
-            filePath: "/node_modules/unused/index.js",
+            filePath: '/node_modules/unused/index.js',
             isThirdParty: true,
-            packageName: "unused",
+            packageName: 'unused',
           }),
         ],
         [],
@@ -247,51 +247,51 @@ describe("Dependency Analyzer", () => {
 
       const suggestions = await rule.execute(context);
 
-      const unused = suggestions.filter((s) => s.type === "unused-third-party");
+      const unused = suggestions.filter((s) => s.type === 'unused-third-party');
       expect(unused).toHaveLength(1);
-      expect(unused[0].severity).toBe("info");
-      expect(unused[0].title).toContain("unused");
-      expect(unused[0].description).toContain("unused");
+      expect(unused[0].severity).toBe('info');
+      expect(unused[0].title).toContain('unused');
+      expect(unused[0].description).toContain('unused');
     });
 
-    it("should not flag third-party dependency that is imported", async () => {
+    it('should not flag third-party dependency that is imported', async () => {
       expect.assertions(1);
 
       const rule = createDependencyAnalyzer();
       const context = createContext(
         [
-          createModule({ filePath: "/a.js" }),
+          createModule({ filePath: '/a.js' }),
           createModule({
-            filePath: "/node_modules/used/index.js",
+            filePath: '/node_modules/used/index.js',
             isThirdParty: true,
-            packageName: "used",
+            packageName: 'used',
           }),
         ],
-        [createDependency("/a.js", "/node_modules/used/index.js")],
+        [createDependency('/a.js', '/node_modules/used/index.js')],
       );
 
       const suggestions = await rule.execute(context);
 
-      const unused = suggestions.filter((s) => s.type === "unused-third-party");
+      const unused = suggestions.filter((s) => s.type === 'unused-third-party');
       expect(unused).toEqual([]);
     });
 
-    it("should detect multiple unused third-party dependencies", async () => {
+    it('should detect multiple unused third-party dependencies', async () => {
       expect.assertions(2);
 
       const rule = createDependencyAnalyzer();
       const context = createContext(
         [
-          createModule({ filePath: "/a.js" }),
+          createModule({ filePath: '/a.js' }),
           createModule({
-            filePath: "/node_modules/unused1/index.js",
+            filePath: '/node_modules/unused1/index.js',
             isThirdParty: true,
-            packageName: "unused1",
+            packageName: 'unused1',
           }),
           createModule({
-            filePath: "/node_modules/unused2/index.js",
+            filePath: '/node_modules/unused2/index.js',
             isThirdParty: true,
-            packageName: "unused2",
+            packageName: 'unused2',
           }),
         ],
         [],
@@ -299,24 +299,24 @@ describe("Dependency Analyzer", () => {
 
       const suggestions = await rule.execute(context);
 
-      const unused = suggestions.filter((s) => s.type === "unused-third-party");
+      const unused = suggestions.filter((s) => s.type === 'unused-third-party');
       expect(unused).toHaveLength(2);
       expect(unused.map((s) => s.title)).toEqual(
         expect.arrayContaining([
-          expect.stringContaining("unused1"),
-          expect.stringContaining("unused2"),
+          expect.stringContaining('unused1'),
+          expect.stringContaining('unused2'),
         ]),
       );
     });
 
-    it("should skip third-party modules without package name", async () => {
+    it('should skip third-party modules without package name', async () => {
       expect.assertions(1);
 
       const rule = createDependencyAnalyzer();
       const context = createContext(
         [
           createModule({
-            filePath: "/node_modules/mystery/index.js",
+            filePath: '/node_modules/mystery/index.js',
             isThirdParty: true,
             // no packageName
           }),
@@ -326,67 +326,67 @@ describe("Dependency Analyzer", () => {
 
       const suggestions = await rule.execute(context);
 
-      const unused = suggestions.filter((s) => s.type === "unused-third-party");
+      const unused = suggestions.filter((s) => s.type === 'unused-third-party');
       expect(unused).toEqual([]);
     });
   });
 
-  describe("deep dependency chain detection", () => {
-    it("should return empty array when chains are within limit", async () => {
+  describe('deep dependency chain detection', () => {
+    it('should return empty array when chains are within limit', async () => {
       expect.assertions(1);
 
       const rule = createDependencyAnalyzer({ maxDepth: 5 });
       const context = createContext(
         [
-          createModule({ filePath: "/a.js" }),
-          createModule({ filePath: "/b.js" }),
-          createModule({ filePath: "/c.js" }),
+          createModule({ filePath: '/a.js' }),
+          createModule({ filePath: '/b.js' }),
+          createModule({ filePath: '/c.js' }),
         ],
         [
-          createDependency("/a.js", "/b.js"),
-          createDependency("/b.js", "/c.js"),
+          createDependency('/a.js', '/b.js'),
+          createDependency('/b.js', '/c.js'),
         ],
       );
 
       const suggestions = await rule.execute(context);
 
       const deep = suggestions.filter(
-        (s) => s.type === "deep-dependency-chain",
+        (s) => s.type === 'deep-dependency-chain',
       );
       expect(deep).toEqual([]);
     });
 
-    it("should detect deep dependency chain exceeding max depth", async () => {
+    it('should detect deep dependency chain exceeding max depth', async () => {
       expect.assertions(4);
 
       const rule = createDependencyAnalyzer({ maxDepth: 3 });
       const modules = [
-        createModule({ filePath: "/a.js" }),
-        createModule({ filePath: "/b.js" }),
-        createModule({ filePath: "/c.js" }),
-        createModule({ filePath: "/d.js" }),
-        createModule({ filePath: "/e.js" }),
+        createModule({ filePath: '/a.js' }),
+        createModule({ filePath: '/b.js' }),
+        createModule({ filePath: '/c.js' }),
+        createModule({ filePath: '/d.js' }),
+        createModule({ filePath: '/e.js' }),
       ];
       const dependencies = [
-        createDependency("/a.js", "/b.js"),
-        createDependency("/b.js", "/c.js"),
-        createDependency("/c.js", "/d.js"),
-        createDependency("/d.js", "/e.js"),
+        createDependency('/a.js', '/b.js'),
+        createDependency('/b.js', '/c.js'),
+        createDependency('/c.js', '/d.js'),
+        createDependency('/d.js', '/e.js'),
       ];
       const context = createContext(modules, dependencies);
 
       const suggestions = await rule.execute(context);
 
       const deep = suggestions.filter(
-        (s) => s.type === "deep-dependency-chain",
+        (s) => s.type === 'deep-dependency-chain',
       );
       expect(deep.length).toBeGreaterThan(0);
-      expect(deep[0].severity).toBe("info"); // depth 4, not > 10
-      expect(deep[0].title).toContain("Deep dependency chain");
-      expect(deep[0].description).toContain("depth");
+      expect(deep[0].severity).toBe('info'); // depth 4, not > 10
+      expect(deep[0].title).toContain('Deep dependency chain');
+      expect(deep[0].description).toContain('depth');
     });
 
-    it("should use warning severity for very deep chains (>10)", async () => {
+    it('should use warning severity for very deep chains (>10)', async () => {
       expect.assertions(2);
 
       const rule = createDependencyAnalyzer({ maxDepth: 5 });
@@ -404,44 +404,44 @@ describe("Dependency Analyzer", () => {
       const suggestions = await rule.execute(context);
 
       const deep = suggestions.filter(
-        (s) => s.type === "deep-dependency-chain",
+        (s) => s.type === 'deep-dependency-chain',
       );
-      const veryDeep = deep.filter((s) => s.severity === "warning");
+      const veryDeep = deep.filter((s) => s.severity === 'warning');
       expect(veryDeep.length).toBeGreaterThan(0);
-      expect(veryDeep[0].title).toContain("Deep dependency chain");
+      expect(veryDeep[0].title).toContain('Deep dependency chain');
     });
 
-    it("should include all modules in the chain as links", async () => {
+    it('should include all modules in the chain as links', async () => {
       expect.assertions(2);
 
       const rule = createDependencyAnalyzer({ maxDepth: 3 });
       const modules = [
-        createModule({ filePath: "/a.js" }),
-        createModule({ filePath: "/b.js" }),
-        createModule({ filePath: "/c.js" }),
-        createModule({ filePath: "/d.js" }),
-        createModule({ filePath: "/e.js" }),
+        createModule({ filePath: '/a.js' }),
+        createModule({ filePath: '/b.js' }),
+        createModule({ filePath: '/c.js' }),
+        createModule({ filePath: '/d.js' }),
+        createModule({ filePath: '/e.js' }),
       ];
       const dependencies = [
-        createDependency("/a.js", "/b.js"),
-        createDependency("/b.js", "/c.js"),
-        createDependency("/c.js", "/d.js"),
-        createDependency("/d.js", "/e.js"),
+        createDependency('/a.js', '/b.js'),
+        createDependency('/b.js', '/c.js'),
+        createDependency('/c.js', '/d.js'),
+        createDependency('/d.js', '/e.js'),
       ];
       const context = createContext(modules, dependencies);
 
       const suggestions = await rule.execute(context);
 
       const deep = suggestions.filter(
-        (s) => s.type === "deep-dependency-chain",
+        (s) => s.type === 'deep-dependency-chain',
       );
       expect(deep.length).toBeGreaterThan(0);
       expect(deep[0].links?.length).toBeGreaterThan(3); // Should include multiple modules
     });
   });
 
-  describe("configuration options", () => {
-    it("should respect detectCircular option", async () => {
+  describe('configuration options', () => {
+    it('should respect detectCircular option', async () => {
       expect.assertions(2);
 
       const ruleWithCircular = createDependencyAnalyzer({
@@ -453,12 +453,12 @@ describe("Dependency Analyzer", () => {
 
       const context = createContext(
         [
-          createModule({ filePath: "/a.js" }),
-          createModule({ filePath: "/b.js" }),
+          createModule({ filePath: '/a.js' }),
+          createModule({ filePath: '/b.js' }),
         ],
         [
-          createDependency("/a.js", "/b.js"),
-          createDependency("/b.js", "/a.js"),
+          createDependency('/a.js', '/b.js'),
+          createDependency('/b.js', '/a.js'),
         ],
       );
 
@@ -466,14 +466,14 @@ describe("Dependency Analyzer", () => {
       const withoutSuggestions = await ruleWithoutCircular.execute(context);
 
       expect(
-        withSuggestions.filter((s) => s.type === "circular-dependency"),
+        withSuggestions.filter((s) => s.type === 'circular-dependency'),
       ).toHaveLength(1);
       expect(
-        withoutSuggestions.filter((s) => s.type === "circular-dependency"),
+        withoutSuggestions.filter((s) => s.type === 'circular-dependency'),
       ).toHaveLength(0);
     });
 
-    it("should respect detectUnusedThirdParty option", async () => {
+    it('should respect detectUnusedThirdParty option', async () => {
       expect.assertions(2);
 
       const ruleWithUnused = createDependencyAnalyzer({
@@ -485,9 +485,9 @@ describe("Dependency Analyzer", () => {
 
       const context = createContext([
         createModule({
-          filePath: "/node_modules/unused/index.js",
+          filePath: '/node_modules/unused/index.js',
           isThirdParty: true,
-          packageName: "unused",
+          packageName: 'unused',
         }),
       ]);
 
@@ -495,14 +495,14 @@ describe("Dependency Analyzer", () => {
       const withoutSuggestions = await ruleWithoutUnused.execute(context);
 
       expect(
-        withSuggestions.filter((s) => s.type === "unused-third-party"),
+        withSuggestions.filter((s) => s.type === 'unused-third-party'),
       ).toHaveLength(1);
       expect(
-        withoutSuggestions.filter((s) => s.type === "unused-third-party"),
+        withoutSuggestions.filter((s) => s.type === 'unused-third-party'),
       ).toHaveLength(0);
     });
 
-    it("should respect detectDeepChains option", async () => {
+    it('should respect detectDeepChains option', async () => {
       expect.assertions(2);
 
       const ruleWithDeep = createDependencyAnalyzer({
@@ -514,17 +514,17 @@ describe("Dependency Analyzer", () => {
       });
 
       const modules = [
-        createModule({ filePath: "/a.js" }),
-        createModule({ filePath: "/b.js" }),
-        createModule({ filePath: "/c.js" }),
-        createModule({ filePath: "/d.js" }),
-        createModule({ filePath: "/e.js" }),
+        createModule({ filePath: '/a.js' }),
+        createModule({ filePath: '/b.js' }),
+        createModule({ filePath: '/c.js' }),
+        createModule({ filePath: '/d.js' }),
+        createModule({ filePath: '/e.js' }),
       ];
       const dependencies = [
-        createDependency("/a.js", "/b.js"),
-        createDependency("/b.js", "/c.js"),
-        createDependency("/c.js", "/d.js"),
-        createDependency("/d.js", "/e.js"),
+        createDependency('/a.js', '/b.js'),
+        createDependency('/b.js', '/c.js'),
+        createDependency('/c.js', '/d.js'),
+        createDependency('/d.js', '/e.js'),
       ];
       const context = createContext(modules, dependencies);
 
@@ -532,32 +532,32 @@ describe("Dependency Analyzer", () => {
       const withoutSuggestions = await ruleWithoutDeep.execute(context);
 
       expect(
-        withSuggestions.filter((s) => s.type === "deep-dependency-chain")
+        withSuggestions.filter((s) => s.type === 'deep-dependency-chain')
           .length,
       ).toBeGreaterThan(0);
       expect(
-        withoutSuggestions.filter((s) => s.type === "deep-dependency-chain"),
+        withoutSuggestions.filter((s) => s.type === 'deep-dependency-chain'),
       ).toHaveLength(0);
     });
 
-    it("should respect custom maxDepth", async () => {
+    it('should respect custom maxDepth', async () => {
       expect.assertions(2);
 
       const ruleDepth3 = createDependencyAnalyzer({ maxDepth: 3 });
       const ruleDepth10 = createDependencyAnalyzer({ maxDepth: 10 });
 
       const modules = [
-        createModule({ filePath: "/a.js" }),
-        createModule({ filePath: "/b.js" }),
-        createModule({ filePath: "/c.js" }),
-        createModule({ filePath: "/d.js" }),
-        createModule({ filePath: "/e.js" }),
+        createModule({ filePath: '/a.js' }),
+        createModule({ filePath: '/b.js' }),
+        createModule({ filePath: '/c.js' }),
+        createModule({ filePath: '/d.js' }),
+        createModule({ filePath: '/e.js' }),
       ];
       const dependencies = [
-        createDependency("/a.js", "/b.js"),
-        createDependency("/b.js", "/c.js"),
-        createDependency("/c.js", "/d.js"),
-        createDependency("/d.js", "/e.js"),
+        createDependency('/a.js', '/b.js'),
+        createDependency('/b.js', '/c.js'),
+        createDependency('/c.js', '/d.js'),
+        createDependency('/d.js', '/e.js'),
       ];
       const context = createContext(modules, dependencies);
 
@@ -565,16 +565,16 @@ describe("Dependency Analyzer", () => {
       const suggestions10 = await ruleDepth10.execute(context);
 
       expect(
-        suggestions3.filter((s) => s.type === "deep-dependency-chain").length,
+        suggestions3.filter((s) => s.type === 'deep-dependency-chain').length,
       ).toBeGreaterThan(0);
       expect(
-        suggestions10.filter((s) => s.type === "deep-dependency-chain"),
+        suggestions10.filter((s) => s.type === 'deep-dependency-chain'),
       ).toHaveLength(0);
     });
   });
 
-  describe("edge cases", () => {
-    it("should handle empty context", async () => {
+  describe('edge cases', () => {
+    it('should handle empty context', async () => {
       expect.assertions(1);
 
       const rule = createDependencyAnalyzer();
@@ -585,35 +585,35 @@ describe("Dependency Analyzer", () => {
       expect(suggestions).toEqual([]);
     });
 
-    it("should handle modules with no dependencies", async () => {
+    it('should handle modules with no dependencies', async () => {
       expect.assertions(1);
 
       const rule = createDependencyAnalyzer();
       const context = createContext([
-        createModule({ filePath: "/a.js" }),
-        createModule({ filePath: "/b.js" }),
+        createModule({ filePath: '/a.js' }),
+        createModule({ filePath: '/b.js' }),
       ]);
 
       const suggestions = await rule.execute(context);
 
       expect(
-        suggestions.filter((s) => s.type === "circular-dependency"),
+        suggestions.filter((s) => s.type === 'circular-dependency'),
       ).toEqual([]);
     });
 
-    it("should handle self-referencing modules", async () => {
+    it('should handle self-referencing modules', async () => {
       expect.assertions(1);
 
       const rule = createDependencyAnalyzer();
       const context = createContext(
-        [createModule({ filePath: "/a.js" })],
-        [createDependency("/a.js", "/a.js")],
+        [createModule({ filePath: '/a.js' })],
+        [createDependency('/a.js', '/a.js')],
       );
 
       const suggestions = await rule.execute(context);
 
       const circular = suggestions.filter(
-        (s) => s.type === "circular-dependency",
+        (s) => s.type === 'circular-dependency',
       );
       expect(circular.length).toBeGreaterThan(0);
     });

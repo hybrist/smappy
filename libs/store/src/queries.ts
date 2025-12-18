@@ -3,9 +3,9 @@
  * Provides CRUD operations and utility queries for stored analysis data
  */
 
-import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
-import * as schema from "./schema.ts";
-import { eq, desc, and, gte, sql, count } from "drizzle-orm";
+import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import * as schema from './schema.ts';
+import { eq, desc, and, gte, sql, count } from 'drizzle-orm';
 
 export interface AnalysisModuleFilters {
   /** Filter by file type (e.g., 'javascript', 'css') */
@@ -19,9 +19,9 @@ export interface AnalysisModuleFilters {
   /** Number of results per page */
   pageSize?: number;
   /** Sort field */
-  sortBy?: "filePath" | "originalSize" | "bundledSize";
+  sortBy?: 'filePath' | 'originalSize' | 'bundledSize';
   /** Sort direction */
-  sortOrder?: "asc" | "desc";
+  sortOrder?: 'asc' | 'desc';
 }
 
 /**
@@ -78,13 +78,13 @@ export interface SaveAnalysisRunInput {
   projectName: string;
   /** Bundler type */
   bundler:
-    | "webpack"
-    | "rollup"
-    | "esbuild"
-    | "vite"
-    | "parcel"
-    | "nextjs"
-    | "other";
+    | 'webpack'
+    | 'rollup'
+    | 'esbuild'
+    | 'vite'
+    | 'parcel'
+    | 'nextjs'
+    | 'other';
   /** Bundle files */
   bundles?: Array<{
     fileName: string;
@@ -172,7 +172,7 @@ export function listAnalysisRuns(
   return runs.map((run) => {
     const moduleStats = db
       .select({
-        moduleCount: sql<number>`count(*)`.as("moduleCount"),
+        moduleCount: sql<number>`count(*)`.as('moduleCount'),
       })
       .from(schema.module)
       .where(eq(schema.module.analysisRunId, run.id))
@@ -180,12 +180,12 @@ export function listAnalysisRuns(
 
     const bundleStats = db
       .select({
-        bundleCount: sql<number>`count(*)`.as("bundleCount"),
+        bundleCount: sql<number>`count(*)`.as('bundleCount'),
         totalSize: sql<number>`coalesce(sum(${schema.bundle.size}), 0)`.as(
-          "totalSize",
+          'totalSize',
         ),
         totalGzipSize: sql<number>`sum(${schema.bundle.gzipSize})`.as(
-          "totalGzipSize",
+          'totalGzipSize',
         ),
       })
       .from(schema.bundle)
@@ -276,8 +276,8 @@ export function getAnalysisModules(
     search,
     page = 1,
     pageSize = 50,
-    sortBy = "bundledSize",
-    sortOrder = "desc",
+    sortBy = 'bundledSize',
+    sortOrder = 'desc',
   } = filters || {};
 
   // Build WHERE conditions
@@ -322,14 +322,14 @@ export function getAnalysisModules(
 
   // Apply sorting
   const sortColumn =
-    sortBy === "filePath"
+    sortBy === 'filePath'
       ? schema.module.filePath
-      : sortBy === "originalSize"
+      : sortBy === 'originalSize'
         ? schema.module.originalSize
         : schema.module.bundledSize;
 
   query =
-    sortOrder === "asc"
+    sortOrder === 'asc'
       ? (query.orderBy(sortColumn) as typeof query)
       : (query.orderBy(desc(sortColumn)) as typeof query);
 
@@ -457,7 +457,7 @@ export function getAnalysisTreemap(
   // Build hierarchical structure
   // Group by package for third-party, or by directory for first-party
   const root: any = {
-    name: "root",
+    name: 'root',
     children: [],
   };
 
@@ -482,8 +482,8 @@ export function getAnalysisTreemap(
       });
     } else {
       // Group first-party modules by top-level directory
-      const parts = module.filePath.split("/");
-      const topDir = parts[0] || "root";
+      const parts = module.filePath.split('/');
+      const topDir = parts[0] || 'root';
 
       if (!firstPartyMap.has(topDir)) {
         firstPartyMap.set(topDir, {
@@ -504,7 +504,7 @@ export function getAnalysisTreemap(
   // Add third-party packages to root
   if (thirdPartyMap.size > 0) {
     const thirdPartyNode = {
-      name: "node_modules",
+      name: 'node_modules',
       children: Array.from(thirdPartyMap.values()),
       value: Array.from(thirdPartyMap.values()).reduce(
         (sum, pkg) => sum + pkg.value,
@@ -553,7 +553,7 @@ export function getAnalysisRunById(
 
   const moduleStats = db
     .select({
-      moduleCount: sql<number>`count(*)`.as("moduleCount"),
+      moduleCount: sql<number>`count(*)`.as('moduleCount'),
     })
     .from(schema.module)
     .where(eq(schema.module.analysisRunId, run.id))
@@ -561,12 +561,12 @@ export function getAnalysisRunById(
 
   const bundleStats = db
     .select({
-      bundleCount: sql<number>`count(*)`.as("bundleCount"),
+      bundleCount: sql<number>`count(*)`.as('bundleCount'),
       totalSize: sql<number>`coalesce(sum(${schema.bundle.size}), 0)`.as(
-        "totalSize",
+        'totalSize',
       ),
       totalGzipSize: sql<number>`sum(${schema.bundle.gzipSize})`.as(
-        "totalGzipSize",
+        'totalGzipSize',
       ),
     })
     .from(schema.bundle)

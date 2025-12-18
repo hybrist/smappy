@@ -3,7 +3,7 @@
  * Provides strongly typed configuration for LLM integrations
  */
 
-export type LLMProviderId = "openai" | "anthropic" | "ollama";
+export type LLMProviderId = 'openai' | 'anthropic' | 'ollama';
 
 /**
  * Resolved configuration for LLM integration
@@ -35,43 +35,43 @@ export interface LLMIntegrationConfig {
  * Partial configuration overrides
  */
 export type PartialLLMIntegrationConfig = Partial<
-  Omit<LLMIntegrationConfig, "provider" | "apiKey">
+  Omit<LLMIntegrationConfig, 'provider' | 'apiKey'>
 > &
-  Partial<Pick<LLMIntegrationConfig, "provider" | "apiKey">>;
+  Partial<Pick<LLMIntegrationConfig, 'provider' | 'apiKey'>>;
 
 const PROVIDER_DEFAULTS: Record<
   LLMProviderId,
-  Omit<LLMIntegrationConfig, "enabled" | "apiKey">
+  Omit<LLMIntegrationConfig, 'enabled' | 'apiKey'>
 > = {
   openai: {
-    provider: "openai",
-    apiBaseUrl: "https://api.openai.com/v1",
-    model: "gpt-4o-mini",
+    provider: 'openai',
+    apiBaseUrl: 'https://api.openai.com/v1',
+    model: 'gpt-4o-mini',
     maxTokens: 512,
     temperature: 0.25,
     rateLimitPerMinute: 60,
     requestTimeoutMs: 15000,
-    attribution: "Generated with OpenAI",
+    attribution: 'Generated with OpenAI',
   },
   anthropic: {
-    provider: "anthropic",
-    apiBaseUrl: "https://api.anthropic.com/v1",
-    model: "claude-3-5-sonnet-20241022",
+    provider: 'anthropic',
+    apiBaseUrl: 'https://api.anthropic.com/v1',
+    model: 'claude-3-5-sonnet-20241022',
     maxTokens: 512,
     temperature: 0.2,
     rateLimitPerMinute: 45,
     requestTimeoutMs: 20000,
-    attribution: "Generated with Anthropic Claude",
+    attribution: 'Generated with Anthropic Claude',
   },
   ollama: {
-    provider: "ollama",
-    apiBaseUrl: "http://localhost:11434",
-    model: "qwen2.5-coder:3b",
+    provider: 'ollama',
+    apiBaseUrl: 'http://localhost:11434',
+    model: 'qwen2.5-coder:3b',
     maxTokens: 512,
     temperature: 0.25,
     rateLimitPerMinute: 120,
     requestTimeoutMs: 30000,
-    attribution: "Generated with Local AI",
+    attribution: 'Generated with Local AI',
   },
 };
 
@@ -108,12 +108,12 @@ export function loadLLMConfig(
     return {
       ...defaults,
       enabled: false,
-      apiKey: apiKey ?? "",
+      apiKey: apiKey ?? '',
     };
   }
 
   // Ollama doesn't require an API key for local usage
-  if (!apiKey && provider !== "ollama") {
+  if (!apiKey && provider !== 'ollama') {
     throw new Error(
       `LLM integration enabled but API key for provider "${provider}" is missing.`,
     );
@@ -149,7 +149,7 @@ export function loadLLMConfig(
   return {
     enabled: true,
     provider,
-    apiKey: apiKey ?? "",
+    apiKey: apiKey ?? '',
     apiBaseUrl: trimTrailingSlash(apiBaseUrl),
     model,
     maxTokens,
@@ -175,12 +175,12 @@ function resolveProvider(
     return envValue as LLMProviderId;
   }
 
-  return "openai";
+  return 'openai';
 }
 
 function isSupportedProvider(provider: string): provider is LLMProviderId {
   return (
-    provider === "openai" || provider === "anthropic" || provider === "ollama"
+    provider === 'openai' || provider === 'anthropic' || provider === 'ollama'
   );
 }
 
@@ -188,13 +188,13 @@ function parseBoolean(
   override: boolean | undefined,
   envValue: string | undefined,
 ): boolean | undefined {
-  if (typeof override === "boolean") {
+  if (typeof override === 'boolean') {
     return override;
   }
   if (envValue === undefined) {
     return undefined;
   }
-  return ["1", "true", "yes", "on"].includes(envValue.toLowerCase());
+  return ['1', 'true', 'yes', 'on'].includes(envValue.toLowerCase());
 }
 
 function numberFrom(
@@ -202,7 +202,7 @@ function numberFrom(
   envValue: string | undefined,
   fallback: number,
 ): number {
-  if (typeof override === "number" && Number.isFinite(override)) {
+  if (typeof override === 'number' && Number.isFinite(override)) {
     return override;
   }
   if (envValue !== undefined) {
@@ -218,15 +218,15 @@ function resolveApiKey(
   provider: LLMProviderId,
   env: NodeJS.ProcessEnv,
 ): string | undefined {
-  if (provider === "openai") {
+  if (provider === 'openai') {
     return env.SMAPPY_OPENAI_API_KEY;
   }
-  if (provider === "anthropic") {
+  if (provider === 'anthropic') {
     return env.SMAPPY_ANTHROPIC_API_KEY;
   }
   return undefined;
 }
 
 function trimTrailingSlash(url: string): string {
-  return url.endsWith("/") ? url.slice(0, -1) : url;
+  return url.endsWith('/') ? url.slice(0, -1) : url;
 }

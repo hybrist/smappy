@@ -1,7 +1,7 @@
-import { useState, useCallback } from "react";
-import { Upload, FileCode, FileJson, FileType, X } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useCallback } from 'react';
+import { Upload, FileCode, FileJson, FileType, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface FileUploadProps {
   onUpload: (files: File[]) => void;
@@ -46,19 +46,19 @@ export function FileUpload({ onUpload }: FileUploadProps) {
         onDragLeave={onDragLeave}
         onDrop={onDrop}
         className={cn(
-          "relative group cursor-pointer rounded-xl border-2 border-dashed p-12 transition-all duration-300 ease-in-out bg-card",
+          'relative group cursor-pointer rounded-xl border-2 border-dashed p-12 transition-all duration-300 ease-in-out bg-card',
           isDragging
-            ? "border-primary bg-primary/5 scale-[1.02] shadow-xl"
-            : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/20",
+            ? 'border-primary bg-primary/5 scale-[1.02] shadow-xl'
+            : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/20',
         )}
       >
         <div className="flex flex-col items-center justify-center text-center gap-4">
           <div
             className={cn(
-              "p-4 rounded-full transition-colors duration-300",
+              'p-4 rounded-full transition-colors duration-300',
               isDragging
-                ? "bg-primary/20 text-primary"
-                : "bg-muted text-muted-foreground group-hover:text-primary group-hover:bg-primary/10",
+                ? 'bg-primary/20 text-primary'
+                : 'bg-muted text-muted-foreground group-hover:text-primary group-hover:bg-primary/10',
             )}
           >
             <Upload className="w-8 h-8" />
@@ -91,9 +91,9 @@ export function FileUpload({ onUpload }: FileUploadProps) {
               >
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded bg-primary/10 text-primary">
-                    {file.name.endsWith(".json") ? (
+                    {file.name.endsWith('.json') ? (
                       <FileJson className="w-4 h-4" />
-                    ) : file.name.endsWith(".js") ? (
+                    ) : file.name.endsWith('.js') ? (
                       <FileCode className="w-4 h-4" />
                     ) : (
                       <FileType className="w-4 h-4" />

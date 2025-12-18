@@ -9,11 +9,11 @@ Rollup plugins are objects with specific hook functions.
 ### Plugin Structure
 
 ```typescript
-import type { Plugin } from "rollup";
+import type { Plugin } from 'rollup';
 
 export function rollupBundleAnalysisPlugin(options: PluginOptions): Plugin {
   return {
-    name: "rollup-bundle-analysis",
+    name: 'rollup-bundle-analysis',
     // Plugin hooks
   };
 }
@@ -71,7 +71,7 @@ interface OutputBundle {
 }
 
 interface OutputChunk {
-  type: "chunk";
+  type: 'chunk';
   fileName: string;
   name?: string;
   isEntry: boolean;
@@ -89,7 +89,7 @@ interface OutputChunk {
 }
 
 interface OutputAsset {
-  type: "asset";
+  type: 'asset';
   fileName: string;
   source: string | Uint8Array;
 }
@@ -101,7 +101,7 @@ interface OutputAsset {
 
 ```typescript
 for (const [id, chunkOrAsset] of Object.entries(bundle)) {
-  if (chunkOrAsset.type === "chunk") {
+  if (chunkOrAsset.type === 'chunk') {
     const chunk = chunkOrAsset as OutputChunk;
 
     if (chunk.modules) {
@@ -118,7 +118,7 @@ for (const [id, chunkOrAsset] of Object.entries(bundle)) {
 
 ```typescript
 for (const [id, chunkOrAsset] of Object.entries(bundle)) {
-  if (chunkOrAsset.type === "chunk") {
+  if (chunkOrAsset.type === 'chunk') {
     const chunk = chunkOrAsset as OutputChunk;
 
     const chunkData = {
@@ -135,7 +135,7 @@ for (const [id, chunkOrAsset] of Object.entries(bundle)) {
 
 ```typescript
 for (const [fileName, chunkOrAsset] of Object.entries(bundle)) {
-  if (chunkOrAsset.type === "chunk") {
+  if (chunkOrAsset.type === 'chunk') {
     const chunk = chunkOrAsset as OutputChunk;
 
     const bundleData = {
@@ -155,7 +155,7 @@ for (const [fileName, chunkOrAsset] of Object.entries(bundle)) {
 ```typescript
 if (chunk.map) {
   const sourceMap =
-    typeof chunk.map === "string" ? chunk.map : JSON.stringify(chunk.map);
+    typeof chunk.map === 'string' ? chunk.map : JSON.stringify(chunk.map);
 }
 ```
 
@@ -164,7 +164,7 @@ if (chunk.map) {
 ```typescript
 const mapFileName = `${chunk.fileName}.map`;
 const mapAsset = bundle[mapFileName];
-if (mapAsset && mapAsset.type === "asset") {
+if (mapAsset && mapAsset.type === 'asset') {
   const sourceMap = mapAsset.source.toString();
 }
 ```
@@ -199,17 +199,17 @@ load(id) {
 
 ```javascript
 // rollup.config.js
-import { rollupBundleAnalysisPlugin } from "./rollup-plugin";
+import { rollupBundleAnalysisPlugin } from './rollup-plugin';
 
 export default {
-  input: "src/index.js",
+  input: 'src/index.js',
   output: {
-    file: "dist/bundle.js",
-    format: "es",
+    file: 'dist/bundle.js',
+    format: 'es',
   },
   plugins: [
     rollupBundleAnalysisPlugin({
-      projectName: "my-project",
+      projectName: 'my-project',
       extractSourceMaps: true,
     }),
   ],
@@ -236,18 +236,18 @@ export default {
 ```javascript
 export default {
   input: {
-    main: "src/index.js",
-    vendor: "src/vendor.js",
+    main: 'src/index.js',
+    vendor: 'src/vendor.js',
   },
   output: {
-    dir: "dist",
-    format: "es",
-    entryFileNames: "[name].js",
-    chunkFileNames: "[name]-[hash].js",
+    dir: 'dist',
+    format: 'es',
+    entryFileNames: '[name].js',
+    chunkFileNames: '[name]-[hash].js',
   },
   plugins: [
     rollupBundleAnalysisPlugin({
-      projectName: "my-project",
+      projectName: 'my-project',
     }),
   ],
 };
@@ -260,7 +260,7 @@ export default {
 Rollup uses `\0` prefix for virtual modules:
 
 ```typescript
-if (moduleId.startsWith("\0")) {
+if (moduleId.startsWith('\0')) {
   // Virtual module - handle specially or skip
 }
 ```
@@ -299,8 +299,8 @@ Access Rollup's plugin context for advanced operations:
 
 ```typescript
 this.emitFile({
-  type: "asset",
-  fileName: "analysis.json",
+  type: 'asset',
+  fileName: 'analysis.json',
   source: JSON.stringify(analysisData),
 });
 

@@ -3,22 +3,22 @@
  * Extracts bundle data from webpack stats JSON and converts it to normalized ingestion input
  */
 
-import type { ModuleInput } from "@smappy/core";
+import type { ModuleInput } from '@smappy/core';
 import type {
   PluginExtractionResult,
   BundlerModule,
   BundlerChunk,
   BundlerBundle,
   BundlerPluginOptions,
-} from "../plugins/types.ts";
-import { BundlerAdapter } from "../plugins/adapters.ts";
+} from '../plugins/types.ts';
+import { BundlerAdapter } from '../plugins/adapters.ts';
 import {
   normalizePath,
   extractSourceMap,
   readFileContent,
-} from "../plugins/utils.ts";
-import type { StatsCompilation } from "webpack";
-import type { ProjectInfo } from "../runner/types.ts";
+} from '../plugins/utils.ts';
+import type { StatsCompilation } from 'webpack';
+import type { ProjectInfo } from '../runner/types.ts';
 
 // ============================================================================
 // Webpack Adapter Implementation
@@ -33,7 +33,7 @@ export class WebpackAdapter extends BundlerAdapter {
   constructor(
     project: ProjectInfo,
     stats: StatsCompilation,
-    options?: Omit<BundlerPluginOptions, "projectName">,
+    options?: Omit<BundlerPluginOptions, 'projectName'>,
   ) {
     super(
       project.path,
@@ -61,7 +61,7 @@ export class WebpackAdapter extends BundlerAdapter {
     const statsJson = this.#stats;
 
     if (!statsJson) {
-      errors.push("No webpack stats available");
+      errors.push('No webpack stats available');
       return this.createEmptyResult(errors, warnings);
     }
 
@@ -77,7 +77,7 @@ export class WebpackAdapter extends BundlerAdapter {
       const bundles = this.convertBundles(bundlerBundles, errors);
 
       // Create ingestion options
-      const options = this.createIngestionOptions("webpack");
+      const options = this.createIngestionOptions('webpack');
 
       return {
         bundles,
@@ -105,13 +105,13 @@ export class WebpackAdapter extends BundlerAdapter {
     // Process modules from stats
     if (statsJson.modules) {
       for (const module of statsJson.modules) {
-        const moduleId = module.identifier || module.name || "";
+        const moduleId = module.identifier || module.name || '';
         if (!moduleId) continue;
 
         // Skip node_modules unless configured
         if (
           !this.options.analyzeThirdParty &&
-          moduleId.includes("node_modules")
+          moduleId.includes('node_modules')
         ) {
           continue;
         }
@@ -159,7 +159,7 @@ export class WebpackAdapter extends BundlerAdapter {
       for (const chunk of statsJson.chunks) {
         if (chunk.modules) {
           for (const module of chunk.modules) {
-            const moduleId = module.identifier || module.name || "";
+            const moduleId = module.identifier || module.name || '';
             if (!moduleId || moduleMap.has(moduleId)) {
               continue; // Already processed
             }
@@ -167,7 +167,7 @@ export class WebpackAdapter extends BundlerAdapter {
             // Skip node_modules unless configured
             if (
               !this.options.analyzeThirdParty &&
-              moduleId.includes("node_modules")
+              moduleId.includes('node_modules')
             ) {
               continue;
             }
@@ -226,13 +226,13 @@ export class WebpackAdapter extends BundlerAdapter {
     }
 
     for (const chunk of statsJson.chunks) {
-      const chunkName = chunk.names?.[0] || chunk.id?.toString() || "unknown";
+      const chunkName = chunk.names?.[0] || chunk.id?.toString() || 'unknown';
       const moduleIds: string[] = [];
 
       // Collect module IDs from chunk
       if (chunk.modules) {
         for (const module of chunk.modules) {
-          const moduleId = module.identifier || module.name || "";
+          const moduleId = module.identifier || module.name || '';
           if (moduleId) {
             moduleIds.push(moduleId);
           }
@@ -270,9 +270,9 @@ export class WebpackAdapter extends BundlerAdapter {
 
       // Only process JavaScript files
       if (
-        !fileName.endsWith(".js") &&
-        !fileName.endsWith(".mjs") &&
-        !fileName.endsWith(".cjs")
+        !fileName.endsWith('.js') &&
+        !fileName.endsWith('.mjs') &&
+        !fileName.endsWith('.cjs')
       ) {
         continue;
       }
@@ -288,7 +288,7 @@ export class WebpackAdapter extends BundlerAdapter {
         // Extract source map if enabled
         if (this.options.extractSourceMaps !== false && content) {
           // Check for separate source map file
-          const sourceMapPath = bundlePath + ".map";
+          const sourceMapPath = bundlePath + '.map';
           try {
             sourceMap = readFileContent(sourceMapPath);
           } catch {
@@ -308,7 +308,7 @@ export class WebpackAdapter extends BundlerAdapter {
       if (statsJson.chunks) {
         for (const chunk of statsJson.chunks) {
           if (chunk.files && chunk.files.includes(fileName)) {
-            const chunkName = chunk.names?.[0] || chunk.id?.toString() || "";
+            const chunkName = chunk.names?.[0] || chunk.id?.toString() || '';
             if (chunkName) {
               chunks.push(chunkName);
             }
@@ -350,7 +350,7 @@ export class WebpackAdapter extends BundlerAdapter {
     const cleanId = this.sanitizeModuleIdentifier(moduleId) || moduleId;
 
     // If it's already an absolute path, return it normalized
-    if (cleanId.startsWith("/") || cleanId.match(/^[A-Z]:/)) {
+    if (cleanId.startsWith('/') || cleanId.match(/^[A-Z]:/)) {
       return normalizePath(cleanId, this.#stats.outputPath);
     }
 
@@ -364,16 +364,16 @@ export class WebpackAdapter extends BundlerAdapter {
   private sanitizeModuleIdentifier(moduleId: string): string {
     let cleanId = moduleId.trim();
 
-    if (cleanId.startsWith("multi ")) {
-      cleanId = cleanId.replace(/^multi\s+/, "");
+    if (cleanId.startsWith('multi ')) {
+      cleanId = cleanId.replace(/^multi\s+/, '');
     }
 
-    const lastBangIndex = cleanId.lastIndexOf("!");
+    const lastBangIndex = cleanId.lastIndexOf('!');
     if (lastBangIndex !== -1) {
       cleanId = cleanId.slice(lastBangIndex + 1);
     }
 
-    const queryIndex = cleanId.indexOf("?");
+    const queryIndex = cleanId.indexOf('?');
     if (queryIndex !== -1) {
       cleanId = cleanId.slice(0, queryIndex);
     }
@@ -385,7 +385,7 @@ export class WebpackAdapter extends BundlerAdapter {
    * Resolve bundle file path
    */
   private resolveBundlePath(fileName: string, outputPath: string): string {
-    if (fileName.startsWith("/")) {
+    if (fileName.startsWith('/')) {
       return fileName;
     }
     return normalizePath(fileName, outputPath);
@@ -402,7 +402,7 @@ export class WebpackAdapter extends BundlerAdapter {
       bundles: [],
       modules: [],
       chunks: [],
-      options: this.createIngestionOptions("webpack"),
+      options: this.createIngestionOptions('webpack'),
       warnings,
       errors,
     };

@@ -6,13 +6,13 @@
 export {
   SuggestionAnalyzer,
   createSuggestionAnalyzer,
-} from "./orchestrator.ts";
-export { createRuleRegistry } from "./registry.ts";
+} from './orchestrator.ts';
+export { createRuleRegistry } from './registry.ts';
 export type {
   SuggestionContext,
   SuggestionRule,
   SuggestionRuleRegistry,
-} from "./types.ts";
+} from './types.ts';
 
 // Re-export rules
-export * from "./rules/index.ts";
+export * from './rules/index.ts';

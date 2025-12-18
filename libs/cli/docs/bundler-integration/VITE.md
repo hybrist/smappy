@@ -9,12 +9,12 @@ Vite plugins are based on Rollup's plugin API with additional Vite-specific hook
 ### Plugin Structure
 
 ```typescript
-import type { Plugin } from "vite";
+import type { Plugin } from 'vite';
 
 export function viteBundleAnalysisPlugin(options: VitePluginOptions): Plugin {
   return {
-    name: "vite-bundle-analysis",
-    enforce: "post", // Run after other plugins
+    name: 'vite-bundle-analysis',
+    enforce: 'post', // Run after other plugins
     // Plugin hooks
   };
 }
@@ -71,7 +71,7 @@ interface OutputBundle {
 }
 
 interface OutputChunk {
-  type: "chunk";
+  type: 'chunk';
   fileName: string;
   name?: string;
   isEntry: boolean;
@@ -89,7 +89,7 @@ interface OutputChunk {
 }
 
 interface OutputAsset {
-  type: "asset";
+  type: 'asset';
   fileName: string;
   source: string | Uint8Array;
 }
@@ -101,7 +101,7 @@ Modules are embedded within chunks:
 
 ```typescript
 for (const [id, chunkOrAsset] of Object.entries(bundle)) {
-  if (chunkOrAsset.type === "chunk") {
+  if (chunkOrAsset.type === 'chunk') {
     const chunk = chunkOrAsset as OutputChunk;
 
     // Access modules in chunk
@@ -121,7 +121,7 @@ Chunks represent code-split entry points:
 
 ```typescript
 for (const [id, chunkOrAsset] of Object.entries(bundle)) {
-  if (chunkOrAsset.type === "chunk") {
+  if (chunkOrAsset.type === 'chunk') {
     const chunk = chunkOrAsset as OutputChunk;
 
     const isEntry = chunk.isEntry;
@@ -137,7 +137,7 @@ Bundles are the output files:
 
 ```typescript
 for (const [fileName, chunkOrAsset] of Object.entries(bundle)) {
-  if (chunkOrAsset.type === "chunk") {
+  if (chunkOrAsset.type === 'chunk') {
     const chunk = chunkOrAsset as OutputChunk;
 
     const content = chunk.code;
@@ -154,7 +154,7 @@ Source maps are available inline in chunks:
 ```typescript
 if (chunk.map) {
   const sourceMap =
-    typeof chunk.map === "string" ? chunk.map : JSON.stringify(chunk.map);
+    typeof chunk.map === 'string' ? chunk.map : JSON.stringify(chunk.map);
 }
 ```
 
@@ -163,7 +163,7 @@ Or from separate `.map` files:
 ```typescript
 const mapFileName = `${chunk.fileName}.map`;
 const mapAsset = bundle[mapFileName];
-if (mapAsset && mapAsset.type === "asset") {
+if (mapAsset && mapAsset.type === 'asset') {
   const sourceMap = mapAsset.source.toString();
 }
 ```
@@ -186,13 +186,13 @@ writeBundle(options, bundle) {
 
 ```typescript
 // vite.config.ts
-import { defineConfig } from "vite";
-import { viteBundleAnalysisPlugin } from "./vite-plugin";
+import { defineConfig } from 'vite';
+import { viteBundleAnalysisPlugin } from './vite-plugin';
 
 export default defineConfig({
   plugins: [
     viteBundleAnalysisPlugin({
-      projectName: "my-project",
+      projectName: 'my-project',
       extractSourceMaps: true,
     }),
   ],
@@ -219,11 +219,11 @@ export default defineConfig({
 ```typescript
 export default defineConfig({
   build: {
-    outDir: "build",
+    outDir: 'build',
   },
   plugins: [
     viteBundleAnalysisPlugin({
-      buildOutputDir: "build",
+      buildOutputDir: 'build',
     }),
   ],
 });
@@ -249,8 +249,8 @@ Access Rollup's plugin context:
 
 ```typescript
 this.emitFile({
-  type: "asset",
-  fileName: "analysis.json",
+  type: 'asset',
+  fileName: 'analysis.json',
   source: JSON.stringify(analysisData),
 });
 ```
@@ -262,7 +262,7 @@ this.emitFile({
 Rollup uses `\0` prefix for virtual modules. Filter these:
 
 ```typescript
-if (moduleId.startsWith("\0")) {
+if (moduleId.startsWith('\0')) {
   continue; // Skip virtual modules
 }
 ```
@@ -272,7 +272,7 @@ if (moduleId.startsWith("\0")) {
 Third-party modules identified by path:
 
 ```typescript
-if (moduleId.includes("node_modules") && !options.analyzeThirdParty) {
+if (moduleId.includes('node_modules') && !options.analyzeThirdParty) {
   continue; // Skip unless configured
 }
 ```
@@ -290,7 +290,7 @@ const isAsync = chunk.isDynamicEntry || chunk.dynamicImports.length > 0;
 CSS files are assets, not chunks:
 
 ```typescript
-if (chunkOrAsset.type === "asset") {
+if (chunkOrAsset.type === 'asset') {
   const asset = chunkOrAsset as OutputAsset;
   // Handle CSS, images, etc.
 }

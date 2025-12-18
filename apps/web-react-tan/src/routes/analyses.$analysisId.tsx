@@ -1,20 +1,20 @@
-import { getAnalysisDetails } from "@/api";
-import { Navbar } from "@/components/layout/navbar";
+import { getAnalysisDetails } from '@/api';
+import { Navbar } from '@/components/layout/navbar';
 import {
   createFileRoute,
   useLoaderData,
   useParams,
-} from "@tanstack/react-router";
+} from '@tanstack/react-router';
 
-export const Route = createFileRoute("/analyses/$analysisId")({
+export const Route = createFileRoute('/analyses/$analysisId')({
   component: AnalysisDetailsPage,
   loader: ({ params: { analysisId } }) =>
     getAnalysisDetails({ data: { id: analysisId } }),
 });
 
 function AnalysisDetailsPage() {
-  const analysis = useLoaderData({ from: "/analyses/$analysisId" });
-  const { analysisId } = useParams({ from: "/analyses/$analysisId" });
+  const analysis = useLoaderData({ from: '/analyses/$analysisId' });
+  const { analysisId } = useParams({ from: '/analyses/$analysisId' });
 
   if (!analysis) {
     return (
@@ -40,7 +40,7 @@ function AnalysisDetailsPage() {
                 Analysis Details for #{analysisId}
               </h1>
               <p className="text-muted-foreground">
-                {analysis.projectName} -{" "}
+                {analysis.projectName} -{' '}
                 {new Date(analysis.createdAt).toLocaleString()}
               </p>
             </div>

@@ -3,10 +3,10 @@
  * Executes bundler builds with temporary configs
  */
 
-import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
-import type { BuildOptions, BuildResult } from "./types.ts";
+import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import type { BuildOptions, BuildResult } from './types.ts';
 
 /**
  * Get the build command for a specific bundler
@@ -16,27 +16,27 @@ function getBuildCommand(
   configPath: string,
 ): { command: string; args: string[] } {
   switch (bundler) {
-    case "vite":
+    case 'vite':
       return {
-        command: "npx",
-        args: ["vite", "build", "--config", configPath],
+        command: 'npx',
+        args: ['vite', 'build', '--config', configPath],
       };
-    case "webpack":
+    case 'webpack':
       return {
-        command: "npx",
-        args: ["webpack", "--config", configPath],
+        command: 'npx',
+        args: ['webpack', '--config', configPath],
       };
-    case "nextjs":
+    case 'nextjs':
       // Next.js uses the config via environment variable or direct file
       // We need to temporarily copy the config to the project directory
       return {
-        command: "npx",
-        args: ["next", "build"],
+        command: 'npx',
+        args: ['next', 'build'],
       };
-    case "rollup":
+    case 'rollup':
       return {
-        command: "npx",
-        args: ["rollup", "--config", configPath],
+        command: 'npx',
+        args: ['rollup', '--config', configPath],
       };
     default:
       throw new Error(`Unsupported bundler: ${bundler}`);
@@ -59,39 +59,39 @@ export async function runBuild(options: BuildOptions): Promise<BuildResult> {
   }
 
   // Get build command
-  const { command, args } = getBuildCommand(bundler || "vite", configPath);
+  const { command, args } = getBuildCommand(bundler || 'vite', configPath);
 
   if (debug) {
-    console.log(`[Build] Running: ${command} ${args.join(" ")}`);
+    console.log(`[Build] Running: ${command} ${args.join(' ')}`);
     console.log(`[Build] Working directory: ${projectPath}`);
   }
 
   return new Promise<BuildResult>((resolvePromise) => {
     const child = spawn(command, args, {
       cwd: resolve(projectPath),
-      stdio: debug ? "inherit" : "pipe",
+      stdio: debug ? 'inherit' : 'pipe',
       env: {
         ...process.env,
         // Disable any interactive prompts
-        CI: "true",
+        CI: 'true',
       },
     });
 
-    let stdout = "";
-    let stderr = "";
+    let stdout = '';
+    let stderr = '';
 
     // Capture output if not inheriting stdio
     if (!debug) {
-      child.stdout?.on("data", (data) => {
+      child.stdout?.on('data', (data) => {
         stdout += data.toString();
       });
 
-      child.stderr?.on("data", (data) => {
+      child.stderr?.on('data', (data) => {
         stderr += data.toString();
       });
     }
 
-    child.on("error", (error) => {
+    child.on('error', (error) => {
       resolvePromise({
         success: false,
         exitCode: null,
@@ -101,7 +101,7 @@ export async function runBuild(options: BuildOptions): Promise<BuildResult> {
       });
     });
 
-    child.on("close", (code) => {
+    child.on('close', (code) => {
       const success = code === 0;
 
       if (!success && debug) {

@@ -1,11 +1,11 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Navbar } from "@/components/layout/navbar";
-import { FileUpload } from "@/components/file-upload";
-import { Mascot } from "@/components/mascot";
-import { Zap, Search, Layers } from "lucide-react";
-import { motion } from "framer-motion";
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { Navbar } from '@/components/layout/navbar';
+import { FileUpload } from '@/components/file-upload';
+import { Mascot } from '@/components/mascot';
+import { Zap, Search, Layers } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute('/')({
   component: HomePage,
 });
 
@@ -15,7 +15,7 @@ function HomePage() {
   const handleUpload = () => {
     // Simulate upload delay then redirect
     setTimeout(() => {
-      navigate({ to: "/dashboard" });
+      navigate({ to: '/dashboard' });
     }, 1500);
   };
 
@@ -38,7 +38,7 @@ function HomePage() {
                 v2.0 AI-Powered Analysis
               </div>
               <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-foreground">
-                Deep dive into your{" "}
+                Deep dive into your{' '}
                 <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-teal-600">
                   bundles
                 </span>

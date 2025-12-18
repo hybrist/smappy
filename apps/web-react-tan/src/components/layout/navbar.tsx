@@ -1,12 +1,12 @@
-import { Link, useLocation } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
-import { Github, Moon, Sun, MessageSquare } from "lucide-react";
-import { useTheme } from "@/components/theme-provider";
+import { Link, useLocation } from '@tanstack/react-router';
+import { Button } from '@/components/ui/button';
+import { Github, Moon, Sun, MessageSquare } from 'lucide-react';
+import { useTheme } from '@/components/theme-provider';
 
 export function Navbar() {
   const location = useLocation();
   const { theme, setTheme } = useTheme();
-  const isDashboard = location.pathname === "/dashboard";
+  const isDashboard = location.pathname === '/dashboard';
 
   return (
     <nav className="w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
@@ -47,7 +47,7 @@ export function Navbar() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             className="h-8 w-8"
           >
             <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

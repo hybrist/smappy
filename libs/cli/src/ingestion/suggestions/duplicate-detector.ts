@@ -6,9 +6,9 @@
 import type {
   SuggestionRule,
   SuggestionContext,
-} from "../../suggestions/types.ts";
-import type { SuggestionData } from "../db/writer.ts";
-import { extractSymbols } from "@smappy/core";
+} from '../../suggestions/types.ts';
+import type { SuggestionData } from '../db/writer.ts';
+import { extractSymbols } from '@smappy/core';
 
 /**
  * Configuration for duplicate code detection
@@ -57,10 +57,10 @@ interface DuplicatePair {
  * Detect duplicate or similar code across modules
  */
 export class DuplicateDetector implements SuggestionRule {
-  readonly id = "duplicate-code";
-  readonly name = "Duplicate Code Detector";
+  readonly id = 'duplicate-code';
+  readonly name = 'Duplicate Code Detector';
   readonly description =
-    "Detects duplicate or similar code blocks across modules";
+    'Detects duplicate or similar code blocks across modules';
 
   private config: Required<DuplicateDetectorConfig>;
 
@@ -125,7 +125,7 @@ export class DuplicateDetector implements SuggestionRule {
       // Create code blocks for each significant symbol
       for (const symbol of analysis.symbols) {
         // Only consider functions and classes
-        if (symbol.type !== "function" && symbol.type !== "class") {
+        if (symbol.type !== 'function' && symbol.type !== 'class') {
           continue;
         }
 
@@ -159,12 +159,12 @@ export class DuplicateDetector implements SuggestionRule {
       if (analysis.astHash && analysis.symbols.length > 0) {
         blocks.push({
           filePath: module.filePath,
-          symbolName: "(entire module)",
+          symbolName: '(entire module)',
           astHash: analysis.astHash,
           code: module.sourceContent,
           size: module.bundledSize,
           startLine: 1,
-          endLine: module.sourceContent.split("\n").length,
+          endLine: module.sourceContent.split('\n').length,
         });
       }
     }
@@ -180,8 +180,8 @@ export class DuplicateDetector implements SuggestionRule {
     startLine: number,
     endLine: number,
   ): string {
-    const lines = sourceContent.split("\n");
-    return lines.slice(startLine - 1, endLine).join("\n");
+    const lines = sourceContent.split('\n');
+    return lines.slice(startLine - 1, endLine).join('\n');
   }
 
   /**
@@ -209,11 +209,11 @@ export class DuplicateDetector implements SuggestionRule {
     return (
       code
         // Remove single-line comments
-        .replace(/\/\/.*$/gm, "")
+        .replace(/\/\/.*$/gm, '')
         // Remove multi-line comments
-        .replace(/\/\*[\s\S]*?\*\//g, "")
+        .replace(/\/\*[\s\S]*?\*\//g, '')
         // Normalize whitespace
-        .replace(/\s+/g, " ")
+        .replace(/\s+/g, ' ')
         .trim()
     );
   }
@@ -257,7 +257,7 @@ export class DuplicateDetector implements SuggestionRule {
               block2.symbolName,
             ]
               .sort()
-              .join("|");
+              .join('|');
 
             if (!seen.has(pairKey)) {
               duplicates.push({ block1, block2, similarity: 100 });
@@ -308,7 +308,7 @@ export class DuplicateDetector implements SuggestionRule {
             block2.symbolName,
           ]
             .sort()
-            .join("|");
+            .join('|');
 
           if (seen.has(pairKey)) {
             continue;
@@ -412,11 +412,11 @@ export class DuplicateDetector implements SuggestionRule {
     const sizeSavings = Math.min(block1.size, block2.size);
 
     // Determine severity based on similarity and size
-    let severity: "critical" | "warning" | "info" = "info";
+    let severity: 'critical' | 'warning' | 'info' = 'info';
     if (similarity >= 95 && sizeSavings > 500) {
-      severity = "critical";
+      severity = 'critical';
     } else if (similarity >= 90 || sizeSavings > 300) {
-      severity = "warning";
+      severity = 'warning';
     }
 
     const title = `Duplicate code detected (${similarity}% similar)`;
@@ -428,17 +428,17 @@ export class DuplicateDetector implements SuggestionRule {
     );
 
     return {
-      type: "DUPLICATE_CODE",
+      type: 'DUPLICATE_CODE',
       severity,
       title,
       description,
       links: [
         {
-          entityType: "Module",
+          entityType: 'Module',
           entityPath: block1.filePath,
         },
         {
-          entityType: "Module",
+          entityType: 'Module',
           entityPath: block2.filePath,
         },
       ],

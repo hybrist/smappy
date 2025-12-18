@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { createFileRoute } from '@tanstack/react-router';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 
 // Session storage: maps session IDs to connected client/server pairs
 const sessions = new Map<
@@ -150,23 +150,23 @@ async function createSession(): Promise<{
 
   // Create a fresh server instance for this session
   const sessionServer = new McpServer({
-    name: "smappy-mcp",
-    version: "1.0.0",
+    name: 'smappy-mcp',
+    version: '1.0.0',
   });
 
   // Register the Hello World MCP App as a UI resource
   sessionServer.registerResource(
-    "hello-app",
-    "ui://smappy/hello-app",
+    'hello-app',
+    'ui://smappy/hello-app',
     {
-      description: "A simple Hello World MCP App",
-      mimeType: "text/html;profile=mcp-app",
+      description: 'A simple Hello World MCP App',
+      mimeType: 'text/html;profile=mcp-app',
     },
     async () => ({
       contents: [
         {
-          uri: "ui://smappy/hello-app",
-          mimeType: "text/html;profile=mcp-app",
+          uri: 'ui://smappy/hello-app',
+          mimeType: 'text/html;profile=mcp-app',
           text: helloAppHtml,
         },
       ],
@@ -175,20 +175,20 @@ async function createSession(): Promise<{
 
   // Register a tool that links to the UI resource
   sessionServer.registerTool(
-    "greet",
+    'greet',
     {
-      title: "Greet User",
+      title: 'Greet User',
       description:
-        "Display an interactive greeting app where users can enter their name",
+        'Display an interactive greeting app where users can enter their name',
       _meta: {
-        "ui/resourceUri": "ui://smappy/hello-app",
+        'ui/resourceUri': 'ui://smappy/hello-app',
       },
     },
     async () => ({
       content: [
         {
-          type: "text" as const,
-          text: "Hello! Use the interactive greeting app to say hello.",
+          type: 'text' as const,
+          text: 'Hello! Use the interactive greeting app to say hello.',
         },
       ],
     }),
@@ -199,8 +199,8 @@ async function createSession(): Promise<{
 
   // Create client to communicate with the server
   const client = new Client({
-    name: "smappy-mcp-client",
-    version: "1.0.0",
+    name: 'smappy-mcp-client',
+    version: '1.0.0',
   });
 
   await client.connect(clientTransport);
@@ -216,29 +216,29 @@ async function createSession(): Promise<{
   return { sessionId, client };
 }
 
-export const Route = createFileRoute("/api/mcp")({
+export const Route = createFileRoute('/api/mcp')({
   server: {
     handlers: {
       // Handle JSON-RPC requests via POST
       POST: async ({ request }: { request: Request }) => {
         const body = await request.json();
-        const sessionId = request.headers.get("mcp-session-id");
+        const sessionId = request.headers.get('mcp-session-id');
 
         // Handle initialization
-        if (body.method === "initialize") {
+        if (body.method === 'initialize') {
           const { sessionId: newSessionId } = await createSession();
 
           // Return server capabilities
           const serverInfo = {
-            protocolVersion: "2024-11-05",
+            protocolVersion: '2024-11-05',
             serverInfo: {
-              name: "smappy-mcp",
-              version: "1.0.0",
+              name: 'smappy-mcp',
+              version: '1.0.0',
             },
             capabilities: {
               extensions: {
-                "io.modelcontextprotocol/ui": {
-                  mimeTypes: ["text/html;profile=mcp-app"],
+                'io.modelcontextprotocol/ui': {
+                  mimeTypes: ['text/html;profile=mcp-app'],
                 },
               },
               resources: {},
@@ -248,14 +248,14 @@ export const Route = createFileRoute("/api/mcp")({
 
           return new Response(
             JSON.stringify({
-              jsonrpc: "2.0",
+              jsonrpc: '2.0',
               id: body.id,
               result: serverInfo,
             }),
             {
               headers: {
-                "Content-Type": "application/json",
-                "Mcp-Session-Id": newSessionId,
+                'Content-Type': 'application/json',
+                'Mcp-Session-Id': newSessionId,
               },
             },
           );
@@ -265,11 +265,11 @@ export const Route = createFileRoute("/api/mcp")({
         if (!sessionId) {
           return new Response(
             JSON.stringify({
-              jsonrpc: "2.0",
-              error: { code: -32600, message: "Session ID required" },
+              jsonrpc: '2.0',
+              error: { code: -32600, message: 'Session ID required' },
               id: body.id ?? null,
             }),
-            { status: 400, headers: { "Content-Type": "application/json" } },
+            { status: 400, headers: { 'Content-Type': 'application/json' } },
           );
         }
 
@@ -277,11 +277,11 @@ export const Route = createFileRoute("/api/mcp")({
         if (!session) {
           return new Response(
             JSON.stringify({
-              jsonrpc: "2.0",
-              error: { code: -32600, message: "Invalid session" },
+              jsonrpc: '2.0',
+              error: { code: -32600, message: 'Invalid session' },
               id: body.id ?? null,
             }),
-            { status: 404, headers: { "Content-Type": "application/json" } },
+            { status: 404, headers: { 'Content-Type': 'application/json' } },
           );
         }
 
@@ -291,30 +291,30 @@ export const Route = createFileRoute("/api/mcp")({
           let result: unknown;
 
           switch (body.method) {
-            case "ping":
+            case 'ping':
               result = {};
               break;
 
-            case "initialized":
+            case 'initialized':
               // Notification, no response needed
               return new Response(null, {
                 status: 202,
-                headers: { "Mcp-Session-Id": sessionId },
+                headers: { 'Mcp-Session-Id': sessionId },
               });
 
-            case "resources/list":
+            case 'resources/list':
               result = await client.listResources();
               break;
 
-            case "resources/read":
+            case 'resources/read':
               result = await client.readResource({ uri: body.params.uri });
               break;
 
-            case "tools/list":
+            case 'tools/list':
               result = await client.listTools();
               break;
 
-            case "tools/call":
+            case 'tools/call':
               result = await client.callTool({
                 name: body.params.name,
                 arguments: body.params.arguments,
@@ -324,7 +324,7 @@ export const Route = createFileRoute("/api/mcp")({
             default:
               return new Response(
                 JSON.stringify({
-                  jsonrpc: "2.0",
+                  jsonrpc: '2.0',
                   error: {
                     code: -32601,
                     message: `Method not found: ${body.method}`,
@@ -334,8 +334,8 @@ export const Route = createFileRoute("/api/mcp")({
                 {
                   status: 200,
                   headers: {
-                    "Content-Type": "application/json",
-                    "Mcp-Session-Id": sessionId,
+                    'Content-Type': 'application/json',
+                    'Mcp-Session-Id': sessionId,
                   },
                 },
               );
@@ -343,33 +343,33 @@ export const Route = createFileRoute("/api/mcp")({
 
           return new Response(
             JSON.stringify({
-              jsonrpc: "2.0",
+              jsonrpc: '2.0',
               id: body.id,
               result,
             }),
             {
               headers: {
-                "Content-Type": "application/json",
-                "Mcp-Session-Id": sessionId,
+                'Content-Type': 'application/json',
+                'Mcp-Session-Id': sessionId,
               },
             },
           );
         } catch (error) {
           return new Response(
             JSON.stringify({
-              jsonrpc: "2.0",
+              jsonrpc: '2.0',
               error: {
                 code: -32603,
                 message:
-                  error instanceof Error ? error.message : "Internal error",
+                  error instanceof Error ? error.message : 'Internal error',
               },
               id: body.id,
             }),
             {
               status: 500,
               headers: {
-                "Content-Type": "application/json",
-                "Mcp-Session-Id": sessionId,
+                'Content-Type': 'application/json',
+                'Mcp-Session-Id': sessionId,
               },
             },
           );
@@ -378,7 +378,7 @@ export const Route = createFileRoute("/api/mcp")({
 
       // Handle session termination
       DELETE: async ({ request }: { request: Request }) => {
-        const sessionId = request.headers.get("mcp-session-id");
+        const sessionId = request.headers.get('mcp-session-id');
 
         if (sessionId && sessions.has(sessionId)) {
           const session = sessions.get(sessionId);

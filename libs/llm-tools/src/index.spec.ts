@@ -1,8 +1,8 @@
-import { describe, it, expect } from "vitest";
-import { createBundleTools } from "./index.js";
+import { describe, it, expect } from 'vitest';
+import { createBundleTools } from './index.js';
 
-describe("createBundleTools", () => {
-  it("requires a store or db instance", () => {
+describe('createBundleTools', () => {
+  it('requires a store or db instance', () => {
     expect(() =>
       createBundleTools({
         analysisId: 1,

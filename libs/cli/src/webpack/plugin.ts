@@ -1,5 +1,5 @@
-import { writeFile } from "node:fs/promises";
-import type { Compiler, Stats } from "webpack";
+import { writeFile } from 'node:fs/promises';
+import type { Compiler, Stats } from 'webpack';
 
 /**
  * Options for WebpackSmappyPlugin.
@@ -22,7 +22,7 @@ export class WebpackSmappyPlugin {
    * Apply the plugin to webpack compiler
    */
   apply(compiler: Compiler): void {
-    const pluginName = "webpack-smappy-analysis";
+    const pluginName = 'webpack-smappy-analysis';
 
     // Hook into compilation completion
     compiler.hooks.done.tapAsync(
@@ -44,14 +44,14 @@ export class WebpackSmappyPlugin {
           });
           await writeFile(statsFile, JSON.stringify(statsJson));
           console.error(
-            "[smappy-plugin] stats are successfully stored as json to %s",
+            '[smappy-plugin] stats are successfully stored as json to %s',
             statsFile,
           );
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : String(error);
           console.error(
-            "[smappy] Failed to generate stats file:",
+            '[smappy] Failed to generate stats file:',
             errorMessage,
           );
         }

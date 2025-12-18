@@ -6,8 +6,8 @@ import type {
   SuggestionData,
   ModuleWithAnalysis,
   DependencyRelationship,
-} from "../ingestion/db/writer.ts";
-import type { ChunkInput, BundleInput } from "@smappy/core";
+} from '../ingestion/db/writer.ts';
+import type { ChunkInput, BundleInput } from '@smappy/core';
 
 /**
  * Context provided to suggestion rules for analysis

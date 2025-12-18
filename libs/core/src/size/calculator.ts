@@ -5,12 +5,12 @@
  * Pure version using only in-memory operations (no file I/O)
  */
 
-import { gzip } from "pako";
+import { gzip } from 'pako';
 
 /**
  * Supported encodings for byte length calculation
  */
-type Encoding = "utf-8" | "ascii" | "latin1" | "base64" | "hex";
+type Encoding = 'utf-8' | 'ascii' | 'latin1' | 'base64' | 'hex';
 
 /**
  * Calculate raw byte length of content
@@ -21,26 +21,26 @@ type Encoding = "utf-8" | "ascii" | "latin1" | "base64" | "hex";
  */
 export function computeRawSize(
   content: string,
-  encoding: Encoding = "utf-8",
+  encoding: Encoding = 'utf-8',
 ): number {
   if (!content) {
     return 0;
   }
 
   switch (encoding) {
-    case "utf-8":
-      return Buffer.byteLength(content, "utf-8");
-    case "ascii":
-      return Buffer.byteLength(content, "ascii");
-    case "latin1":
-      return Buffer.byteLength(content, "latin1");
-    case "base64":
-      return Buffer.byteLength(content, "base64");
-    case "hex":
-      return Buffer.byteLength(content, "hex");
+    case 'utf-8':
+      return Buffer.byteLength(content, 'utf-8');
+    case 'ascii':
+      return Buffer.byteLength(content, 'ascii');
+    case 'latin1':
+      return Buffer.byteLength(content, 'latin1');
+    case 'base64':
+      return Buffer.byteLength(content, 'base64');
+    case 'hex':
+      return Buffer.byteLength(content, 'hex');
     default:
       // Fallback to UTF-8
-      return Buffer.byteLength(content, "utf-8");
+      return Buffer.byteLength(content, 'utf-8');
   }
 }
 
@@ -62,7 +62,7 @@ export function computeGzipSize(content: string): number {
     return compressed.length;
   } catch (error) {
     // Fallback to raw size if compression fails
-    console.warn("Gzip compression failed, using raw size:", error);
+    console.warn('Gzip compression failed, using raw size:', error);
     return computeRawSize(content);
   }
 }

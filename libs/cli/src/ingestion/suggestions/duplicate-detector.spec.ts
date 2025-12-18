@@ -2,16 +2,16 @@
  * Tests for duplicate code detector
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   DuplicateDetector,
   createDuplicateDetector,
   type DuplicateDetectorConfig,
-} from "./duplicate-detector.js";
-import type { SuggestionContext } from "../../suggestions/types.js";
-import type { ModuleWithAnalysis } from "../db/writer.js";
+} from './duplicate-detector.js';
+import type { SuggestionContext } from '../../suggestions/types.js';
+import type { ModuleWithAnalysis } from '../db/writer.js';
 
-describe("DuplicateDetector", () => {
+describe('DuplicateDetector', () => {
   let detector: DuplicateDetector;
   let context: SuggestionContext;
 
@@ -24,7 +24,7 @@ describe("DuplicateDetector", () => {
   ): ModuleWithAnalysis => ({
     filePath,
     sourceContent,
-    fileType: "js",
+    fileType: 'js',
     originalSize: bundledSize,
     bundledSize,
     isThirdParty,
@@ -42,33 +42,33 @@ describe("DuplicateDetector", () => {
     };
   });
 
-  describe("rule metadata", () => {
-    it("should have correct rule metadata", () => {
-      expect(detector.id).toBe("duplicate-code");
-      expect(detector.name).toBe("Duplicate Code Detector");
-      expect(detector.description).toContain("duplicate");
+  describe('rule metadata', () => {
+    it('should have correct rule metadata', () => {
+      expect(detector.id).toBe('duplicate-code');
+      expect(detector.name).toBe('Duplicate Code Detector');
+      expect(detector.description).toContain('duplicate');
     });
   });
 
-  describe("execute", () => {
-    it("should return empty array when no modules exist", () => {
+  describe('execute', () => {
+    it('should return empty array when no modules exist', () => {
       const suggestions = detector.execute(context);
       expect(suggestions).toEqual([]);
     });
 
-    it("should return empty array when only one module exists", () => {
+    it('should return empty array when only one module exists', () => {
       const code = `
         export function calculate(a, b) {
           return a + b;
         }
       `;
-      context.modules = [createModule("./src/utils.js", code, 200)];
+      context.modules = [createModule('./src/utils.js', code, 200)];
 
       const suggestions = detector.execute(context);
       expect(suggestions).toEqual([]);
     });
 
-    it("should detect exact duplicate functions", () => {
+    it('should detect exact duplicate functions', () => {
       const duplicateCode = `
         export function calculate(a, b) {
           return a + b;
@@ -76,20 +76,20 @@ describe("DuplicateDetector", () => {
       `;
 
       context.modules = [
-        createModule("./src/module1.js", duplicateCode, 200),
-        createModule("./src/module2.js", duplicateCode, 200),
+        createModule('./src/module1.js', duplicateCode, 200),
+        createModule('./src/module2.js', duplicateCode, 200),
       ];
 
       const suggestions = detector.execute(context);
 
       expect(suggestions.length).toBeGreaterThan(0);
       const suggestion = suggestions[0];
-      expect(suggestion.type).toBe("DUPLICATE_CODE");
-      expect(suggestion.title).toContain("Duplicate code detected");
-      expect(suggestion.title).toContain("%");
+      expect(suggestion.type).toBe('DUPLICATE_CODE');
+      expect(suggestion.title).toContain('Duplicate code detected');
+      expect(suggestion.title).toContain('%');
     });
 
-    it("should detect similar functions above threshold", () => {
+    it('should detect similar functions above threshold', () => {
       // Functions with nearly identical code but minor differences
       const code1 = `
         export function processData(data) {
@@ -118,8 +118,8 @@ describe("DuplicateDetector", () => {
       `;
 
       context.modules = [
-        createModule("./src/user.js", code1, 500),
-        createModule("./src/customer.js", code2, 500),
+        createModule('./src/user.js', code1, 500),
+        createModule('./src/customer.js', code2, 500),
       ];
 
       const suggestions = detector.execute(context);
@@ -129,11 +129,11 @@ describe("DuplicateDetector", () => {
       expect(suggestions.length).toBeGreaterThan(0);
       if (suggestions.length > 0) {
         const suggestion = suggestions[0];
-        expect(suggestion.type).toBe("DUPLICATE_CODE");
+        expect(suggestion.type).toBe('DUPLICATE_CODE');
       }
     });
 
-    it("should not detect dissimilar code", () => {
+    it('should not detect dissimilar code', () => {
       const code1 = `
         export function add(a, b) {
           return a + b;
@@ -152,8 +152,8 @@ describe("DuplicateDetector", () => {
       `;
 
       context.modules = [
-        createModule("./src/math.js", code1, 200),
-        createModule("./src/users.js", code2, 300),
+        createModule('./src/math.js', code1, 200),
+        createModule('./src/users.js', code2, 300),
       ];
 
       const suggestions = detector.execute(context);
@@ -161,7 +161,7 @@ describe("DuplicateDetector", () => {
       expect(suggestions).toEqual([]);
     });
 
-    it("should skip third-party modules by default", () => {
+    it('should skip third-party modules by default', () => {
       const code = `
         export function helper() {
           return 42;
@@ -169,8 +169,8 @@ describe("DuplicateDetector", () => {
       `;
 
       context.modules = [
-        createModule("./src/app.js", code, 200, false),
-        createModule("./node_modules/lib/index.js", code, 200, true),
+        createModule('./src/app.js', code, 200, false),
+        createModule('./node_modules/lib/index.js', code, 200, true),
       ];
 
       const suggestions = detector.execute(context);
@@ -178,12 +178,12 @@ describe("DuplicateDetector", () => {
       expect(suggestions).toEqual([]);
     });
 
-    it("should skip modules below minimum size", () => {
-      const tinyCode = "export const x = 1;";
+    it('should skip modules below minimum size', () => {
+      const tinyCode = 'export const x = 1;';
 
       context.modules = [
-        createModule("./src/a.js", tinyCode, 50),
-        createModule("./src/b.js", tinyCode, 50),
+        createModule('./src/a.js', tinyCode, 50),
+        createModule('./src/b.js', tinyCode, 50),
       ];
 
       const suggestions = detector.execute(context);
@@ -191,7 +191,7 @@ describe("DuplicateDetector", () => {
       expect(suggestions).toEqual([]);
     });
 
-    it("should include links to both modules", () => {
+    it('should include links to both modules', () => {
       const code = `
         export function calculate(a, b) {
           const result = a + b;
@@ -200,8 +200,8 @@ describe("DuplicateDetector", () => {
       `;
 
       context.modules = [
-        createModule("./src/module1.js", code, 200),
-        createModule("./src/module2.js", code, 200),
+        createModule('./src/module1.js', code, 200),
+        createModule('./src/module2.js', code, 200),
       ];
 
       const suggestions = detector.execute(context);
@@ -210,15 +210,15 @@ describe("DuplicateDetector", () => {
       const suggestion = suggestions[0];
       expect(suggestion.links).toBeDefined();
       expect(suggestion.links).toHaveLength(2);
-      expect(suggestion.links?.[0].entityType).toBe("Module");
-      expect(suggestion.links?.[1].entityType).toBe("Module");
+      expect(suggestion.links?.[0].entityType).toBe('Module');
+      expect(suggestion.links?.[1].entityType).toBe('Module');
 
       const paths = suggestion.links?.map((link) => link.entityPath);
-      expect(paths).toContain("./src/module1.js");
-      expect(paths).toContain("./src/module2.js");
+      expect(paths).toContain('./src/module1.js');
+      expect(paths).toContain('./src/module2.js');
     });
 
-    it("should calculate potential size savings", () => {
+    it('should calculate potential size savings', () => {
       const code = `
         export function largeFunction() {
           const a = 1;
@@ -231,19 +231,19 @@ describe("DuplicateDetector", () => {
       `;
 
       context.modules = [
-        createModule("./src/module1.js", code, 500),
-        createModule("./src/module2.js", code, 500),
+        createModule('./src/module1.js', code, 500),
+        createModule('./src/module2.js', code, 500),
       ];
 
       const suggestions = detector.execute(context);
 
       expect(suggestions.length).toBeGreaterThan(0);
       const suggestion = suggestions[0];
-      expect(suggestion.description).toContain("savings");
+      expect(suggestion.description).toContain('savings');
       expect(suggestion.description).toMatch(/\d+/); // Contains numbers for size
     });
 
-    it("should provide actionable recommendations", () => {
+    it('should provide actionable recommendations', () => {
       const code = `
         export function process(data) {
           return data.map(x => x * 2);
@@ -251,19 +251,19 @@ describe("DuplicateDetector", () => {
       `;
 
       context.modules = [
-        createModule("./src/a.js", code, 200),
-        createModule("./src/b.js", code, 200),
+        createModule('./src/a.js', code, 200),
+        createModule('./src/b.js', code, 200),
       ];
 
       const suggestions = detector.execute(context);
 
       expect(suggestions.length).toBeGreaterThan(0);
       const suggestion = suggestions[0];
-      expect(suggestion.description).toContain("Extract");
-      expect(suggestion.description).toContain("shared utility");
+      expect(suggestion.description).toContain('Extract');
+      expect(suggestion.description).toContain('shared utility');
     });
 
-    it("should not report duplicates within the same file", () => {
+    it('should not report duplicates within the same file', () => {
       const code = `
         export function helper1(x) {
           return x * 2;
@@ -273,14 +273,14 @@ describe("DuplicateDetector", () => {
         }
       `;
 
-      context.modules = [createModule("./src/utils.js", code, 300)];
+      context.modules = [createModule('./src/utils.js', code, 300)];
 
       const suggestions = detector.execute(context);
 
       expect(suggestions).toEqual([]);
     });
 
-    it("should detect duplicate classes", () => {
+    it('should detect duplicate classes', () => {
       const classCode = `
         export class DataProcessor {
           constructor() {
@@ -293,8 +293,8 @@ describe("DuplicateDetector", () => {
       `;
 
       context.modules = [
-        createModule("./src/processor1.js", classCode, 400),
-        createModule("./src/processor2.js", classCode, 400),
+        createModule('./src/processor1.js', classCode, 400),
+        createModule('./src/processor2.js', classCode, 400),
       ];
 
       const suggestions = detector.execute(context);
@@ -302,7 +302,7 @@ describe("DuplicateDetector", () => {
       expect(suggestions.length).toBeGreaterThan(0);
     });
 
-    it("should handle multiple duplicate pairs", () => {
+    it('should handle multiple duplicate pairs', () => {
       const code1 = `
         export function funcA() {
           return 'A'.repeat(50);
@@ -316,10 +316,10 @@ describe("DuplicateDetector", () => {
       `;
 
       context.modules = [
-        createModule("./src/a1.js", code1, 200),
-        createModule("./src/a2.js", code1, 200),
-        createModule("./src/b1.js", code2, 200),
-        createModule("./src/b2.js", code2, 200),
+        createModule('./src/a1.js', code1, 200),
+        createModule('./src/a2.js', code1, 200),
+        createModule('./src/b1.js', code2, 200),
+        createModule('./src/b2.js', code2, 200),
       ];
 
       const suggestions = detector.execute(context);
@@ -329,8 +329,8 @@ describe("DuplicateDetector", () => {
     });
   });
 
-  describe("custom configuration", () => {
-    it("should accept custom similarity threshold", () => {
+  describe('custom configuration', () => {
+    it('should accept custom similarity threshold', () => {
       const config: DuplicateDetectorConfig = {
         similarityThreshold: 95, // Very strict
       };
@@ -349,8 +349,8 @@ describe("DuplicateDetector", () => {
       `;
 
       context.modules = [
-        createModule("./src/a.js", code1, 200),
-        createModule("./src/b.js", code2, 200),
+        createModule('./src/a.js', code1, 200),
+        createModule('./src/b.js', code2, 200),
       ];
 
       const suggestions = detector.execute(context);
@@ -360,7 +360,7 @@ describe("DuplicateDetector", () => {
       expect(Array.isArray(suggestions)).toBe(true);
     });
 
-    it("should accept custom minimum code size", () => {
+    it('should accept custom minimum code size', () => {
       const config: DuplicateDetectorConfig = {
         minCodeSize: 500, // Very large minimum
       };
@@ -373,8 +373,8 @@ describe("DuplicateDetector", () => {
       `;
 
       context.modules = [
-        createModule("./src/a.js", smallCode, 300),
-        createModule("./src/b.js", smallCode, 300),
+        createModule('./src/a.js', smallCode, 300),
+        createModule('./src/b.js', smallCode, 300),
       ];
 
       const suggestions = detector.execute(context);
@@ -383,7 +383,7 @@ describe("DuplicateDetector", () => {
       expect(suggestions).toEqual([]);
     });
 
-    it("should allow including third-party modules", () => {
+    it('should allow including third-party modules', () => {
       const config: DuplicateDetectorConfig = {
         skipThirdParty: false,
       };
@@ -396,8 +396,8 @@ describe("DuplicateDetector", () => {
       `;
 
       context.modules = [
-        createModule("./src/app.js", code, 200, false),
-        createModule("./node_modules/lib/index.js", code, 200, true),
+        createModule('./src/app.js', code, 200, false),
+        createModule('./node_modules/lib/index.js', code, 200, true),
       ];
 
       const suggestions = detector.execute(context);
@@ -406,8 +406,8 @@ describe("DuplicateDetector", () => {
     });
   });
 
-  describe("severity levels", () => {
-    it("should use critical severity for very similar large code", () => {
+  describe('severity levels', () => {
+    it('should use critical severity for very similar large code', () => {
       const largeCode = `
         export function processLargeData(data) {
           const step1 = data.map(x => x * 2);
@@ -419,20 +419,20 @@ describe("DuplicateDetector", () => {
       `;
 
       context.modules = [
-        createModule("./src/a.js", largeCode, 600),
-        createModule("./src/b.js", largeCode, 600),
+        createModule('./src/a.js', largeCode, 600),
+        createModule('./src/b.js', largeCode, 600),
       ];
 
       const suggestions = detector.execute(context);
 
       expect(suggestions.length).toBeGreaterThan(0);
       const criticalSuggestion = suggestions.find(
-        (s) => s.severity === "critical",
+        (s) => s.severity === 'critical',
       );
       expect(criticalSuggestion).toBeDefined();
     });
 
-    it("should use warning severity for moderately similar code", () => {
+    it('should use warning severity for moderately similar code', () => {
       const code = `
         export function process(x) {
           const a = x * 2;
@@ -443,64 +443,64 @@ describe("DuplicateDetector", () => {
       `;
 
       context.modules = [
-        createModule("./src/a.js", code, 350),
-        createModule("./src/b.js", code, 350),
+        createModule('./src/a.js', code, 350),
+        createModule('./src/b.js', code, 350),
       ];
 
       const suggestions = detector.execute(context);
 
       expect(suggestions.length).toBeGreaterThan(0);
-      expect(["warning", "critical"]).toContain(suggestions[0].severity);
+      expect(['warning', 'critical']).toContain(suggestions[0].severity);
     });
   });
 
-  describe("edge cases", () => {
-    it("should handle empty modules", () => {
+  describe('edge cases', () => {
+    it('should handle empty modules', () => {
       context.modules = [
-        createModule("./src/empty1.js", "", 0),
-        createModule("./src/empty2.js", "", 0),
+        createModule('./src/empty1.js', '', 0),
+        createModule('./src/empty2.js', '', 0),
       ];
 
       const suggestions = detector.execute(context);
       expect(suggestions).toEqual([]);
     });
 
-    it("should handle modules with only comments", () => {
+    it('should handle modules with only comments', () => {
       const commentCode = `
         // This is a comment
         /* Another comment */
       `;
 
       context.modules = [
-        createModule("./src/a.js", commentCode, 100),
-        createModule("./src/b.js", commentCode, 100),
+        createModule('./src/a.js', commentCode, 100),
+        createModule('./src/b.js', commentCode, 100),
       ];
 
       const suggestions = detector.execute(context);
       expect(suggestions).toEqual([]);
     });
 
-    it("should handle modules with syntax errors gracefully", () => {
-      const invalidCode = "export function broken(";
+    it('should handle modules with syntax errors gracefully', () => {
+      const invalidCode = 'export function broken(';
 
       context.modules = [
-        createModule("./src/broken.js", invalidCode, 150),
-        createModule("./src/valid.js", "export const x = 1;", 150),
+        createModule('./src/broken.js', invalidCode, 150),
+        createModule('./src/valid.js', 'export const x = 1;', 150),
       ];
 
       // Should not throw, just skip broken modules
       expect(() => detector.execute(context)).not.toThrow();
     });
 
-    it("should normalize whitespace when comparing", () => {
+    it('should normalize whitespace when comparing', () => {
       const code1 = `export function test() { return 42; }`;
       const code2 = `export function test() {
         return 42;
       }`;
 
       context.modules = [
-        createModule("./src/a.js", code1, 200),
-        createModule("./src/b.js", code2, 200),
+        createModule('./src/a.js', code1, 200),
+        createModule('./src/b.js', code2, 200),
       ];
 
       const suggestions = detector.execute(context);
@@ -508,16 +508,16 @@ describe("DuplicateDetector", () => {
       expect(suggestions.length).toBeGreaterThan(0);
     });
 
-    it("should handle very large modules efficiently", () => {
+    it('should handle very large modules efficiently', () => {
       // Generate a large code string
       const largeCode = Array(1000)
         .fill(null)
         .map((_, i) => `const var${i} = ${i};`)
-        .join("\n");
+        .join('\n');
 
       context.modules = [
-        createModule("./src/large1.js", largeCode, 50000),
-        createModule("./src/large2.js", largeCode, 50000),
+        createModule('./src/large1.js', largeCode, 50000),
+        createModule('./src/large2.js', largeCode, 50000),
       ];
 
       // Should complete without timeout
@@ -526,8 +526,8 @@ describe("DuplicateDetector", () => {
     });
   });
 
-  describe("description formatting", () => {
-    it("should format sizes in description correctly", () => {
+  describe('description formatting', () => {
+    it('should format sizes in description correctly', () => {
       const code = `
         export function calc() {
           return Array(100).fill(0).reduce((a, b) => a + b, 0);
@@ -535,8 +535,8 @@ describe("DuplicateDetector", () => {
       `;
 
       context.modules = [
-        createModule("./src/a.js", code, 250),
-        createModule("./src/b.js", code, 250),
+        createModule('./src/a.js', code, 250),
+        createModule('./src/b.js', code, 250),
       ];
 
       const suggestions = detector.execute(context);
@@ -545,36 +545,36 @@ describe("DuplicateDetector", () => {
       expect(suggestions[0].description).toMatch(/\d+(\.\d+)?[KMB]/);
     });
 
-    it("should include line numbers in description", () => {
+    it('should include line numbers in description', () => {
       const code = `export function test() {
         const x = 1;
         return x;
       }`;
 
       context.modules = [
-        createModule("./src/a.js", code, 200),
-        createModule("./src/b.js", code, 200),
+        createModule('./src/a.js', code, 200),
+        createModule('./src/b.js', code, 200),
       ];
 
       const suggestions = detector.execute(context);
 
       expect(suggestions.length).toBeGreaterThan(0);
-      expect(suggestions[0].description).toContain("Lines:");
+      expect(suggestions[0].description).toContain('Lines:');
     });
 
-    it("should include file paths in description", () => {
+    it('should include file paths in description', () => {
       const code = `export const value = 42;`;
 
       context.modules = [
-        createModule("./src/config/a.js", code, 150),
-        createModule("./src/config/b.js", code, 150),
+        createModule('./src/config/a.js', code, 150),
+        createModule('./src/config/b.js', code, 150),
       ];
 
       const suggestions = detector.execute(context);
 
       expect(suggestions.length).toBeGreaterThan(0);
-      expect(suggestions[0].description).toContain("./src/config/a.js");
-      expect(suggestions[0].description).toContain("./src/config/b.js");
+      expect(suggestions[0].description).toContain('./src/config/a.js');
+      expect(suggestions[0].description).toContain('./src/config/b.js');
     });
   });
 });

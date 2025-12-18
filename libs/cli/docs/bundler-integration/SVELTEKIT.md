@@ -21,15 +21,15 @@ npm install smappy-plugin --save-dev
 Add the plugin to your `vite.config.ts`:
 
 ```typescript
-import { sveltekit } from "@sveltejs/kit/vite";
-import { viteBundleAnalysisPlugin } from "@smappy/cli/src/plugins/vite/plugin.js";
-import { defineConfig } from "vite";
+import { sveltekit } from '@sveltejs/kit/vite';
+import { viteBundleAnalysisPlugin } from '@smappy/cli/src/plugins/vite/plugin.js';
+import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [
     sveltekit(),
     viteBundleAnalysisPlugin({
-      projectName: "my-sveltekit-app",
+      projectName: 'my-sveltekit-app',
       autoIngest: true,
     }),
   ],
@@ -102,9 +102,9 @@ Smappy can analyze its own bundle! Here's how:
 Edit `vite.config.ts`:
 
 ```typescript
-import { sveltekit } from "@sveltejs/kit/vite";
-import { viteBundleAnalysisPlugin } from "@smappy/cli/src/plugins/vite/plugin.js";
-import { defineConfig } from "vite";
+import { sveltekit } from '@sveltejs/kit/vite';
+import { viteBundleAnalysisPlugin } from '@smappy/cli/src/plugins/vite/plugin.js';
+import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [
@@ -112,7 +112,7 @@ export default defineConfig({
 
     // Analyze Smappy's own bundle
     viteBundleAnalysisPlugin({
-      projectName: "smappy",
+      projectName: 'smappy',
       autoIngest: true,
       debug: true, // Enable detailed logging
     }),
@@ -194,8 +194,8 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ["svelte", "@sveltejs/kit"],
-          ui: ["chart.js", "d3"],
+          vendor: ['svelte', '@sveltejs/kit'],
+          ui: ['chart.js', 'd3'],
         },
       },
     },
@@ -225,8 +225,8 @@ To analyze server-side bundle separately:
 
 ```typescript
 viteBundleAnalysisPlugin({
-  projectName: "my-app-server",
-  buildOutputDir: "build/server",
+  projectName: 'my-app-server',
+  buildOutputDir: 'build/server',
   handleSSR: true,
 });
 ```
@@ -237,8 +237,8 @@ For non-standard output locations:
 
 ```typescript
 viteBundleAnalysisPlugin({
-  projectName: "my-app",
-  buildOutputDir: "custom-dist",
+  projectName: 'my-app',
+  buildOutputDir: 'custom-dist',
 });
 ```
 
@@ -249,10 +249,10 @@ Only analyze in CI or specific environments:
 ```typescript
 const plugins = [sveltekit()];
 
-if (process.env.ANALYZE_BUNDLE === "true") {
+if (process.env.ANALYZE_BUNDLE === 'true') {
   plugins.push(
     viteBundleAnalysisPlugin({
-      projectName: "my-app",
+      projectName: 'my-app',
       autoIngest: true,
     }),
   );
@@ -287,7 +287,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: '18'
 
       - run: npm install
       - run: npm run build
@@ -304,7 +304,7 @@ Fail CI if bundle exceeds thresholds:
 
 ```typescript
 viteBundleAnalysisPlugin({
-  projectName: "my-app",
+  projectName: 'my-app',
   autoIngest: true,
   thresholds: {
     totalSize: 500 * 1024, // 500 KB
@@ -344,10 +344,10 @@ Ensure libraries are tree-shakeable:
 
 ```typescript
 // Good - imports only what's needed
-import { specific } from "library";
+import { specific } from 'library';
 
 // Bad - imports entire library
-import * as library from "library";
+import * as library from 'library';
 ```
 
 ### 4. Analyze with Smappy
@@ -394,9 +394,9 @@ Use Smappy's suggestions feature to identify:
 **Workaround**: Analyze only the client build (which contains most of your app code):
 
 ```typescript
-import { sveltekit } from "@sveltejs/kit/vite";
-import { viteBundleAnalysisPlugin } from "@smappy/cli/src/plugins/vite/plugin.js";
-import { defineConfig } from "vite";
+import { sveltekit } from '@sveltejs/kit/vite';
+import { viteBundleAnalysisPlugin } from '@smappy/cli/src/plugins/vite/plugin.js';
+import { defineConfig } from 'vite';
 
 export default defineConfig(({ isSsrBuild }) => ({
   plugins: [
@@ -406,7 +406,7 @@ export default defineConfig(({ isSsrBuild }) => ({
     ...(!isSsrBuild
       ? [
           viteBundleAnalysisPlugin({
-            projectName: "my-app",
+            projectName: 'my-app',
             autoIngest: true,
           }),
         ]

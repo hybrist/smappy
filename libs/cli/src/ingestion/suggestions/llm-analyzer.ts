@@ -1,18 +1,18 @@
 import type {
   SuggestionRule,
   SuggestionContext,
-} from "../../suggestions/types.ts";
-import type { SuggestionData } from "../db/writer.ts";
-import type { BundleInput } from "@smappy/core";
+} from '../../suggestions/types.ts';
+import type { SuggestionData } from '../db/writer.ts';
+import type { BundleInput } from '@smappy/core';
 import {
   loadLLMConfig,
   type LLMIntegrationConfig,
   type PartialLLMIntegrationConfig,
-} from "../../config/llm.ts";
-import { generateText } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
-import { createAnthropic } from "@ai-sdk/anthropic";
-import { ollama } from "ollama-ai-provider-v2";
+} from '../../config/llm.ts';
+import { generateText } from 'ai';
+import { createOpenAI } from '@ai-sdk/openai';
+import { createAnthropic } from '@ai-sdk/anthropic';
+import { ollama } from 'ollama-ai-provider-v2';
 
 /**
  * Options for the LLM analyzer
@@ -30,10 +30,10 @@ export interface LLMAnalyzerOptions {
 const rateLimiterRegistry = new Map<string, RateLimiter>();
 
 export class LLMAnalyzer implements SuggestionRule {
-  readonly id = "llm-advanced-analyzer";
-  readonly name = "LLM-Powered Analyzer";
+  readonly id = 'llm-advanced-analyzer';
+  readonly name = 'LLM-Powered Analyzer';
   readonly description =
-    "Generates contextual bundle analysis suggestions using LLM providers";
+    'Generates contextual bundle analysis suggestions using LLM providers';
 
   private readonly config: LLMIntegrationConfig;
   private readonly rateLimiter?: RateLimiter;
@@ -41,8 +41,8 @@ export class LLMAnalyzer implements SuggestionRule {
 
   constructor(options: LLMAnalyzerOptions = {}) {
     const resolvedConfig =
-      "enabled" in (options.config ?? {}) &&
-      "apiBaseUrl" in (options.config ?? {})
+      'enabled' in (options.config ?? {}) &&
+      'apiBaseUrl' in (options.config ?? {})
         ? (options.config as LLMIntegrationConfig)
         : loadLLMConfig(
             options.config as PartialLLMIntegrationConfig | undefined,
@@ -75,8 +75,8 @@ export class LLMAnalyzer implements SuggestionRule {
       const result = await generateText({
         model,
         messages: [
-          { role: "system", content: DEFAULT_SYSTEM_PROMPT },
-          { role: "user", content: userPrompt },
+          { role: 'system', content: DEFAULT_SYSTEM_PROMPT },
+          { role: 'user', content: userPrompt },
         ],
         maxOutputTokens: this.config.maxTokens,
         temperature: this.config.temperature,
@@ -87,17 +87,17 @@ export class LLMAnalyzer implements SuggestionRule {
       if (suggestions.length === 0) {
         return [
           this.buildFallbackSuggestion(
-            "No structured suggestions were returned by the LLM.",
+            'No structured suggestions were returned by the LLM.',
           ),
         ];
       }
 
       return suggestions;
     } catch (error) {
-      console.error("[LLMAnalyzer] Failed to generate suggestions", error);
+      console.error('[LLMAnalyzer] Failed to generate suggestions', error);
       return [
         this.buildFallbackSuggestion(
-          `Unable to generate AI suggestions at this time. ${(error as Error).message ?? "Unknown error."}`,
+          `Unable to generate AI suggestions at this time. ${(error as Error).message ?? 'Unknown error.'}`,
         ),
       ];
     }
@@ -107,25 +107,25 @@ export class LLMAnalyzer implements SuggestionRule {
     const { provider, model, apiKey, apiBaseUrl } = this.config;
 
     switch (provider) {
-      case "openai": {
+      case 'openai': {
         const openai = createOpenAI({
           apiKey,
           baseURL:
-            apiBaseUrl !== "https://api.openai.com/v1" ? apiBaseUrl : undefined,
+            apiBaseUrl !== 'https://api.openai.com/v1' ? apiBaseUrl : undefined,
         });
         return openai(model);
       }
-      case "anthropic": {
+      case 'anthropic': {
         const anthropic = createAnthropic({
           apiKey,
           baseURL:
-            apiBaseUrl !== "https://api.anthropic.com/v1"
+            apiBaseUrl !== 'https://api.anthropic.com/v1'
               ? apiBaseUrl
               : undefined,
         });
         return anthropic(model);
       }
-      case "ollama":
+      case 'ollama':
         return ollama(model);
       default:
         throw new Error(`Unsupported LLM provider: ${provider}`);
@@ -170,7 +170,7 @@ export class LLMAnalyzer implements SuggestionRule {
     const bundleSummary = context.bundles.slice(0, 5).map((bundle) => {
       const bundleWithSize = bundle as BundleInput & { size?: number };
       const size =
-        typeof bundleWithSize.size === "number"
+        typeof bundleWithSize.size === 'number'
           ? formatBytes(bundleWithSize.size)
           : undefined;
       return {
@@ -215,7 +215,7 @@ ${JSON.stringify(payload, null, 2)}`;
       parsed = JSON.parse(cleaned);
     } catch (error) {
       console.warn(
-        "[LLMAnalyzer] Failed to parse LLM response as JSON",
+        '[LLMAnalyzer] Failed to parse LLM response as JSON',
         error,
         cleaned,
       );
@@ -228,14 +228,14 @@ ${JSON.stringify(payload, null, 2)}`;
 
     const suggestions: SuggestionData[] = [];
     for (const entry of parsed) {
-      if (!entry || typeof entry !== "object") {
+      if (!entry || typeof entry !== 'object') {
         continue;
       }
 
       const typedEntry = entry as Record<string, unknown>;
-      const title = normalizeString(typedEntry.title) ?? "AI Suggestion";
-      const description = normalizeString(typedEntry.description) ?? "";
-      const type = normalizeString(typedEntry.type) ?? "LLM_SUGGESTION";
+      const title = normalizeString(typedEntry.title) ?? 'AI Suggestion';
+      const description = normalizeString(typedEntry.description) ?? '';
+      const type = normalizeString(typedEntry.type) ?? 'LLM_SUGGESTION';
       const severity = normalizeSeverity(typedEntry.severity);
       const links = normalizeLinks(typedEntry.links);
 
@@ -255,9 +255,9 @@ ${JSON.stringify(payload, null, 2)}`;
 
   private stripCodeFences(input: string): string {
     const trimmed = input.trim();
-    if (trimmed.startsWith("```")) {
-      const withoutStart = trimmed.replace(/^```[a-zA-Z]*\n?/, "");
-      return withoutStart.replace(/```$/, "").trim();
+    if (trimmed.startsWith('```')) {
+      const withoutStart = trimmed.replace(/^```[a-zA-Z]*\n?/, '');
+      return withoutStart.replace(/```$/, '').trim();
     }
     return trimmed;
   }
@@ -283,8 +283,8 @@ ${JSON.stringify(payload, null, 2)}`;
   private buildRateLimitSuggestion(): SuggestionData {
     const providerName = this.getProviderName();
     return {
-      type: "LLM_RATE_LIMIT",
-      severity: "info",
+      type: 'LLM_RATE_LIMIT',
+      severity: 'info',
       title: `${providerName} rate limit reached`,
       description: this.appendAttribution(
         `${providerName} requests are temporarily paused to respect rate limits. Suggestions will resume automatically shortly.`,
@@ -295,8 +295,8 @@ ${JSON.stringify(payload, null, 2)}`;
   private buildFallbackSuggestion(reason: string): SuggestionData {
     const providerName = this.getProviderName();
     return {
-      type: "LLM_FALLBACK",
-      severity: "info",
+      type: 'LLM_FALLBACK',
+      severity: 'info',
       title: `${providerName} suggestions unavailable`,
       description: this.appendAttribution(reason),
     };
@@ -304,20 +304,20 @@ ${JSON.stringify(payload, null, 2)}`;
 
   private getProviderName(): string {
     switch (this.config.provider) {
-      case "openai":
-        return "OpenAI";
-      case "anthropic":
-        return "Anthropic Claude";
-      case "ollama":
-        return "Local AI";
+      case 'openai':
+        return 'OpenAI';
+      case 'anthropic':
+        return 'Anthropic Claude';
+      case 'ollama':
+        return 'Local AI';
       default:
-        return "LLM provider";
+        return 'LLM provider';
     }
   }
 }
 
 const DEFAULT_SYSTEM_PROMPT =
-  "You are an expert front-end performance engineer. Generate concise, high impact optimization suggestions based on the provided bundle analysis data.";
+  'You are an expert front-end performance engineer. Generate concise, high impact optimization suggestions based on the provided bundle analysis data.';
 
 class RateLimiter {
   private readonly windowMs = 60_000;
@@ -351,45 +351,45 @@ class RateLimiter {
 }
 
 function normalizeString(value: unknown): string | undefined {
-  if (typeof value !== "string") {
+  if (typeof value !== 'string') {
     return undefined;
   }
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
-function normalizeSeverity(value: unknown): "critical" | "warning" | "info" {
-  if (typeof value === "string") {
+function normalizeSeverity(value: unknown): 'critical' | 'warning' | 'info' {
+  if (typeof value === 'string') {
     const normalized = value.trim().toLowerCase();
     if (
-      normalized === "critical" ||
-      normalized === "warning" ||
-      normalized === "info"
+      normalized === 'critical' ||
+      normalized === 'warning' ||
+      normalized === 'info'
     ) {
       return normalized;
     }
-    if (normalized === "high" || normalized === "severe") {
-      return "critical";
+    if (normalized === 'high' || normalized === 'severe') {
+      return 'critical';
     }
-    if (normalized === "medium") {
-      return "warning";
+    if (normalized === 'medium') {
+      return 'warning';
     }
   }
-  return "info";
+  return 'info';
 }
 
-function normalizeLinks(value: unknown): SuggestionData["links"] {
+function normalizeLinks(value: unknown): SuggestionData['links'] {
   if (!Array.isArray(value)) {
     return undefined;
   }
 
   const links = value
     .map((entry) => {
-      if (!entry || typeof entry !== "object") {
+      if (!entry || typeof entry !== 'object') {
         return undefined;
       }
       const record = entry as Record<string, unknown>;
-      const entityTypeRaw = normalizeString(record.entityType) ?? "";
+      const entityTypeRaw = normalizeString(record.entityType) ?? '';
       const entityType = normalizeEntityType(entityTypeRaw);
       if (!entityType) {
         return undefined;
@@ -408,18 +408,18 @@ function normalizeLinks(value: unknown): SuggestionData["links"] {
 
 function normalizeEntityType(
   value: string,
-): NonNullable<SuggestionData["links"]>[number]["entityType"] | undefined {
+): NonNullable<SuggestionData['links']>[number]['entityType'] | undefined {
   const normalized = value.trim().toLowerCase();
   switch (normalized) {
-    case "module":
-      return "Module";
-    case "symbol":
-      return "Symbol";
-    case "dependency":
-    case "dependencies":
-      return "Dependency";
-    case "chunk":
-      return "Chunk";
+    case 'module':
+      return 'Module';
+    case 'symbol':
+      return 'Symbol';
+    case 'dependency':
+    case 'dependencies':
+      return 'Dependency';
+    case 'chunk':
+      return 'Chunk';
     default:
       return undefined;
   }
@@ -427,7 +427,7 @@ function normalizeEntityType(
 
 function formatBytes(size: number | undefined): string {
   if (size === undefined || !Number.isFinite(size)) {
-    return "unknown";
+    return 'unknown';
   }
 
   if (size < 1024) {

@@ -1,8 +1,8 @@
-import type { Store } from "@smappy/store";
-import { schema } from "@smappy/store";
-import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
-import { and, asc, desc, eq, sql } from "drizzle-orm";
-import { z } from "zod";
+import type { Store } from '@smappy/store';
+import { schema } from '@smappy/store';
+import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import { and, asc, desc, eq, sql } from 'drizzle-orm';
+import { z } from 'zod';
 
 type StoreDb = BetterSQLite3Database<typeof schema>;
 
@@ -88,7 +88,7 @@ export interface FragmentSearchResult {
 }
 
 export interface LlmToolDefinition {
-  type: "function";
+  type: 'function';
   description: string;
   inputSchema: z.ZodTypeAny;
   execute: (input: unknown) => Promise<unknown>;
@@ -99,7 +99,7 @@ export type LlmToolDefinitions = Record<string, LlmToolDefinition>;
 const emptyInputSchema = z.object({});
 const listSortSchema = z.object({
   sortBy: z
-    .enum(["size", "name"])
+    .enum(['size', 'name'])
     .optional()
     .describe('Sort order: "size" (default) or "name"'),
 });
@@ -116,7 +116,7 @@ const sourceFileAnalysisSchema = z.object({
 const fragmentSearchSchema = z.object({
   searchTerm: z
     .string()
-    .describe("The search term to find in fragment names (case-insensitive)"),
+    .describe('The search term to find in fragment names (case-insensitive)'),
 });
 
 /**
@@ -130,9 +130,9 @@ export function createBundleTools(
   return {
     get_bundle_overview: {
       description:
-        "Get a high-level overview of the bundle including total size, chunk count, source file count, and the largest chunks. Use this when the user asks about bundle size, contents, or general information.",
+        'Get a high-level overview of the bundle including total size, chunk count, source file count, and the largest chunks. Use this when the user asks about bundle size, contents, or general information.',
       inputSchema: emptyInputSchema,
-      type: "function",
+      type: 'function',
       execute: async (input) => {
         emptyInputSchema.parse(input ?? {});
         return getBundleOverview(ctx);
@@ -140,9 +140,9 @@ export function createBundleTools(
     },
     list_bundle_chunks: {
       description:
-        "List all chunks (output files) in the bundle with their sizes. Useful when the user wants to see what chunks exist or which chunks are largest. Can sort by size (default) or name.",
+        'List all chunks (output files) in the bundle with their sizes. Useful when the user wants to see what chunks exist or which chunks are largest. Can sort by size (default) or name.',
       inputSchema: listSortSchema,
-      type: "function",
+      type: 'function',
       execute: async (input) => {
         const { sortBy } = listSortSchema.parse(input ?? {});
         return listBundleChunks(ctx, sortBy);
@@ -150,9 +150,9 @@ export function createBundleTools(
     },
     get_chunk_details: {
       description:
-        "Get detailed information about a specific chunk including its size and source files it contains. Use this when the user asks about a particular chunk file.",
+        'Get detailed information about a specific chunk including its size and source files it contains. Use this when the user asks about a particular chunk file.',
       inputSchema: chunkDetailsSchema,
-      type: "function",
+      type: 'function',
       execute: async (input) => {
         const { chunkName } = chunkDetailsSchema.parse(input ?? {});
         return getChunkDetails(ctx, chunkName);
@@ -160,9 +160,9 @@ export function createBundleTools(
     },
     list_source_files: {
       description:
-        "List all source files in the bundle with their estimated sizes. Use this when the user wants to see what source files are in the bundle or which source files are largest.",
+        'List all source files in the bundle with their estimated sizes. Use this when the user wants to see what source files are in the bundle or which source files are largest.',
       inputSchema: listSortSchema,
-      type: "function",
+      type: 'function',
       execute: async (input) => {
         const { sortBy } = listSortSchema.parse(input ?? {});
         return listSourceFiles(ctx, sortBy);
@@ -170,9 +170,9 @@ export function createBundleTools(
     },
     get_source_file_analysis: {
       description:
-        "Get detailed analysis of a specific source file showing all functions, classes, and other code fragments. Use this when the user asks about what is in a specific source file.",
+        'Get detailed analysis of a specific source file showing all functions, classes, and other code fragments. Use this when the user asks about what is in a specific source file.',
       inputSchema: sourceFileAnalysisSchema,
-      type: "function",
+      type: 'function',
       execute: async (input) => {
         const { filePath } = sourceFileAnalysisSchema.parse(input ?? {});
         return getSourceFileAnalysis(ctx, filePath);
@@ -180,9 +180,9 @@ export function createBundleTools(
     },
     find_fragment: {
       description:
-        "Search for functions, classes, methods, or other code fragments by name across all source files. Use this when the user is looking for a specific function or class.",
+        'Search for functions, classes, methods, or other code fragments by name across all source files. Use this when the user is looking for a specific function or class.',
       inputSchema: fragmentSearchSchema,
-      type: "function",
+      type: 'function',
       execute: async (input) => {
         const { searchTerm } = fragmentSearchSchema.parse(input ?? {});
         return findFragment(ctx, searchTerm);
@@ -203,16 +203,16 @@ function normalizeContext(context: BundleToolContext): NormalizedContext {
 
   if (!db) {
     throw new Error(
-      "A store or database instance is required to create LLM tools.",
+      'A store or database instance is required to create LLM tools.',
     );
   }
 
   if (!Number.isFinite(context.analysisId)) {
-    throw new Error("A valid analysisId must be provided.");
+    throw new Error('A valid analysisId must be provided.');
   }
 
   if (!context.bundle?.id || !Number.isFinite(context.bundle.id)) {
-    throw new Error("A valid bundle id must be provided in the context.");
+    throw new Error('A valid bundle id must be provided in the context.');
   }
 
   return {
@@ -246,9 +246,9 @@ async function getBundleOverview(
   const bundleStats = db
     .select({
       totalSize: sql<number>`coalesce(sum(${schema.bundle.size}), 0)`.as(
-        "totalSize",
+        'totalSize',
       ),
-      chunkCount: sql<number>`count(*)`.as("chunkCount"),
+      chunkCount: sql<number>`count(*)`.as('chunkCount'),
     })
     .from(schema.bundle)
     .where(eq(schema.bundle.analysisRunId, analysisId))
@@ -256,7 +256,7 @@ async function getBundleOverview(
 
   const sourceCount = db
     .select({
-      count: sql<number>`count(*)`.as("count"),
+      count: sql<number>`count(*)`.as('count'),
     })
     .from(schema.module)
     .where(eq(schema.module.analysisRunId, analysisId))
@@ -273,14 +273,14 @@ async function getBundleOverview(
     .limit(5)
     .all()
     .map((row) => ({
-      name: row.name ?? "(unnamed chunk)",
+      name: row.name ?? '(unnamed chunk)',
       size: Number(row.size ?? 0),
       sizeFormatted: formatBytes(Number(row.size ?? 0)),
     }));
 
   return {
     bundleId: selectedBundle.id,
-    bundleName: selectedBundle.fileName ?? "(unnamed bundle)",
+    bundleName: selectedBundle.fileName ?? '(unnamed bundle)',
     importedAt: new Date(analysis.createdAt).toLocaleString(),
     totalSize: Number(bundleStats.totalSize ?? 0),
     chunkCount: Number(bundleStats.chunkCount ?? 0),
@@ -291,7 +291,7 @@ async function getBundleOverview(
 
 async function listBundleChunks(
   context: NormalizedContext,
-  sortBy: "size" | "name" = "size",
+  sortBy: 'size' | 'name' = 'size',
 ): Promise<ChunkInfo[]> {
   const { db, analysisId } = context;
   const rows = db
@@ -302,7 +302,7 @@ async function listBundleChunks(
     .from(schema.bundle)
     .where(eq(schema.bundle.analysisRunId, analysisId))
     .orderBy(
-      sortBy === "name"
+      sortBy === 'name'
         ? asc(schema.bundle.fileName)
         : desc(schema.bundle.size),
     )
@@ -311,7 +311,7 @@ async function listBundleChunks(
   return rows.map((row) => {
     const size = Number(row.size ?? 0);
     return {
-      name: row.name ?? "(unnamed chunk)",
+      name: row.name ?? '(unnamed chunk)',
       size,
       sizeFormatted: formatBytes(size),
     };
@@ -326,7 +326,7 @@ async function getChunkDetails(
   const bundleRow = getBundleByName(db, analysisId, chunkName);
 
   const moduleSizeColumn =
-    sql<number>`sum(${schema.sourceMapEntry.byteLength})`.as("totalSize");
+    sql<number>`sum(${schema.sourceMapEntry.byteLength})`.as('totalSize');
   const moduleRows = db
     .select({
       filePath: schema.module.filePath,
@@ -355,14 +355,14 @@ async function getChunkDetails(
     name: bundleRow.fileName ?? chunkName,
     size: bundleRow.size ?? 0,
     sizeFormatted: formatBytes(bundleRow.size ?? 0),
-    sourceFiles: moduleRows.map((row) => row.filePath ?? "(unknown source)"),
+    sourceFiles: moduleRows.map((row) => row.filePath ?? '(unknown source)'),
     sourceFileCount: moduleRows.length,
   };
 }
 
 async function listSourceFiles(
   context: NormalizedContext,
-  sortBy: "size" | "name" = "size",
+  sortBy: 'size' | 'name' = 'size',
 ): Promise<SourceFileInfo[]> {
   const { db, analysisId } = context;
   const rows = db
@@ -375,8 +375,8 @@ async function listSourceFiles(
     .all();
 
   rows.sort((a, b) => {
-    if (sortBy === "name") {
-      return (a.path ?? "").localeCompare(b.path ?? "");
+    if (sortBy === 'name') {
+      return (a.path ?? '').localeCompare(b.path ?? '');
     }
     return Number(b.totalSize ?? 0) - Number(a.totalSize ?? 0);
   });
@@ -384,7 +384,7 @@ async function listSourceFiles(
   return rows.map((row) => {
     const size = Number(row.totalSize ?? 0);
     return {
-      path: row.path ?? "(unknown source)",
+      path: row.path ?? '(unknown source)',
       totalSize: size,
       sizeFormatted: formatBytes(size),
     };
@@ -434,8 +434,8 @@ async function getSourceFileAnalysis(
   const fragments: SourceFragment[] = rows.map((fragment) => {
     const size = Number(fragment.sourceSize ?? 0);
     return {
-      name: fragment.name ?? "(anonymous)",
-      type: fragment.type ?? "unknown",
+      name: fragment.name ?? '(anonymous)',
+      type: fragment.type ?? 'unknown',
       startLine: fragment.startLine ?? 0,
       endLine: fragment.endLine ?? 0,
       sourceSize: size,
@@ -483,9 +483,9 @@ async function findFragment(
     .map((row) => {
       const size = Number(row.sourceSize ?? 0);
       return {
-        filePath: row.filePath ?? "(unknown source)",
-        fragmentName: row.fragmentName ?? "(anonymous)",
-        type: row.type ?? "unknown",
+        filePath: row.filePath ?? '(unknown source)',
+        fragmentName: row.fragmentName ?? '(anonymous)',
+        type: row.type ?? 'unknown',
         startLine: row.startLine ?? 0,
         endLine: row.endLine ?? 0,
         sourceSize: size,
@@ -545,9 +545,9 @@ function getBundleByName(db: StoreDb, analysisId: number, chunkName: string) {
 }
 
 function formatBytes(bytes: number): string {
-  if (!bytes) return "0 B";
+  if (!bytes) return '0 B';
   const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB", "TB"];
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i] ?? "B"}`;
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i] ?? 'B'}`;
 }

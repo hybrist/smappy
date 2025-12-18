@@ -2,13 +2,13 @@
  * Tests for the store package
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { createStore } from "./index.ts";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { unlinkSync, existsSync } from "node:fs";
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { createStore } from './index.ts';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { unlinkSync, existsSync } from 'node:fs';
 
-describe("createStore", () => {
+describe('createStore', () => {
   let testDbPath: string;
   let store: ReturnType<typeof createStore>;
 
@@ -35,32 +35,32 @@ describe("createStore", () => {
     }
   });
 
-  it("should create a store instance", () => {
+  it('should create a store instance', () => {
     expect(store).toBeDefined();
     expect(store.db).toBeDefined();
-    expect(typeof store.listAnalysisRuns).toBe("function");
-    expect(typeof store.getLatestAnalysisRun).toBe("function");
-    expect(typeof store.saveAnalysisRun).toBe("function");
-    expect(typeof store.pruneAnalysisRuns).toBe("function");
-    expect(typeof store.close).toBe("function");
+    expect(typeof store.listAnalysisRuns).toBe('function');
+    expect(typeof store.getLatestAnalysisRun).toBe('function');
+    expect(typeof store.saveAnalysisRun).toBe('function');
+    expect(typeof store.pruneAnalysisRuns).toBe('function');
+    expect(typeof store.close).toBe('function');
   });
 
-  it("should save and retrieve analysis runs", () => {
+  it('should save and retrieve analysis runs', () => {
     const result = store.saveAnalysisRun({
-      projectName: "test-project",
-      bundler: "vite",
+      projectName: 'test-project',
+      bundler: 'vite',
       bundles: [
         {
-          fileName: "main.js",
-          fileType: "javascript",
+          fileName: 'main.js',
+          fileType: 'javascript',
           size: 1024,
           gzipSize: 512,
         },
       ],
       modules: [
         {
-          filePath: "src/index.ts",
-          fileType: "javascript",
+          filePath: 'src/index.ts',
+          fileType: 'javascript',
           originalSize: 512,
           bundledSize: 256,
           isThirdParty: false,
@@ -68,7 +68,7 @@ describe("createStore", () => {
       ],
       chunks: [
         {
-          name: "main",
+          name: 'main',
           totalSize: 1024,
           isEntry: true,
           isAsync: false,
@@ -81,29 +81,29 @@ describe("createStore", () => {
     expect(result.stats.modulesWritten).toBe(1);
     expect(result.stats.chunksWritten).toBe(1);
 
-    const latest = store.getLatestAnalysisRun("test-project");
+    const latest = store.getLatestAnalysisRun('test-project');
     expect(latest).not.toBeNull();
-    expect(latest?.projectName).toBe("test-project");
-    expect(latest?.bundler).toBe("vite");
+    expect(latest?.projectName).toBe('test-project');
+    expect(latest?.bundler).toBe('vite');
     expect(latest?.bundleCount).toBe(1);
     expect(latest?.moduleCount).toBe(1);
   });
 
-  it("should list analysis runs with filtering", () => {
+  it('should list analysis runs with filtering', () => {
     // Save multiple runs
     store.saveAnalysisRun({
-      projectName: "project-a",
-      bundler: "vite",
+      projectName: 'project-a',
+      bundler: 'vite',
     });
 
     store.saveAnalysisRun({
-      projectName: "project-a",
-      bundler: "webpack",
+      projectName: 'project-a',
+      bundler: 'webpack',
     });
 
     store.saveAnalysisRun({
-      projectName: "project-b",
-      bundler: "rollup",
+      projectName: 'project-b',
+      bundler: 'rollup',
     });
 
     // List all runs
@@ -111,7 +111,7 @@ describe("createStore", () => {
     expect(allRuns.length).toBe(3);
 
     // Filter by project name
-    const projectARuns = store.listAnalysisRuns({ projectName: "project-a" });
+    const projectARuns = store.listAnalysisRuns({ projectName: 'project-a' });
     expect(projectARuns.length).toBe(2);
 
     // Test limit
@@ -119,32 +119,32 @@ describe("createStore", () => {
     expect(limited.length).toBe(1);
   });
 
-  it("should get latest analysis run", () => {
+  it('should get latest analysis run', () => {
     store.saveAnalysisRun({
-      projectName: "test-project",
-      bundler: "vite",
+      projectName: 'test-project',
+      bundler: 'vite',
     });
 
     store.saveAnalysisRun({
-      projectName: "test-project",
-      bundler: "webpack",
+      projectName: 'test-project',
+      bundler: 'webpack',
     });
 
-    const latest = store.getLatestAnalysisRun("test-project");
+    const latest = store.getLatestAnalysisRun('test-project');
     expect(latest).not.toBeNull();
-    expect(latest?.bundler).toBe("webpack");
+    expect(latest?.bundler).toBe('webpack');
   });
 
-  it("should prune old analysis runs", () => {
+  it('should prune old analysis runs', () => {
     // Create multiple runs
     for (let i = 0; i < 10; i++) {
       store.saveAnalysisRun({
-        projectName: "test-project",
-        bundler: "vite",
+        projectName: 'test-project',
+        bundler: 'vite',
       });
     }
 
-    const allRuns = store.listAnalysisRuns({ projectName: "test-project" });
+    const allRuns = store.listAnalysisRuns({ projectName: 'test-project' });
     expect(allRuns.length).toBe(10);
 
     // Prune, keeping minimum of 5
@@ -152,20 +152,20 @@ describe("createStore", () => {
     expect(deleted).toBe(5);
 
     const remainingRuns = store.listAnalysisRuns({
-      projectName: "test-project",
+      projectName: 'test-project',
     });
     expect(remainingRuns.length).toBe(5);
   });
 
-  it("should handle empty results gracefully", () => {
-    const latest = store.getLatestAnalysisRun("non-existent");
+  it('should handle empty results gracefully', () => {
+    const latest = store.getLatestAnalysisRun('non-existent');
     expect(latest).toBeNull();
 
-    const runs = store.listAnalysisRuns({ projectName: "non-existent" });
+    const runs = store.listAnalysisRuns({ projectName: 'non-existent' });
     expect(runs.length).toBe(0);
   });
 
-  it("should use default database path from environment", () => {
+  it('should use default database path from environment', () => {
     const originalEnv = process.env.SMAPPY_DB_PATH;
 
     try {

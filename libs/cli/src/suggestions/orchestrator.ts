@@ -7,9 +7,9 @@ import type {
   SuggestionContext,
   SuggestionRule,
   SuggestionRuleRegistry,
-} from "./types.ts";
-import type { SuggestionData } from "../ingestion/db/writer.ts";
-import { createRuleRegistry } from "./registry.ts";
+} from './types.ts';
+import type { SuggestionData } from '../ingestion/db/writer.ts';
+import { createRuleRegistry } from './registry.ts';
 
 /**
  * Suggestion analyzer orchestrator

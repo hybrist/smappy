@@ -1,6 +1,6 @@
-import { spawnSync } from "node:child_process";
-import type { BuildRunOptions, ProjectInfo } from "./types.ts";
-import type { BundlerAdapter } from "../plugins/adapters.ts";
+import { spawnSync } from 'node:child_process';
+import type { BuildRunOptions, ProjectInfo } from './types.ts';
+import type { BundlerAdapter } from '../plugins/adapters.ts';
 
 export abstract class BuildRunner {
   readonly #project: ProjectInfo;
@@ -23,14 +23,14 @@ export abstract class BuildRunner {
 }
 
 export function npx(project: ProjectInfo, cmd: string, args: string[]) {
-  const result = spawnSync("npx", [cmd, ...args], {
+  const result = spawnSync('npx', [cmd, ...args], {
     // Forward stdout/stderr but ignore stdin.
-    stdio: ["ignore", "inherit", "inherit"],
+    stdio: ['ignore', 'inherit', 'inherit'],
     cwd: project.path,
     env: {
       ...process.env,
-      CI: "1",
-      NODE_ENV: "production",
+      CI: '1',
+      NODE_ENV: 'production',
     },
   });
 
@@ -40,7 +40,7 @@ export function npx(project: ProjectInfo, cmd: string, args: string[]) {
 
   if (result.status !== 0) {
     throw new Error(
-      `Command failed with exit code ${result.status}: npx ${cmd} ${args.join(" ")}`,
+      `Command failed with exit code ${result.status}: npx ${cmd} ${args.join(' ')}`,
     );
   }
 }

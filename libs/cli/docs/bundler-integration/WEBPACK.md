@@ -25,10 +25,10 @@ class WebpackBundleAnalysisPlugin {
 **Use Case**: Extract bundle content, source maps, and metadata
 
 ```typescript
-compiler.hooks.compilation.tap("WebpackBundleAnalysis", (compilation) => {
+compiler.hooks.compilation.tap('WebpackBundleAnalysis', (compilation) => {
   compilation.hooks.processAssets.tap(
     {
-      name: "WebpackBundleAnalysis",
+      name: 'WebpackBundleAnalysis',
       stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ANALYZE,
     },
     (assets) => {
@@ -48,7 +48,7 @@ compiler.hooks.compilation.tap("WebpackBundleAnalysis", (compilation) => {
 **Use Case**: Access final stats and module graph
 
 ```typescript
-compiler.hooks.done.tap("WebpackBundleAnalysis", (stats) => {
+compiler.hooks.done.tap('WebpackBundleAnalysis', (stats) => {
   const statsJson = stats.toJson({
     all: false,
     modules: true,
@@ -161,16 +161,16 @@ for (const module of compilation.modules) {
 ### Implementation Example
 
 ```typescript
-import type { Compiler, Compilation } from "webpack";
+import type { Compiler, Compilation } from 'webpack';
 
 export class WebpackBundleAnalysisPlugin {
   apply(compiler: Compiler) {
     compiler.hooks.compilation.tap(
-      "WebpackBundleAnalysis",
+      'WebpackBundleAnalysis',
       (compilation: Compilation) => {
         compilation.hooks.processAssets.tap(
           {
-            name: "WebpackBundleAnalysis",
+            name: 'WebpackBundleAnalysis',
             stage: Compilation.PROCESS_ASSETS_STAGE_ANALYZE,
           },
           () => {
@@ -205,12 +205,12 @@ export class WebpackBundleAnalysisPlugin {
 
 ```javascript
 // webpack.config.js
-const WebpackBundleAnalysisPlugin = require("./webpack-plugin");
+const WebpackBundleAnalysisPlugin = require('./webpack-plugin');
 
 module.exports = {
   plugins: [
     new WebpackBundleAnalysisPlugin({
-      projectName: "my-project",
+      projectName: 'my-project',
       extractSourceMaps: true,
     }),
   ],
@@ -221,7 +221,7 @@ module.exports = {
 
 ```javascript
 module.exports = {
-  devtool: "source-map", // or 'hidden-source-map'
+  devtool: 'source-map', // or 'hidden-source-map'
   plugins: [
     new WebpackBundleAnalysisPlugin({
       extractSourceMaps: true,
