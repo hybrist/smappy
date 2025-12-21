@@ -1,6 +1,18 @@
-import rsc from '@vitejs/plugin-rsc'
-import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import rsc from '@vitejs/plugin-rsc';
+import react from '@vitejs/plugin-react';
+import { defineConfig, type Plugin as VitePlugin } from 'vite';
+
+function rscMcpApps(): VitePlugin {
+  return {
+    name: 'rsc-mcp-apps',
+    configureServer: (server) => {
+      server.middlewares.use('/mcp', (_req, res, _next) => {
+        res.setHeader('Content-Type', 'application/json;charset=utf-8');
+        res.end(JSON.stringify({ ok: true }));
+      });
+    },
+  };
+}
 
 export default defineConfig({
   plugins: [
@@ -16,6 +28,8 @@ export default defineConfig({
     // use any of react plugins https://github.com/vitejs/vite-plugin-react
     // to enable client component HMR
     react(),
+
+    rscMcpApps(),
 
     // use https://github.com/antfu-collective/vite-plugin-inspect
     // to understand internal transforms required for RSC.
@@ -69,4 +83,4 @@ export default defineConfig({
       },
     },
   },
-})
+});
