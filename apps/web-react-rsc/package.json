@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.25.1",
+    "@whatwg-node/server": "^0.10.17",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },
