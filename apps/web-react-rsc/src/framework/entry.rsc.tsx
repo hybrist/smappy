@@ -5,10 +5,10 @@ import {
   loadServerAction,
   decodeAction,
   decodeFormState,
-} from "@vitejs/plugin-rsc/rsc";
-import type { ReactFormState } from "react-dom/client";
-import { Root } from "../root.tsx";
-import { parseRenderRequest } from "./request.tsx";
+} from '@vitejs/plugin-rsc/rsc';
+import type { ReactFormState } from 'react-dom/client';
+import { Root } from '../root.tsx';
+import { parseRenderRequest } from './request.tsx';
 
 // The schema of payload which is serialized into RSC stream on rsc environment
 // and deserialized on ssr/client environments.
@@ -31,15 +31,15 @@ export default async function handler(request: Request): Promise<Response> {
   request = renderRequest.request;
 
   // handle server function request
-  let returnValue: RscPayload["returnValue"] | undefined;
+  let returnValue: RscPayload['returnValue'] | undefined;
   let formState: ReactFormState | undefined;
   let temporaryReferences: unknown | undefined;
   let actionStatus: number | undefined;
   if (renderRequest.isAction === true) {
     if (renderRequest.actionId) {
       // action is called via `ReactClient.setServerCallback`.
-      const contentType = request.headers.get("content-type");
-      const body = contentType?.startsWith("multipart/form-data")
+      const contentType = request.headers.get('content-type');
+      const body = contentType?.startsWith('multipart/form-data')
         ? await request.formData()
         : await request.text();
       temporaryReferences = createTemporaryReferenceSet();
@@ -64,7 +64,7 @@ export default async function handler(request: Request): Promise<Response> {
       } catch (e) {
         // there's no single general obvious way to surface this error,
         // so explicitly return classic 500 response.
-        return new Response("Internal Server Error: server action failed", {
+        return new Response('Internal Server Error: server action failed', {
           status: 500,
         });
       }
@@ -88,7 +88,7 @@ export default async function handler(request: Request): Promise<Response> {
     return new Response(rscStream, {
       status: actionStatus,
       headers: {
-        "content-type": "text/x-component;charset=utf-8",
+        'content-type': 'text/x-component;charset=utf-8',
       },
     });
   }
@@ -98,19 +98,19 @@ export default async function handler(request: Request): Promise<Response> {
   // in RSC environment. however this can be customized by implementing own runtime communication
   // e.g. `@cloudflare/vite-plugin`'s service binding.
   const ssrEntryModule = await import.meta.viteRsc.loadModule<
-    typeof import("./entry.ssr.tsx")
-  >("ssr", "index");
+    typeof import('./entry.ssr.tsx')
+  >('ssr', 'index');
   const ssrResult = await ssrEntryModule.renderHTML(rscStream, {
     formState,
     // allow quick simulation of javascript disabled browser
-    debugNojs: renderRequest.url.searchParams.has("__nojs"),
+    debugNojs: renderRequest.url.searchParams.has('__nojs'),
   });
 
   // respond html
   return new Response(ssrResult.stream, {
     status: ssrResult.status,
     headers: {
-      "Content-type": "text/html",
+      'Content-type': 'text/html',
     },
   });
 }

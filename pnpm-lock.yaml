@@ -212,18 +212,21 @@ importers:
 
   apps/web-react-rsc:
     dependencies:
+      '@modelcontextprotocol/ext-apps':
+        specifier: ^0.2.2
+        version: 0.2.2(@modelcontextprotocol/sdk@1.25.1(hono@4.11.1)(zod@4.2.1))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(zod@4.2.1)
       '@modelcontextprotocol/sdk':
         specifier: ^1.25.1
         version: 1.25.1(hono@4.11.1)(zod@4.2.1)
-      '@whatwg-node/server':
-        specifier: ^0.10.17
-        version: 0.10.17
       react:
         specifier: ^19.2.3
         version: 19.2.3
       react-dom:
         specifier: ^19.2.3
         version: 19.2.3(react@19.2.3)
+      zod:
+        specifier: 'catalog:'
+        version: 4.2.1
     devDependencies:
       '@types/react':
         specifier: ^19.2.7
@@ -1425,10 +1428,6 @@ packages:
   '@emnapi/wasi-threads@1.1.0':
     resolution: {integrity: sha512-WI0DdZ8xFSbgMjR1sFsKABJ/C5OnRrjT06JXbZKexJGrDuPTzZdDYfFlsgcCXCyf+suG5QU2e/y1Wo2V/OapLQ==}
 
-  '@envelop/instrumentation@1.0.0':
-    resolution: {integrity: sha512-cxgkB66RQB95H3X27jlnxCRNTmPuSTgmBAq6/4n2Dtv4hsk4yz8FadA1ggmd0uZzvKqWD6CR+WFgTjhDqg7eyw==}
-    engines: {node: '>=18.0.0'}
-
   '@esbuild-kit/core-utils@3.3.2':
     resolution: {integrity: sha512-sPRAnw9CdSsRmEtnsl2WXWdyquogVpB3yZ3dgwJfe8zrOzTsV7cJvmwrKVa+0ma5BoiGJ+BoqkMvawbayKUsqQ==}
     deprecated: 'Merged into tsx: https://tsx.is'
@@ -2084,9 +2083,6 @@ packages:
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@fastify/busboy@3.2.0':
-    resolution: {integrity: sha512-m9FVDXU3GT2ITSe0UaMA5rU3QkfC/UXtCU8y0gSN/GugTqtVldOBWIB5V6V3sbmenVZUIpU6f+mPEO2+m5iTaA==}
-
   '@floating-ui/core@1.7.3':
     resolution: {integrity: sha512-sGnvb5dmrJaKEZ+LDIpguvdX3bDlEllmv4/ClQ9awcmCZrlx5jQyyMWFM5kBI+EyNOCDDiKk8il0zeuX3Zlg/w==}
 
@@ -2514,6 +2510,19 @@ packages:
   '@mermaid-js/parser@0.6.3':
     resolution: {integrity: sha512-lnjOhe7zyHjc+If7yT4zoedx2vo4sHaTmtkl1+or8BRTnCtDmcTpAjpzDSfCZrshM5bCoz0GyidzadJAH1xobA==}
 
+  '@modelcontextprotocol/ext-apps@0.2.2':
+    resolution: {integrity: sha512-h8sN3QIBLqMsRXjKL76M5VmBQf3N0I1G1DiDiSYAgtdynYQctHqCs79WEo1d5wClyZVYBWXdRcxgiR/WBfSOqw==}
+    peerDependencies:
+      '@modelcontextprotocol/sdk': ^1.24.0
+      react: ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^17.0.0 || ^18.0.0 || ^19.0.0
+      zod: ^3.25.0 || ^4.0.0
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
+
   '@modelcontextprotocol/sdk@1.20.1':
     resolution: {integrity: sha512-j/P+yuxXfgxb+mW7OEoRCM3G47zCTDqUPivJo/VzpjbG8I9csTXtOprCf5FfOfHK4whOJny0aHuBEON+kS7CCA==}
     engines: {node: '>=18'}
@@ -2784,6 +2793,61 @@ packages:
   '@opentelemetry/api@1.9.0':
     resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
     engines: {node: '>=8.0.0'}
+
+  '@oven/bun-darwin-aarch64@1.3.5':
+    resolution: {integrity: sha512-8GvNtMo0NINM7Emk9cNAviCG3teEgr3BUX9be0+GD029zIagx2Sf54jMui1Eu1IpFm7nWHODuLEefGOQNaJ0gQ==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@oven/bun-darwin-x64-baseline@1.3.5':
+    resolution: {integrity: sha512-p5q3rJk48qhLuLBOFehVc+kqCE03YrswTc6NCxbwsxiwfySXwcAvpF2KWKF/ZZObvvR8hCCvqe1F81b2p5r2dg==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@oven/bun-darwin-x64@1.3.5':
+    resolution: {integrity: sha512-r33eHQOHAwkuiBJIwmkXIyqONQOQMnd1GMTpDzaxx9vf9+svby80LZO9Hcm1ns6KT/TBRFyODC/0loA7FAaffg==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@oven/bun-linux-aarch64-musl@1.3.5':
+    resolution: {integrity: sha512-HKBeUlJdNduRkzJKZ5DXM+pPqntfC50/Hu2X65jVX0Y7hu/6IC8RaUTqpr8FtCZqqmc9wDK0OTL+Mbi9UQIKYQ==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@oven/bun-linux-aarch64@1.3.5':
+    resolution: {integrity: sha512-zkcHPI23QxJ1TdqafhgkXt1NOEN8o5C460sVeNnrhfJ43LwZgtfcvcQE39x/pBedu67fatY8CU0iY00nOh46ZQ==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@oven/bun-linux-x64-baseline@1.3.5':
+    resolution: {integrity: sha512-FeCQyBU62DMuB0nn01vPnf3McXrKOsrK9p7sHaBFYycw0mmoU8kCq/WkBkGMnLuvQljJSyen8QBTx+fXdNupWg==}
+    cpu: [x64]
+    os: [linux]
+
+  '@oven/bun-linux-x64-musl-baseline@1.3.5':
+    resolution: {integrity: sha512-TJiYC7KCr0XxFTsxgwQOeE7dncrEL/RSyL0EzSL3xRkrxJMWBCvCSjQn7LV1i6T7hFst0+3KoN3VWvD5BinqHA==}
+    cpu: [x64]
+    os: [linux]
+
+  '@oven/bun-linux-x64-musl@1.3.5':
+    resolution: {integrity: sha512-XkCCHkByYn8BIDvoxnny898znju4xnW2kvFE8FT5+0Y62cWdcBGMZ9RdsEUTeRz16k8hHtJpaSfLcEmNTFIwRQ==}
+    cpu: [x64]
+    os: [linux]
+
+  '@oven/bun-linux-x64@1.3.5':
+    resolution: {integrity: sha512-n7zhKTSDZS0yOYg5Rq8easZu5Y/o47sv0c7yGr2ciFdcie9uYV55fZ7QMqhWMGK33ezCSikh5EDkUMCIvfWpjA==}
+    cpu: [x64]
+    os: [linux]
+
+  '@oven/bun-windows-x64-baseline@1.3.5':
+    resolution: {integrity: sha512-rtVQB9/1XK8FWJgFtsOthbPifRMYypgJwxu+pK3NHx8WvFKmq7HcPDqNr8xLzGULjQEO7eAo2aOZfONOwYz+5g==}
+    cpu: [x64]
+    os: [win32]
+
+  '@oven/bun-windows-x64@1.3.5':
+    resolution: {integrity: sha512-T3xkODItb/0ftQPFsZDc7EAX2D6A4TEazQ2YZyofZToO8Q7y8YT8ooWdhd0BQiTCd66uEvgE1DCZetynwg2IoA==}
+    cpu: [x64]
+    os: [win32]
 
   '@oxc-parser/binding-android-arm64@0.73.2':
     resolution: {integrity: sha512-YkO/7t7yshWtHCWxd5oADgXBU8Dput6UFtPULSUXgwEbim8dZvMDc7T8vCcEmtOEHOJBcJRHuK1fuKXJnwU5Aw==}
@@ -4835,26 +4899,6 @@ packages:
     peerDependenciesMeta:
       webpack-dev-server:
         optional: true
-
-  '@whatwg-node/disposablestack@0.0.6':
-    resolution: {integrity: sha512-LOtTn+JgJvX8WfBVJtF08TGrdjuFzGJc4mkP8EdDI8ADbvO7kiexYep1o8dwnt0okb0jYclCDXF13xU7Ge4zSw==}
-    engines: {node: '>=18.0.0'}
-
-  '@whatwg-node/fetch@0.10.13':
-    resolution: {integrity: sha512-b4PhJ+zYj4357zwk4TTuF2nEe0vVtOrwdsrNo5hL+u1ojXNhh1FgJ6pg1jzDlwlT4oBdzfSwaBwMCtFCsIWg8Q==}
-    engines: {node: '>=18.0.0'}
-
-  '@whatwg-node/node-fetch@0.8.4':
-    resolution: {integrity: sha512-AlKLc57loGoyYlrzDbejB9EeR+pfdJdGzbYnkEuZaGekFboBwzfVYVMsy88PMriqPI1ORpiGYGgSSWpx7a2sDA==}
-    engines: {node: '>=18.0.0'}
-
-  '@whatwg-node/promise-helpers@1.3.2':
-    resolution: {integrity: sha512-Nst5JdK47VIl9UcGwtv2Rcgyn5lWtZ0/mhRQ4G8NN2isxpq2TO30iqHzmwoJycjWuyUfg3GFXqP/gFHXeV57IA==}
-    engines: {node: '>=16.0.0'}
-
-  '@whatwg-node/server@0.10.17':
-    resolution: {integrity: sha512-QxI+HQfJeI/UscFNCTcSri6nrHP25mtyAMbhEri7W2ctdb3EsorPuJz7IovSgNjvKVs73dg9Fmayewx1O2xOxA==}
-    engines: {node: '>=18.0.0'}
 
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
@@ -10122,11 +10166,6 @@ snapshots:
       tslib: 2.8.1
     optional: true
 
-  '@envelop/instrumentation@1.0.0':
-    dependencies:
-      '@whatwg-node/promise-helpers': 1.3.2
-      tslib: 2.8.1
-
   '@esbuild-kit/core-utils@3.3.2':
     dependencies:
       esbuild: 0.18.20
@@ -10488,8 +10527,6 @@ snapshots:
     dependencies:
       '@eslint/core': 0.17.0
       levn: 0.4.1
-
-  '@fastify/busboy@3.2.0': {}
 
   '@floating-ui/core@1.7.3':
     dependencies:
@@ -10875,6 +10912,31 @@ snapshots:
     dependencies:
       langium: 3.3.1
 
+  '@modelcontextprotocol/ext-apps@0.2.2(@modelcontextprotocol/sdk@1.25.1(hono@4.11.1)(zod@4.2.1))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(zod@4.2.1)':
+    dependencies:
+      '@modelcontextprotocol/sdk': 1.25.1(hono@4.11.1)(zod@4.2.1)
+      prettier: 3.7.4
+      zod: 4.2.1
+    optionalDependencies:
+      '@oven/bun-darwin-aarch64': 1.3.5
+      '@oven/bun-darwin-x64': 1.3.5
+      '@oven/bun-darwin-x64-baseline': 1.3.5
+      '@oven/bun-linux-aarch64': 1.3.5
+      '@oven/bun-linux-aarch64-musl': 1.3.5
+      '@oven/bun-linux-x64': 1.3.5
+      '@oven/bun-linux-x64-baseline': 1.3.5
+      '@oven/bun-linux-x64-musl': 1.3.5
+      '@oven/bun-linux-x64-musl-baseline': 1.3.5
+      '@oven/bun-windows-x64': 1.3.5
+      '@oven/bun-windows-x64-baseline': 1.3.5
+      '@rollup/rollup-darwin-arm64': 4.53.5
+      '@rollup/rollup-darwin-x64': 4.53.5
+      '@rollup/rollup-linux-arm64-gnu': 4.53.5
+      '@rollup/rollup-linux-x64-gnu': 4.53.5
+      '@rollup/rollup-win32-x64-msvc': 4.53.5
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
+
   '@modelcontextprotocol/sdk@1.20.1':
     dependencies:
       ajv: 6.12.6
@@ -11127,6 +11189,39 @@ snapshots:
   '@oozcitak/util@10.0.0': {}
 
   '@opentelemetry/api@1.9.0': {}
+
+  '@oven/bun-darwin-aarch64@1.3.5':
+    optional: true
+
+  '@oven/bun-darwin-x64-baseline@1.3.5':
+    optional: true
+
+  '@oven/bun-darwin-x64@1.3.5':
+    optional: true
+
+  '@oven/bun-linux-aarch64-musl@1.3.5':
+    optional: true
+
+  '@oven/bun-linux-aarch64@1.3.5':
+    optional: true
+
+  '@oven/bun-linux-x64-baseline@1.3.5':
+    optional: true
+
+  '@oven/bun-linux-x64-musl-baseline@1.3.5':
+    optional: true
+
+  '@oven/bun-linux-x64-musl@1.3.5':
+    optional: true
+
+  '@oven/bun-linux-x64@1.3.5':
+    optional: true
+
+  '@oven/bun-windows-x64-baseline@1.3.5':
+    optional: true
+
+  '@oven/bun-windows-x64@1.3.5':
+    optional: true
 
   '@oxc-parser/binding-android-arm64@0.73.2':
     optional: true
@@ -13357,35 +13452,6 @@ snapshots:
     dependencies:
       webpack: 5.104.0(webpack-cli@5.1.4)
       webpack-cli: 5.1.4(webpack@5.104.0)
-
-  '@whatwg-node/disposablestack@0.0.6':
-    dependencies:
-      '@whatwg-node/promise-helpers': 1.3.2
-      tslib: 2.8.1
-
-  '@whatwg-node/fetch@0.10.13':
-    dependencies:
-      '@whatwg-node/node-fetch': 0.8.4
-      urlpattern-polyfill: 10.1.0
-
-  '@whatwg-node/node-fetch@0.8.4':
-    dependencies:
-      '@fastify/busboy': 3.2.0
-      '@whatwg-node/disposablestack': 0.0.6
-      '@whatwg-node/promise-helpers': 1.3.2
-      tslib: 2.8.1
-
-  '@whatwg-node/promise-helpers@1.3.2':
-    dependencies:
-      tslib: 2.8.1
-
-  '@whatwg-node/server@0.10.17':
-    dependencies:
-      '@envelop/instrumentation': 1.0.0
-      '@whatwg-node/disposablestack': 0.0.6
-      '@whatwg-node/fetch': 0.10.13
-      '@whatwg-node/promise-helpers': 1.3.2
-      tslib: 2.8.1
 
   '@xtuc/ieee754@1.2.0': {}
 

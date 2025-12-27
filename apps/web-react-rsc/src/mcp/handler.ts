@@ -1,6 +1,11 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { z } from 'zod';
+
+// Import accessors for RSC renderer and bootstrap HTML from vite config
+// These are set by the rscMcpApps plugin when the server starts
+import { getRscRenderer, getMcpBootstrapHtml } from '../../vite.config.ts';
 
 // Session storage: maps session IDs to connected client/server pairs
 const sessions = new Map<
@@ -8,132 +13,22 @@ const sessions = new Map<
   { client: Client; cleanup: () => Promise<void> }
 >();
 
-// Hello World MCP App HTML
-const helloAppHtml = `<!DOCTYPE html>
+// Fallback HTML for when RSC bootstrap isn't ready yet
+const fallbackHtml = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: system-ui, -apple-system, sans-serif;
-      padding: 1rem;
-      min-height: 100vh;
-      background: var(--background, #ffffff);
-      color: var(--foreground, #000000);
-    }
-    .container {
-      max-width: 400px;
-      margin: 0 auto;
+      font-family: system-ui, sans-serif;
+      padding: 2rem;
       text-align: center;
     }
-    h1 { margin-bottom: 1rem; }
-    .greeting {
-      padding: 1rem;
-      border-radius: 8px;
-      background: var(--muted, #f0f0f0);
-      margin-bottom: 1rem;
-    }
-    input {
-      width: 100%;
-      padding: 0.5rem;
-      border: 1px solid var(--border, #ccc);
-      border-radius: 4px;
-      margin-bottom: 0.5rem;
-      font-size: 1rem;
-    }
-    button {
-      width: 100%;
-      padding: 0.5rem 1rem;
-      background: var(--primary, #0066cc);
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 1rem;
-    }
-    button:hover { opacity: 0.9; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Hello World App</h1>
-    <div class="greeting" id="greeting">Welcome to the Smappy MCP App!</div>
-    <input type="text" id="nameInput" placeholder="Enter your name">
-    <button id="greetBtn">Say Hello</button>
-  </div>
-  <script>
-    const greeting = document.getElementById('greeting');
-    const nameInput = document.getElementById('nameInput');
-    const greetBtn = document.getElementById('greetBtn');
-
-    // MCP App communication
-    let hostOrigin = '*';
-    let requestId = 0;
-
-    function sendMessage(method, params = {}) {
-      const msg = { jsonrpc: '2.0', id: ++requestId, method, params };
-      window.parent.postMessage(msg, hostOrigin);
-      return requestId;
-    }
-
-    function sendNotification(method, params = {}) {
-      const msg = { jsonrpc: '2.0', method, params };
-      window.parent.postMessage(msg, hostOrigin);
-    }
-
-    // Handle messages from host
-    window.addEventListener('message', (event) => {
-      const data = event.data;
-      if (!data || typeof data !== 'object') return;
-
-      // Handle initialize response
-      if (data.result && data.result.hostContext) {
-        const ctx = data.result.hostContext;
-        // Apply theme variables if provided
-        if (ctx.styles?.variables) {
-          Object.entries(ctx.styles.variables).forEach(([key, value]) => {
-            document.documentElement.style.setProperty(key, value);
-          });
-        }
-      }
-
-      // Handle tool input notification
-      if (data.method === 'ui/notifications/tool-input') {
-        const args = data.params?.arguments || {};
-        if (args.name) {
-          nameInput.value = args.name;
-          updateGreeting(args.name);
-        }
-      }
-    });
-
-    function updateGreeting(name) {
-      greeting.textContent = name ? \`Hello, \${name}! 👋\` : 'Welcome to the Smappy MCP App!';
-    }
-
-    greetBtn.addEventListener('click', () => {
-      const name = nameInput.value.trim();
-      updateGreeting(name);
-      // Notify host about the action
-      sendNotification('notifications/message', {
-        level: 'info',
-        data: \`User greeted: \${name || 'anonymous'}\`
-      });
-    });
-
-    nameInput.addEventListener('input', () => {
-      updateGreeting(nameInput.value.trim());
-    });
-
-    // Initialize connection with host
-    sendMessage('ui/initialize', {
-      protocolVersion: '2024-11-05',
-      clientInfo: { name: 'hello-app', version: '1.0.0' },
-      capabilities: {}
-    });
-  </script>
+  <p>RSC bootstrap is loading...</p>
 </body>
 </html>`;
 
@@ -149,48 +44,147 @@ async function createSession(): Promise<{
 
   // Create a fresh server instance for this session
   const sessionServer = new McpServer({
-    name: 'smappy-mcp',
+    name: 'smappy-mcp-rsc',
     version: '1.0.0',
   });
 
-  // Register the Hello World MCP App as a UI resource
+  // Register the RSC MCP App bootstrap as a UI resource
   sessionServer.registerResource(
-    'hello-app',
-    'ui://smappy/hello-app',
+    'rsc-app',
+    'ui://smappy/rsc-app',
     {
-      description: 'A simple Hello World MCP App',
+      description: 'RSC-powered MCP App bootstrap',
       mimeType: 'text/html;profile=mcp-app',
     },
     async () => ({
       contents: [
         {
-          uri: 'ui://smappy/hello-app',
+          uri: 'ui://smappy/rsc-app',
           mimeType: 'text/html;profile=mcp-app',
-          text: helloAppHtml,
+          text: getMcpBootstrapHtml() || fallbackHtml,
         },
       ],
     }),
   );
 
-  // Register a tool that links to the UI resource
+  // Register the RSC greeting tool
   sessionServer.registerTool(
-    'greet',
+    'render-greeting',
     {
-      title: 'Greet User',
+      title: 'Render Greeting',
       description:
-        'Display an interactive greeting app where users can enter their name',
+        'Render an interactive greeting card using React Server Components',
+      inputSchema: z.object({
+        name: z.string().describe('The name to greet'),
+      }),
       _meta: {
-        'ui/resourceUri': 'ui://smappy/hello-app',
+        'ui/resourceUri': 'ui://smappy/rsc-app',
       },
     },
-    async () => ({
-      content: [
-        {
-          type: 'text' as const,
-          text: 'Hello! Use the interactive greeting app to say hello.',
-        },
-      ],
-    }),
+    async ({ name }) => {
+      const renderer = getRscRenderer();
+
+      if (!renderer) {
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: `Hello, ${name}! (RSC renderer not available)`,
+            },
+          ],
+        };
+      }
+
+      try {
+        const rscPayload = await renderer.renderGreeting({ name });
+
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: `Greeting card for ${name}`,
+            },
+          ],
+          structuredContent: {
+            type: 'rsc',
+            payload: rscPayload,
+          },
+        };
+      } catch (error) {
+        console.error('[MCP] RSC render error:', error);
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: `Error rendering greeting: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
+  );
+
+  // Register the server action dispatch tool
+  sessionServer.registerTool(
+    'rsc/dispatch-action',
+    {
+      title: 'Dispatch Server Action',
+      description: 'Execute an RSC server action and return the updated state',
+      inputSchema: z.object({
+        actionId: z.string().describe('The server action ID'),
+        args: z.string().describe('Encoded action arguments'),
+      }),
+      _meta: {
+        // This tool is only callable from the app, not the model
+        'ui/visibility': ['app'],
+      },
+    },
+    async ({ actionId, args }) => {
+      const renderer = getRscRenderer();
+
+      if (!renderer) {
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: 'RSC renderer not available',
+            },
+          ],
+          isError: true,
+        };
+      }
+
+      try {
+        const result = await renderer.dispatchAction(actionId, args);
+
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: result.returnValue.ok
+                ? 'Action executed successfully'
+                : 'Action failed',
+            },
+          ],
+          structuredContent: {
+            type: 'rsc',
+            payload: result.payload,
+          },
+        };
+      } catch (error) {
+        console.error('[MCP] Server action error:', error);
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: `Error executing action: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
   );
 
   // Connect server to its transport
@@ -229,7 +223,7 @@ export const Route = {
       const serverInfo = {
         protocolVersion: '2024-11-05',
         serverInfo: {
-          name: 'smappy-mcp',
+          name: 'smappy-mcp-rsc',
           version: '1.0.0',
         },
         capabilities: {
