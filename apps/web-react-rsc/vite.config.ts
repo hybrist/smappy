@@ -145,6 +145,7 @@ function rscMcpApps(): VitePlugin {
         mcpBootstrapHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
+  <base href="${baseUrl}/">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RSC MCP App</title>
@@ -192,24 +193,6 @@ function rscMcpApps(): VitePlugin {
         ) {
           console.log('[MCP] Reloading RSC renderer...');
           await loadRscRenderer();
-        }
-      });
-
-      // Serve test-host.html directly (bypass RSC)
-      server.middlewares.use('/test-host', async (req, res, next) => {
-        const fs = await import('node:fs/promises');
-        const path = await import('node:path');
-        const testHostPath = path.join(
-          process.cwd(),
-          'public',
-          'test-host.html',
-        );
-        try {
-          const html = await fs.readFile(testHostPath, 'utf-8');
-          res.setHeader('Content-Type', 'text/html');
-          res.end(html);
-        } catch (error) {
-          next();
         }
       });
 

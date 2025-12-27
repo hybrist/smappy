@@ -127,7 +127,7 @@ async function createSession(): Promise<{
 
   // Register the server action dispatch tool
   sessionServer.registerTool(
-    'rsc/dispatch-action',
+    '_rsc.dispatch-action',
     {
       title: 'Dispatch Server Action',
       description: 'Execute an RSC server action and return the updated state',

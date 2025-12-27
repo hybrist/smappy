@@ -19,8 +19,16 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from '@modelcontextprotocol/ext-apps';
 
-// Import pre-bundled client components so they're available in the module map
-import './client-components.tsx';
+// Custom findSourceMapURL that uses document.baseURI instead of window.location.origin
+// This is needed because srcdoc iframes have null origin but valid baseURI via <base> tag
+function findSourceMapURL(filename: string, environmentName: string): string {
+  // Get the base URL from the <base> tag or fall back to document.baseURI
+  const baseUrl = document.baseURI || window.location.origin;
+  const url = new URL('/__vite_rsc_findSourceMapURL', baseUrl);
+  url.searchParams.set('filename', filename);
+  url.searchParams.set('environmentName', environmentName);
+  return url.toString();
+}
 
 // RSC Payload type
 interface RscPayload {
@@ -79,16 +87,13 @@ async function main() {
     </React.StrictMode>,
   );
 
-  // Helper to convert RSC payload string to a ReadableStream
-  // The server should send a clean payload without debug chunks
-  function payloadToStream(payload: string): ReadableStream<Uint8Array> {
+  // Helper to convert RSC payload chunks to a ReadableStream
+  function chunksToStream(chunks: string): ReadableStream<Uint8Array> {
     const encoder = new TextEncoder();
-    // Ensure payload ends with newline for proper parsing
-    const normalizedPayload = payload.endsWith('\n') ? payload : payload + '\n';
 
     return new ReadableStream({
-      start(controller) {
-        controller.enqueue(encoder.encode(normalizedPayload));
+      async start(controller) {
+        controller.enqueue(encoder.encode(chunks));
         controller.close();
       },
     });
@@ -96,15 +101,17 @@ async function main() {
 
   // Handle tool result with RSC payload
   app.ontoolresult = (async (result) => {
-    console.log('Tool result received:', result);
     if (
       result.structuredContent?.type === 'rsc' &&
       result.structuredContent.payload &&
       typeof result.structuredContent.payload === 'string'
     ) {
+      const chunks = result.structuredContent.payload;
       try {
-        const stream = payloadToStream(result.structuredContent.payload);
-        const payload = await createFromReadableStream<RscPayload>(stream);
+        const stream = chunksToStream(chunks);
+        const payload = await createFromReadableStream<RscPayload>(stream, {
+          findSourceMapURL,
+        });
         currentPayload = payload;
         if (setPayloadState) {
           setPayloadState(payload);
@@ -128,20 +135,21 @@ async function main() {
 
     // Call the dispatch-action tool via MCP
     const result = (await app.callServerTool({
-      name: 'rsc/dispatch-action', arguments: {
+      name: '_rsc.dispatch-action', arguments: {
         actionId,
         args: encodedArgs,
       },
-    })) as { structuredContent?: { type: string; payload: string } };
+    })) as { structuredContent?: { type: string; payload: string[] } };
 
     // Parse the returned RSC payload
     if (
       result.structuredContent?.type === 'rsc' &&
-      result.structuredContent.payload
+      typeof result.structuredContent.payload === 'string'
     ) {
-      const stream = payloadToStream(result.structuredContent.payload);
+      const stream = chunksToStream(result.structuredContent.payload);
       const payload = await createFromReadableStream<RscPayload>(stream, {
         temporaryReferences,
+        findSourceMapURL,
       });
       currentPayload = payload;
       if (setPayloadState) {

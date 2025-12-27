@@ -1,3 +1,5 @@
+import { ClientCounter } from "../../client";
+
 export function GreetingCard({ name }: { name: string }) {
   return (
     <div
@@ -17,6 +19,9 @@ export function GreetingCard({ name }: { name: string }) {
       <p style={{ margin: 0, opacity: 0.9 }}>
         This UI was server-rendered via React Server Components.
       </p>
+      <blockquote>
+        <ClientCounter />
+      </blockquote>
     </div>
   );
 }

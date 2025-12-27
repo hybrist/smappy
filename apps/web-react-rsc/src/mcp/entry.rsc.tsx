@@ -27,6 +27,7 @@ export type RscPayload = {
 
 /**
  * Render a greeting card component to RSC flight stream
+ * Returns an array of chunks to preserve the original streaming boundaries
  */
 export async function renderGreeting(props: { name: string }): Promise<string> {
   const payload: RscPayload = {
@@ -34,7 +35,7 @@ export async function renderGreeting(props: { name: string }): Promise<string> {
   };
 
   const stream = renderToReadableStream<RscPayload>(payload);
-  return await streamToString(stream);
+  return await streamToChunks(stream);
 }
 
 /**
@@ -100,14 +101,6 @@ export async function renderComponent(
 
 /**
  * Helper to convert a ReadableStream to a string
- * Filters out debug/development-only information that can cause parsing issues
- * when the payload is deserialized outside of the normal RSC streaming context.
- *
- * Debug line formats in React 19 dev mode:
- * - `:N<timestamp>` - timing marker
- * - `N:D{...}` or `N:D"..."` - debug/timing data for chunk N
- * - `N:{"env":"Server","stack":...}` - owner stack info
- * - `N:[[...]]` with `false]]` - stack trace arrays
  */
 async function streamToString(
   stream: ReadableStream<Uint8Array>,
@@ -123,65 +116,35 @@ async function streamToString(
   }
 
   result += decoder.decode(); // Flush remaining
+  return result;
+}
 
-  const lines = result.split('\n');
+/**
+ * Collect stream chunks as an array of strings, preserving the original chunk boundaries.
+ * This is important because the RSC client parser expects data in the same chunks
+ * as the server emitted them.
+ */
+async function streamToChunks(
+  stream: ReadableStream<Uint8Array>,
+): Promise<string> {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  const chunks: string[] = [];
 
-  // Collect debug chunk IDs that are ONLY used for debug info
-  // (to clean up references to them in other chunks)
-  const debugOnlyChunkIds = new Set<string>();
-
-  // First pass: identify chunks that are purely debug info
-  for (const line of lines) {
-    if (!line.trim()) continue;
-
-    const chunkMatch = line.match(/^(\d+):/);
-    if (!chunkMatch) continue;
-
-    const chunkId = chunkMatch[1];
-
-    // Debug owner stack chunks contain "env":"Server" and "stack":
-    if (line.includes('"env":"Server"') && line.includes('"stack":')) {
-      debugOnlyChunkIds.add(chunkId);
-    }
-
-    // Debug stack trace array chunks (format: N:[["name","file",line,col,...]])
-    if (/^\d+:\[\[/.test(line) && line.includes(',false]]')) {
-      debugOnlyChunkIds.add(chunkId);
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const chunk = decoder.decode(value, { stream: true });
+    if (chunk) {
+      chunks.push(chunk);
     }
   }
 
-  // Filter lines based on content, not chunk ID
-  const filteredLines = lines
-    .filter((line) => {
-      if (!line.trim()) return false;
+  // Flush remaining
+  const remaining = decoder.decode();
+  if (remaining) {
+    chunks.push(remaining);
+  }
 
-      // Filter timing markers
-      if (line.startsWith(':N')) return false;
-
-      // Filter debug/timing data lines (N:D...)
-      if (/^\d+:D/.test(line)) return false;
-
-      // Filter owner stack info lines
-      if (line.includes('"env":"Server"') && line.includes('"stack":'))
-        return false;
-
-      // Filter stack trace array lines
-      if (/^\d+:\[\[/.test(line) && line.includes(',false]]')) return false;
-
-      return true;
-    })
-    .map((line) => {
-      // Remove references to debug chunks in element arrays
-      // Format: ["$","tag",key,props,"$debugId","$debugId2",ownerIndex]
-      let cleaned = line;
-      for (const debugId of debugOnlyChunkIds) {
-        cleaned = cleaned.replace(new RegExp(`,\"\\$${debugId}\"`, 'g'), '');
-      }
-      // Clean up trailing owner info index (a number before the final ])
-      // Pattern: ,...,N] where N is the owner index
-      cleaned = cleaned.replace(/,(\d+)\]$/g, ']');
-      return cleaned;
-    });
-
-  return filteredLines.join('\n');
+  return chunks.join('');
 }
