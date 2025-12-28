@@ -128,7 +128,6 @@ function rscMcpApps(): VitePlugin {
             }
           ).runner.import('/src/mcp/entry.rsc.tsx');
           rscRenderer = mod as typeof rscRenderer;
-          console.log('[MCP] RSC renderer loaded');
         } catch (error) {
           console.error('[MCP] Failed to load RSC renderer:', error);
         }
@@ -191,7 +190,6 @@ function rscMcpApps(): VitePlugin {
           file.includes('mcp/entry.rsc.tsx') ||
           file.includes('mcp/components/')
         ) {
-          console.log('[MCP] Reloading RSC renderer...');
           await loadRscRenderer();
         }
       });

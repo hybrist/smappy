@@ -1,3 +1,4 @@
+import { getServerCounter, updateServerCounter } from "../../action";
 import { ClientCounter } from "../../client";
 
 export function GreetingCard({ name }: { name: string }) {
@@ -19,9 +20,15 @@ export function GreetingCard({ name }: { name: string }) {
       <p style={{ margin: 0, opacity: 0.9 }}>
         This UI was server-rendered via React Server Components.
       </p>
-      <blockquote>
+      <h1>Vite + RSC</h1>
+      <div className="card">
         <ClientCounter />
-      </blockquote>
+      </div>
+      <div className="card">
+        <form action={updateServerCounter.bind(null, 1)}>
+          <button>Server Counter: {getServerCounter()}</button>
+        </form>
+      </div>
     </div>
   );
 }

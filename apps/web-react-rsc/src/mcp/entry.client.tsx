@@ -123,8 +123,7 @@ async function main() {
   });
 
   // Handle tool input (can be used for optimistic updates)
-  app.ontoolinput = ((args) => {
-    console.log('Tool input received:', args);
+  app.ontoolinput = ((_args) => {
     // Could show loading state with the input args here
   });
 
@@ -167,7 +166,6 @@ async function main() {
   // Initialize MCP connection
   try {
     await app.connect();
-    console.log('MCP connection initialized');
   } catch (error) {
     console.error('Failed to initialize MCP connection:', error);
   }
