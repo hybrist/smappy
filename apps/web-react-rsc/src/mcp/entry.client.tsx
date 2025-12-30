@@ -30,6 +30,29 @@ function findSourceMapURL(filename: string, environmentName: string): string {
   return url.toString();
 }
 
+// Helper to serialize encoded args (string or FormData) to a transferable format
+// FormData cannot be sent via postMessage, so we convert it to a string representation
+async function serializeEncodedArgs(
+  encoded: string | FormData,
+): Promise<{ type: 'string' | 'formdata'; data: string }> {
+  if (typeof encoded === 'string') {
+    return { type: 'string', data: encoded };
+  }
+
+  // FormData needs to be serialized. We convert it to a multipart/form-data body
+  // and then base64 encode it for transport.
+  const response = new Response(encoded);
+  const contentType = response.headers.get('content-type') || '';
+  const arrayBuffer = await response.arrayBuffer();
+  const base64 = btoa(
+    String.fromCharCode(...new Uint8Array(arrayBuffer)),
+  );
+  return {
+    type: 'formdata',
+    data: JSON.stringify({ contentType, body: base64 }),
+  };
+}
+
 // RSC Payload type
 interface RscPayload {
   root: React.ReactNode;
@@ -131,12 +154,18 @@ async function main() {
   setServerCallback(async (actionId: string, args: unknown[]) => {
     const temporaryReferences = createTemporaryReferenceSet();
     const encodedArgs = await encodeReply(args, { temporaryReferences });
+    
+    // Serialize the encoded args for postMessage transport
+    // (FormData cannot be cloned for postMessage)
+    const serializedArgs = await serializeEncodedArgs(encodedArgs);
 
     // Call the dispatch-action tool via MCP
     const result = (await app.callServerTool({
-      name: '_rsc.dispatch-action', arguments: {
+      name: '_rsc.dispatch-action',
+      arguments: {
         actionId,
-        args: encodedArgs,
+        argsType: serializedArgs.type,
+        args: serializedArgs.data,
       },
     })) as { structuredContent?: { type: string; payload: string[] } };
 
@@ -162,6 +191,25 @@ async function main() {
 
     throw new Error('No RSC payload in action response');
   });
+
+  // Intercept form submissions to ensure they're handled by React Server Components.
+  // In sandboxed iframes, native form submission can be blocked even with allow-forms
+  // (e.g., if allow-same-origin is missing or navigation is restricted).
+  // React's form handlers run in the bubble phase. If they've already prevented default
+  // (meaning they handled the server action), we don't need to do anything. Otherwise,
+  // we prevent default to avoid sandbox navigation restrictions.
+  document.addEventListener('submit', (e) => {
+    const form = e.target as HTMLFormElement;
+    if (!form || !rootElement.contains(form)) return;
+    
+    // If React has already prevented default, it means React handled the form.
+    // Otherwise, prevent default to avoid sandbox restrictions. React can still
+    // process server actions even if default is prevented (it extracts FormData
+    // from the form element, not from the actual submission).
+    if (!e.defaultPrevented) {
+      e.preventDefault();
+    }
+  }, false); // Bubble phase: React's handlers run here too
 
   // Initialize MCP connection
   try {

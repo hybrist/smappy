@@ -133,6 +133,9 @@ async function createSession(): Promise<{
       description: 'Execute an RSC server action and return the updated state',
       inputSchema: z.object({
         actionId: z.string().describe('The server action ID'),
+        argsType: z
+          .enum(['string', 'formdata'])
+          .describe('Type of the encoded args'),
         args: z.string().describe('Encoded action arguments'),
       }),
       _meta: {
@@ -140,7 +143,7 @@ async function createSession(): Promise<{
         'ui/visibility': ['app'],
       },
     },
-    async ({ actionId, args }) => {
+    async ({ actionId, argsType, args }) => {
       const renderer = getRscRenderer();
 
       if (!renderer) {
@@ -156,7 +159,7 @@ async function createSession(): Promise<{
       }
 
       try {
-        const result = await renderer.dispatchAction(actionId, args);
+        const result = await renderer.dispatchAction(actionId, argsType, args);
 
         return {
           content: [
