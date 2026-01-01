@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "check": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
@@ -24,6 +25,7 @@
     "@vitejs/plugin-react": "latest",
     "@vitejs/plugin-rsc": "latest",
     "rsc-html-stream": "^0.0.7",
+    "typescript": "catalog:",
     "vite": "^7.3.0"
   }
 }

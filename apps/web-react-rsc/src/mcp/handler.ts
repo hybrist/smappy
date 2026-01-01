@@ -3,36 +3,19 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { z } from 'zod';
 
-// Import accessors for RSC renderer and bootstrap HTML from vite config
-// These are set by the rscMcpApps plugin when the server starts
-import { getRscRenderer, getMcpBootstrapHtml } from '../../vite.config.ts';
+// Import RSC renderer accessor from vite config (set by rscMcpApps plugin)
+import { getRscRenderer } from '../../vite.config.ts';
+
+// Import bootstrap HTML generator
+import { generateBootstrapHtml } from './bootstrap-html.ts';
 
 // Session storage: maps session IDs to connected client/server pairs
 const sessions = new Map<
   string,
-  { client: Client; cleanup: () => Promise<void> }
+  { client: Client; cleanup: () => Promise<void>; baseUrl: string }
 >();
 
-// Fallback HTML for when RSC bootstrap isn't ready yet
-const fallbackHtml = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      padding: 2rem;
-      text-align: center;
-    }
-  </style>
-</head>
-<body>
-  <p>RSC bootstrap is loading...</p>
-</body>
-</html>`;
-
-async function createSession(): Promise<{
+async function createSession(baseUrl: string): Promise<{
   sessionId: string;
   client: Client;
 }> {
@@ -61,7 +44,7 @@ async function createSession(): Promise<{
         {
           uri: 'ui://smappy/rsc-app',
           mimeType: 'text/html;profile=mcp-app',
-          text: getMcpBootstrapHtml() || fallbackHtml,
+          text: generateBootstrapHtml(baseUrl),
         },
       ],
     }),
@@ -207,6 +190,7 @@ async function createSession(): Promise<{
       await client.close();
       await sessionServer.close();
     },
+    baseUrl,
   });
 
   return { sessionId, client };
@@ -220,7 +204,11 @@ export const Route = {
 
     // Handle initialization
     if (body.method === 'initialize') {
-      const { sessionId: newSessionId } = await createSession();
+      // Get base URL from header (set by middleware) or derive from request
+      const baseUrl =
+        request.headers.get('x-base-url') ||
+        new URL(request.url).origin;
+      const { sessionId: newSessionId } = await createSession(baseUrl);
 
       // Return server capabilities
       const serverInfo = {

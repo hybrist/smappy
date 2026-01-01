@@ -24,16 +24,9 @@ let rscRenderer: {
   ) => Promise<string>;
 } | null = null;
 
-// Global reference to the MCP bootstrap HTML
-let mcpBootstrapHtml: string | null = null;
-
 // Export for use in handler
 export function getRscRenderer() {
   return rscRenderer;
-}
-
-export function getMcpBootstrapHtml() {
-  return mcpBootstrapHtml;
 }
 
 // Helper to convert Node.js IncomingMessage to Web Request
@@ -53,6 +46,9 @@ async function nodeToWebRequest(
       }
     }
   }
+
+  // Add base URL header for MCP handler to use when generating bootstrap HTML
+  headers.set('x-base-url', baseUrl);
 
   // Read body for methods that have one
   let body: string | undefined;
@@ -134,54 +130,9 @@ function rscMcpApps(): VitePlugin {
         }
       };
 
-      // Generate MCP bootstrap HTML
-      const generateBootstrapHtml = async () => {
-        const address = server.httpServer?.address();
-        if (!address || typeof address === 'string') return;
-
-        const port = address.port;
-        const baseUrl = `http://localhost:${port}`;
-
-        mcpBootstrapHtml = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RSC MCP App</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      min-height: 100vh;
-      background: var(--background, #ffffff);
-      color: var(--foreground, #000000);
-    }
-    #root {
-      padding: 1rem;
-    }
-  </style>
-</head>
-<body>
-  <div id="root"></div>
-  <!-- Vite client for HMR and React refresh preamble -->
-  <script type="module" src="${baseUrl}/@vite/client"></script>
-  <script type="module">
-    // React refresh preamble - required for @vitejs/plugin-react in iframes
-    import RefreshRuntime from "${baseUrl}/@react-refresh";
-    RefreshRuntime.injectIntoGlobalHook(window);
-    window.$RefreshReg$ = () => {};
-    window.$RefreshSig$ = () => (type) => type;
-    window.__vite_plugin_react_preamble_installed__ = true;
-  </script>
-  <script type="module" src="${baseUrl}/src/mcp/entry.client.tsx"></script>
-</body>
-</html>`;
-      };
-
-      // Initialize when server is ready
+      // Initialize RSC renderer when server is ready
       server.httpServer?.once('listening', async () => {
         await loadRscRenderer();
-        await generateBootstrapHtml();
       });
 
       // Handle HMR for RSC module
