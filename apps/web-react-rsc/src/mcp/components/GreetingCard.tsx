@@ -1,13 +1,11 @@
-import { getServerCounter, updateServerCounter } from "../../action";
-import { ClientCounter, WrappedServerCounter } from "../../client";
+import { getServerCounter, updateServerCounter } from '../../action';
+import { ClientCounter, WrappedServerCounter } from '../../client';
 
 export async function GreetingCard({ name }: { name: string }) {
   const count = await getServerCounter();
   return (
     <div>
-      <h1>
-        Hello, {name}!
-      </h1>
+      <h1>Hello, {name}!</h1>
       <div className="card">
         <ClientCounter />
       </div>
@@ -23,7 +21,9 @@ export async function GreetingCard({ name }: { name: string }) {
       </div>
       <div className="card">
         <form>
-          <button formAction={updateServerCounter.bind(null, 1)}>Server Counter: {getServerCounter()}</button>
+          <button formAction={updateServerCounter.bind(null, 1)}>
+            Server Counter: {getServerCounter()}
+          </button>
         </form>
       </div>
     </div>

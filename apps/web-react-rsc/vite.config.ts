@@ -161,6 +161,21 @@ function rscMcpApps(): VitePlugin {
           const webRequest = await nodeToWebRequest(req, baseUrl);
           const webResponse = await mcpRoute[req.method]({
             request: webRequest,
+            generateBootstrapHtml: async () => {
+              const { default: bootstrapHtmlTemplate } =
+                await server.ssrLoadModule('/src/mcp/bootstrap.html?raw');
+              const transformedHtml = await server.transformIndexHtml(
+                req.url!,
+                bootstrapHtmlTemplate,
+                req.originalUrl!,
+              );
+              // Work around https://github.com/vitejs/vite/issues/18457 by adding server.origin to HTML asset references.
+              const absoluteHtml = transformedHtml.replace(
+                /(\bsrc="|\bfrom ")\//g,
+                `$1${server.config.server.origin}/`,
+              );
+              return absoluteHtml;
+            },
           });
           await webToNodeResponse(webResponse, res);
         } catch (error) {
@@ -181,6 +196,12 @@ function rscMcpApps(): VitePlugin {
 }
 
 export default defineConfig({
+  server: {
+    port: 5200,
+    strictPort: true,
+    origin: process.env.VITE_MCP_ORIGIN || 'http://rsc.localhost:5200',
+  },
+
   plugins: [
     rsc({
       // `entries` option is only a shorthand for specifying each `rollupOptions.input` below

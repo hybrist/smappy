@@ -105,7 +105,7 @@ export async function dispatchAction(
   encodedArgs: string,
 ): Promise<{ payload: string; returnValue: { ok: boolean; data: unknown } }> {
   const temporaryReferences = createTemporaryReferenceSet();
-  
+
   // Deserialize the args based on type
   const decodableArgs = await deserializeEncodedArgs(argsType, encodedArgs);
   const args = await decodeReply(decodableArgs, { temporaryReferences });

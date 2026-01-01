@@ -116,14 +116,14 @@ Both `framework/entry.rsc.tsx` and `mcp/entry.rsc.tsx` handle RSC rendering and 
 
 ## File-by-File Guide
 
-| File | Purpose |
-|------|---------|
-| `vite.config.ts` | Build config + MCP plugin (needs extraction) |
-| `framework/entry.rsc.tsx` | `@vitejs/plugin-rsc/rsc` APIs |
-| `framework/entry.ssr.tsx` | `@vitejs/plugin-rsc/ssr` + `rsc-html-stream/server` |
+| File                          | Purpose                                                 |
+| ----------------------------- | ------------------------------------------------------- |
+| `vite.config.ts`              | Build config + MCP plugin (needs extraction)            |
+| `framework/entry.rsc.tsx`     | `@vitejs/plugin-rsc/rsc` APIs                           |
+| `framework/entry.ssr.tsx`     | `@vitejs/plugin-rsc/ssr` + `rsc-html-stream/server`     |
 | `framework/entry.browser.tsx` | `@vitejs/plugin-rsc/browser` + `rsc-html-stream/client` |
-| `mcp/handler.ts` | MCP SDK server setup, tool registration |
-| `mcp/entry.rsc.tsx` | RSC rendering for MCP tool results |
-| `mcp/entry.client.tsx` | `@modelcontextprotocol/ext-apps` client |
-| `mcp/bootstrap.html` | HTML template for MCP App shell |
-| `mcp/bootstrap-html.ts` | Bootstrap HTML generator with base URL substitution |
+| `mcp/handler.ts`              | MCP SDK server setup, tool registration                 |
+| `mcp/entry.rsc.tsx`           | RSC rendering for MCP tool results                      |
+| `mcp/entry.client.tsx`        | `@modelcontextprotocol/ext-apps` client                 |
+| `mcp/bootstrap.html`          | HTML template for MCP App shell                         |
+| `mcp/bootstrap-html.ts`       | Bootstrap HTML generator with base URL substitution     |

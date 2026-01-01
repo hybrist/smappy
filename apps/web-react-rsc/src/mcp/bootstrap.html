@@ -1,34 +1,31 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RSC MCP App</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      min-height: 100vh;
-      background: var(--background, #ffffff);
-      color: var(--foreground, #000000);
-    }
-    #root {
-      padding: 1rem;
-    }
-  </style>
-</head>
-<body>
-  <div id="root"></div>
-  <!-- Vite client for HMR and React refresh preamble -->
-  <script type="module" src="{{BASE_URL}}/@vite/client"></script>
-  <script type="module">
-    // React refresh preamble - required for @vitejs/plugin-react in iframes
-    import RefreshRuntime from "{{BASE_URL}}/@react-refresh";
-    RefreshRuntime.injectIntoGlobalHook(window);
-    window.$RefreshReg$ = () => {};
-    window.$RefreshSig$ = () => (type) => type;
-    window.__vite_plugin_react_preamble_installed__ = true;
-  </script>
-  <script type="module" src="{{BASE_URL}}/src/mcp/entry.client.tsx"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RSC MCP App</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        min-height: 100vh;
+        background: var(--background, #ffffff);
+        color: var(--foreground, #000000);
+      }
+      #root {
+        padding: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/mcp/entry.client.tsx"></script>
+  </body>
 </html>

@@ -6,31 +6,16 @@ import { z } from 'zod';
 // Import RSC renderer accessor from vite config (set by rscMcpApps plugin)
 import { getRscRenderer } from '../../vite.config.ts';
 
-// Import bootstrap HTML generator
-import { generateBootstrapHtml } from './bootstrap-html.ts';
-
 // Session storage: maps session IDs to connected client/server pairs
 const sessions = new Map<
   string,
-  { client: Client; cleanup: () => Promise<void>; baseUrl: string }
+  { client: Client; cleanup: () => Promise<void> }
 >();
 
-async function createSession(baseUrl: string): Promise<{
-  sessionId: string;
-  client: Client;
-}> {
-  const sessionId = crypto.randomUUID();
-
-  // Create linked in-memory transports
-  const [clientTransport, serverTransport] =
-    InMemoryTransport.createLinkedPair();
-
-  // Create a fresh server instance for this session
-  const sessionServer = new McpServer({
-    name: 'smappy-mcp-rsc',
-    version: '1.0.0',
-  });
-
+function initializeServer(
+  sessionServer: McpServer,
+  generateBootstrapHtml: () => Promise<string>,
+) {
   // Register the RSC MCP App bootstrap as a UI resource
   sessionServer.registerResource(
     'rsc-app',
@@ -44,7 +29,7 @@ async function createSession(baseUrl: string): Promise<{
         {
           uri: 'ui://smappy/rsc-app',
           mimeType: 'text/html;profile=mcp-app',
-          text: generateBootstrapHtml(baseUrl),
+          text: await generateBootstrapHtml(),
         },
       ],
     }),
@@ -172,6 +157,31 @@ async function createSession(baseUrl: string): Promise<{
       }
     },
   );
+}
+
+function createMcpServer(
+  generateBootstrapHtml: () => Promise<string>,
+): McpServer {
+  const sessionServer = new McpServer({
+    name: 'smappy-mcp-rsc',
+    version: '1.0.0',
+  });
+  initializeServer(sessionServer, generateBootstrapHtml);
+  return sessionServer;
+}
+
+async function createSession(createMcpServer: () => McpServer): Promise<{
+  sessionId: string;
+  client: Client;
+}> {
+  const sessionId = crypto.randomUUID();
+
+  // Create linked in-memory transports
+  const [clientTransport, serverTransport] =
+    InMemoryTransport.createLinkedPair();
+
+  // Create a fresh server instance for this session
+  const sessionServer = createMcpServer();
 
   // Connect server to its transport
   await sessionServer.connect(serverTransport);
@@ -190,7 +200,6 @@ async function createSession(baseUrl: string): Promise<{
       await client.close();
       await sessionServer.close();
     },
-    baseUrl,
   });
 
   return { sessionId, client };
@@ -198,17 +207,21 @@ async function createSession(baseUrl: string): Promise<{
 
 export const Route = {
   // Handle JSON-RPC requests via POST
-  POST: async ({ request }: { request: Request }) => {
+  POST: async ({
+    request,
+    generateBootstrapHtml,
+  }: {
+    request: Request;
+    generateBootstrapHtml: () => Promise<string>;
+  }) => {
     const body = await request.json();
     const sessionId = request.headers.get('mcp-session-id');
 
     // Handle initialization
     if (body.method === 'initialize') {
-      // Get base URL from header (set by middleware) or derive from request
-      const baseUrl =
-        request.headers.get('x-base-url') ||
-        new URL(request.url).origin;
-      const { sessionId: newSessionId } = await createSession(baseUrl);
+      const { sessionId: newSessionId } = await createSession(() =>
+        createMcpServer(generateBootstrapHtml),
+      );
 
       // Return server capabilities
       const serverInfo = {

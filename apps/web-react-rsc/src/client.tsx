@@ -14,13 +14,21 @@ export function ClientCounter() {
   );
 }
 
-export function WrappedServerCounter({count, children} : { count: number, children: React.ReactNode }) {
+export function WrappedServerCounter({
+  count,
+  children,
+}: {
+  count: number;
+  children: React.ReactNode;
+}) {
   return (
-    <button onClick={() => {
-      startTransition(async () => {
-        await updateServerCounter(1);
-      });
-    }}>
+    <button
+      onClick={() => {
+        startTransition(async () => {
+          await updateServerCounter(1);
+        });
+      }}
+    >
       Wrapped Server Counter: {count}
       {children}
     </button>

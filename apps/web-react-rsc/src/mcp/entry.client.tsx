@@ -44,9 +44,7 @@ async function serializeEncodedArgs(
   const response = new Response(encoded);
   const contentType = response.headers.get('content-type') || '';
   const arrayBuffer = await response.arrayBuffer();
-  const base64 = btoa(
-    String.fromCharCode(...new Uint8Array(arrayBuffer)),
-  );
+  const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
   return {
     type: 'formdata',
     data: JSON.stringify({ contentType, body: base64 }),
@@ -123,7 +121,7 @@ async function main() {
   }
 
   // Handle tool result with RSC payload
-  app.ontoolresult = (async (result) => {
+  app.ontoolresult = async (result) => {
     if (
       result.structuredContent?.type === 'rsc' &&
       result.structuredContent.payload &&
@@ -143,18 +141,18 @@ async function main() {
         console.error('Failed to deserialize RSC payload:', error);
       }
     }
-  });
+  };
 
   // Handle tool input (can be used for optimistic updates)
-  app.ontoolinput = ((_args) => {
+  app.ontoolinput = (_args) => {
     // Could show loading state with the input args here
-  });
+  };
 
   // Set up server action callback to route through MCP
   setServerCallback(async (actionId: string, args: unknown[]) => {
     const temporaryReferences = createTemporaryReferenceSet();
     const encodedArgs = await encodeReply(args, { temporaryReferences });
-    
+
     // Serialize the encoded args for postMessage transport
     // (FormData cannot be cloned for postMessage)
     const serializedArgs = await serializeEncodedArgs(encodedArgs);
@@ -198,18 +196,22 @@ async function main() {
   // React's form handlers run in the bubble phase. If they've already prevented default
   // (meaning they handled the server action), we don't need to do anything. Otherwise,
   // we prevent default to avoid sandbox navigation restrictions.
-  document.addEventListener('submit', (e) => {
-    const form = e.target as HTMLFormElement;
-    if (!form || !rootElement.contains(form)) return;
-    
-    // If React has already prevented default, it means React handled the form.
-    // Otherwise, prevent default to avoid sandbox restrictions. React can still
-    // process server actions even if default is prevented (it extracts FormData
-    // from the form element, not from the actual submission).
-    if (!e.defaultPrevented) {
-      e.preventDefault();
-    }
-  }, false); // Bubble phase: React's handlers run here too
+  document.addEventListener(
+    'submit',
+    (e) => {
+      const form = e.target as HTMLFormElement;
+      if (!form || !rootElement.contains(form)) return;
+
+      // If React has already prevented default, it means React handled the form.
+      // Otherwise, prevent default to avoid sandbox restrictions. React can still
+      // process server actions even if default is prevented (it extracts FormData
+      // from the form element, not from the actual submission).
+      if (!e.defaultPrevented) {
+        e.preventDefault();
+      }
+    },
+    false,
+  ); // Bubble phase: React's handlers run here too
 
   // Initialize MCP connection
   try {
