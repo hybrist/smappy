@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MCP Apps Test Host</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        padding: 1rem;
+        background: #1a1a2e;
+        color: #eee;
+        min-height: 100vh;
+      }
+      h1 {
+        margin-bottom: 1rem;
+        color: #fff;
+      }
+      .controls {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+      }
+      input {
+        padding: 0.5rem;
+        border-radius: 4px;
+        border: 1px solid #444;
+        background: #2a2a4e;
+        color: #eee;
+        font-size: 1rem;
+      }
+      button {
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        border: none;
+        background: #667eea;
+        color: white;
+        cursor: pointer;
+        font-size: 1rem;
+      }
+      button:hover {
+        opacity: 0.9;
+      }
+      .log {
+        background: #0d0d1a;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        max-height: 200px;
+        overflow-y: auto;
+        font-family: monospace;
+        font-size: 0.875rem;
+      }
+      .log-entry {
+        margin-bottom: 0.25rem;
+      }
+      .log-entry.sent {
+        color: #4ade80;
+      }
+      .log-entry.received {
+        color: #60a5fa;
+      }
+      .iframe-container {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      }
+      iframe {
+        width: 100%;
+        height: 400px;
+        border: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>MCP Apps Test Host</h1>
+
+    <div class="controls">
+      <input
+        type="text"
+        id="nameInput"
+        placeholder="Enter name"
+        value="World"
+      />
+      <button id="renderBtn">Call render-greeting</button>
+      <button id="clearBtn">Clear Log</button>
+    </div>
+
+    <div class="log" id="log"></div>
+
+    <div class="iframe-container">
+      <iframe
+        id="mcpAppFrame"
+        sandbox="allow-scripts allow-forms allow-popups"
+      ></iframe>
+    </div>
+
+    <script type="module">
+      const log = document.getElementById('log');
+      const nameInput = document.getElementById('nameInput');
+      const renderBtn = document.getElementById('renderBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const frame = document.getElementById('mcpAppFrame');
+
+      let sessionId = null;
+      const MCP_URL = '/mcp';
+
+      function addLog(type, message) {
+        const entry = document.createElement('div');
+        entry.className = `log-entry ${type}`;
+        entry.textContent = `[${type.toUpperCase()}] ${message}`;
+        log.appendChild(entry);
+        log.scrollTop = log.scrollHeight;
+      }
+
+      // Initialize MCP session
+      async function initMcp() {
+        addLog('sent', 'initialize');
+        const response = await fetch(MCP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'initialize',
+            params: {},
+          }),
+        });
+
+        sessionId = response.headers.get('mcp-session-id');
+        const result = await response.json();
+        addLog('received', `Session: ${sessionId}`);
+        addLog('received', JSON.stringify(result.result.capabilities));
+
+        // Load the UI resource
+        await loadUiResource();
+      }
+
+      // Load UI resource into iframe
+      async function loadUiResource() {
+        addLog('sent', 'resources/read ui://smappy/rsc-app');
+        const response = await fetch(MCP_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'mcp-session-id': sessionId,
+          },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            id: 2,
+            method: 'resources/read',
+            params: { uri: 'ui://smappy/rsc-app' },
+          }),
+        });
+
+        const result = await response.json();
+        const html = result.result.contents[0].text;
+        addLog('received', `UI resource loaded (${html.length} bytes)`);
+
+        // Load into iframe using srcdoc
+        frame.srcdoc = html;
+      }
+
+      // Handle messages from iframe
+      window.addEventListener('message', async (event) => {
+        const data = event.data;
+        if (!data || data.jsonrpc !== '2.0') return;
+
+        addLog(
+          'received',
+          `iframe: ${JSON.stringify(data).substring(0, 100)}...`,
+        );
+
+        // Handle ui/initialize request
+        if (data.method === 'ui/initialize') {
+          const response = {
+            jsonrpc: '2.0',
+            id: data.id,
+            result: {
+              protocolVersion: '2024-11-05',
+              hostInfo: {
+                name: 'Test Host',
+                version: '1.0.0',
+              },
+              hostCapabilities: {},
+              hostContext: {
+                styles: {
+                  variables: {
+                    // '--background': '#ffffff',
+                    // '--foreground': '#1a1a2e',
+                    // '--primary': '#667eea',
+                    // '--muted': '#f0f0f5',
+                  },
+                },
+              },
+            },
+          };
+          frame.contentWindow.postMessage(response, '*');
+          addLog('sent', `iframe: ui/initialize response`);
+        }
+
+        // Handle tools/call request from iframe (for server actions)
+        if (data.method === 'tools/call') {
+          const toolResult = await callTool(
+            data.params.name,
+            data.params.arguments,
+          );
+          const response = {
+            jsonrpc: '2.0',
+            id: data.id,
+            result: toolResult,
+          };
+          frame.contentWindow.postMessage(response, '*');
+          addLog('sent', `iframe: tools/call response`);
+        }
+      });
+
+      // Call a tool via MCP
+      async function callTool(name, args) {
+        addLog('sent', `tools/call ${name}`);
+        const response = await fetch(MCP_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'mcp-session-id': sessionId,
+          },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            id: Date.now(),
+            method: 'tools/call',
+            params: { name, arguments: args },
+          }),
+        });
+
+        const result = await response.json();
+        addLog(
+          'received',
+          `Tool result: ${result.result.content?.[0]?.text || 'no text'}`,
+        );
+        return result.result;
+      }
+
+      // Render greeting button handler
+      renderBtn.addEventListener('click', async () => {
+        const name = nameInput.value || 'World';
+        const toolResult = await callTool('render-greeting', { name });
+
+        // Send tool-input notification
+        frame.contentWindow.postMessage(
+          {
+            jsonrpc: '2.0',
+            method: 'ui/notifications/tool-input',
+            params: { arguments: { name } },
+          },
+          '*',
+        );
+        addLog('sent', 'iframe: ui/notifications/tool-input');
+
+        // Send tool-result notification with RSC payload
+        frame.contentWindow.postMessage(
+          {
+            jsonrpc: '2.0',
+            method: 'ui/notifications/tool-result',
+            params: toolResult,
+          },
+          '*',
+        );
+        addLog('sent', 'iframe: ui/notifications/tool-result');
+      });
+
+      clearBtn.addEventListener('click', () => {
+        log.innerHTML = '';
+      });
+
+      // Initialize on load
+      initMcp();
+    </script>
+  </body>
+</html>

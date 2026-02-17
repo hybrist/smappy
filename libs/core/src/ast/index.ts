@@ -9,4 +9,4 @@ export {
   type SymbolWithExport,
   type AnalysisResult,
   type AnalyzerOptions,
-} from "./analyzer.ts";
+} from './analyzer.ts';

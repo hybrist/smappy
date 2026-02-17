@@ -1,13 +1,13 @@
 /**
  * Tests for Webpack plugin
  */
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { WebpackSmappyPlugin } from "./plugin.ts";
-import type { WebpackPluginOptions } from "./plugin.ts";
-import type { Compiler, Stats } from "webpack";
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { WebpackSmappyPlugin } from './plugin.ts';
+import type { WebpackPluginOptions } from './plugin.ts';
+import type { Compiler, Stats } from 'webpack';
 
 // Mock the ingestion module
-vi.mock("../../ingestion/index.js", () => ({
+vi.mock('../../ingestion/index.js', () => ({
   ingestBundle: vi.fn().mockResolvedValue({
     analysisRunId: 1,
     bundlesWritten: 1,
@@ -21,17 +21,17 @@ vi.mock("../../ingestion/index.js", () => ({
   }),
 }));
 
-describe("WebpackBundleAnalysisPlugin", () => {
+describe('WebpackBundleAnalysisPlugin', () => {
   const baseOptions: WebpackPluginOptions = {
-    statsFile: "/tmp/test-project.stats.json",
+    statsFile: '/tmp/test-project.stats.json',
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe("apply method", () => {
-    it("should register done hook", () => {
+  describe('apply method', () => {
+    it('should register done hook', () => {
       const plugin = new WebpackSmappyPlugin(baseOptions);
       const mockCallback = vi.fn();
       const mockCompiler = {
@@ -45,9 +45,9 @@ describe("WebpackBundleAnalysisPlugin", () => {
           compilation: {},
         },
         options: {
-          mode: "production",
+          mode: 'production',
           output: {
-            path: "/dist",
+            path: '/dist',
           },
         },
       } as unknown as Compiler;
@@ -55,7 +55,7 @@ describe("WebpackBundleAnalysisPlugin", () => {
       plugin.apply(mockCompiler);
 
       expect(mockCompiler.hooks.done.tapAsync).toHaveBeenCalledWith(
-        "webpack-smappy-analysis",
+        'webpack-smappy-analysis',
         expect.any(Function),
       );
     });

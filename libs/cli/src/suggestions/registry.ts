@@ -3,7 +3,7 @@
  * Manages registration and retrieval of suggestion rules
  */
 
-import type { SuggestionRule, SuggestionRuleRegistry } from "./types.ts";
+import type { SuggestionRule, SuggestionRuleRegistry } from './types.ts';
 
 /**
  * Default implementation of SuggestionRuleRegistry

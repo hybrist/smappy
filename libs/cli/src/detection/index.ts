@@ -3,15 +3,15 @@
  * Combines bundler and framework detection
  */
 
-import { existsSync, readFileSync } from "node:fs";
-import { join, resolve, isAbsolute } from "node:path";
-import { detectBundler, type BundlerDetection } from "./bundler.ts";
-import { detectFramework, type FrameworkDetection } from "./framework.ts";
+import { existsSync, readFileSync } from 'node:fs';
+import { join, resolve, isAbsolute } from 'node:path';
+import { detectBundler, type BundlerDetection } from './bundler.ts';
+import { detectFramework, type FrameworkDetection } from './framework.ts';
 
 export interface DetectionResult {
-  bundler: BundlerDetection["bundler"];
-  framework: FrameworkDetection["framework"];
-  confidence: "high" | "medium" | "low";
+  bundler: BundlerDetection['bundler'];
+  framework: FrameworkDetection['framework'];
+  confidence: 'high' | 'medium' | 'low';
   detectedVia: {
     bundler: string[];
     framework: string[];
@@ -22,13 +22,13 @@ export interface DetectionResult {
  * Read and parse package.json from project path
  */
 function readPackageJson(projectPath: string): Record<string, unknown> {
-  const packageJsonPath = join(projectPath, "package.json");
+  const packageJsonPath = join(projectPath, 'package.json');
   if (!existsSync(packageJsonPath)) {
     throw new Error(`package.json not found at ${projectPath}`);
   }
 
   try {
-    const content = readFileSync(packageJsonPath, "utf-8");
+    const content = readFileSync(packageJsonPath, 'utf-8');
     return JSON.parse(content) as Record<string, unknown>;
   } catch (error) {
     throw new Error(
@@ -43,32 +43,32 @@ function readPackageJson(projectPath: string): Record<string, unknown> {
 function determineOverallConfidence(
   bundlerDetection: BundlerDetection,
   frameworkDetection: FrameworkDetection,
-): "high" | "medium" | "low" {
+): 'high' | 'medium' | 'low' {
   // If both are high confidence, overall is high
   if (
-    bundlerDetection.confidence === "high" &&
-    frameworkDetection.confidence === "high"
+    bundlerDetection.confidence === 'high' &&
+    frameworkDetection.confidence === 'high'
   ) {
-    return "high";
+    return 'high';
   }
 
   // If both are low confidence, overall is low
   if (
-    bundlerDetection.confidence === "low" &&
-    frameworkDetection.confidence === "low"
+    bundlerDetection.confidence === 'low' &&
+    frameworkDetection.confidence === 'low'
   ) {
-    return "low";
+    return 'low';
   }
 
   // Otherwise, take the higher of the two
   if (
-    bundlerDetection.confidence === "high" ||
-    frameworkDetection.confidence === "high"
+    bundlerDetection.confidence === 'high' ||
+    frameworkDetection.confidence === 'high'
   ) {
-    return "medium";
+    return 'medium';
   }
 
-  return "low";
+  return 'low';
 }
 
 /**

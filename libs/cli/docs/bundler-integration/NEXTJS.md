@@ -8,14 +8,14 @@ We provide a helper that wires the bundle analysis plugin into Next.js builds fo
 
 ```javascript
 // next.config.js
-import { withNextBundleAnalysis } from "@smappy/cli/src/plugins/nextjs/index.js";
+import { withNextBundleAnalysis } from '@smappy/cli/src/plugins/nextjs/index.js';
 
 export default withNextBundleAnalysis(
   {
     reactStrictMode: true,
   },
   {
-    projectName: "my-nextjs-app",
+    projectName: 'my-nextjs-app',
     extractSourceMaps: true,
     analyzeClient: true,
     analyzeServer: true,
@@ -45,7 +45,7 @@ module.exports = {
 
 ```javascript
 // next.config.js
-const WebpackBundleAnalysisPlugin = require("./webpack-plugin");
+const WebpackBundleAnalysisPlugin = require('./webpack-plugin');
 
 module.exports = {
   webpack: (config, { isServer }) => {
@@ -53,7 +53,7 @@ module.exports = {
       // Only analyze client bundles
       config.plugins.push(
         new WebpackBundleAnalysisPlugin({
-          projectName: "my-nextjs-app",
+          projectName: 'my-nextjs-app',
           extractSourceMaps: true,
         }),
       );
@@ -73,10 +73,10 @@ Next.js provides access to webpack compilation hooks:
 webpack: (config, { webpack }) => {
   config.plugins.push({
     apply: (compiler) => {
-      compiler.hooks.compilation.tap("NextJsBundleAnalysis", (compilation) => {
+      compiler.hooks.compilation.tap('NextJsBundleAnalysis', (compilation) => {
         compilation.hooks.processAssets.tap(
           {
-            name: "NextJsBundleAnalysis",
+            name: 'NextJsBundleAnalysis',
             stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ANALYZE,
           },
           (assets) => {
@@ -99,10 +99,10 @@ Next.js does not provide `onBuildStart` and `onBuildComplete` hooks in `next.con
 webpack: (config, { webpack }) => {
   config.plugins.push({
     apply: (compiler) => {
-      compiler.hooks.beforeRun.tap("BuildLifecyclePlugin", (compiler) => {
-        console.log("Build starting...");
+      compiler.hooks.beforeRun.tap('BuildLifecyclePlugin', (compiler) => {
+        console.log('Build starting...');
       });
-      compiler.hooks.done.tap("BuildLifecyclePlugin", (stats) => {
+      compiler.hooks.done.tap('BuildLifecyclePlugin', (stats) => {
         if (!stats.hasErrors()) {
           // Process bundles
         }
@@ -152,7 +152,7 @@ pages/
 webpack: (config, { webpack }) => {
   config.plugins.push({
     apply: (compiler) => {
-      compiler.hooks.done.tap("NextJsBundleAnalysis", (stats) => {
+      compiler.hooks.done.tap('NextJsBundleAnalysis', (stats) => {
         const statsJson = stats.toJson({
           all: false,
           modules: true,
@@ -162,7 +162,7 @@ webpack: (config, { webpack }) => {
 
         // Extract data from stats
         const bundles = statsJson.assets
-          .filter((asset) => asset.name.endsWith(".js"))
+          .filter((asset) => asset.name.endsWith('.js'))
           .map((asset) => ({
             fileName: asset.name,
             size: asset.size,
@@ -180,21 +180,21 @@ webpack: (config, { webpack }) => {
 Next.js outputs to `.next` directory:
 
 ```javascript
-const { readdirSync, readFileSync, statSync } = require("fs");
-const { join } = require("path");
+const { readdirSync, readFileSync, statSync } = require('fs');
+const { join } = require('path');
 
 function extractBundles(nextDir) {
   const bundles = [];
-  const staticDir = join(nextDir, "static");
+  const staticDir = join(nextDir, 'static');
 
   // Client bundles
-  const chunksDir = join(staticDir, "chunks");
+  const chunksDir = join(staticDir, 'chunks');
   const files = readdirSync(chunksDir, { recursive: true });
 
   for (const file of files) {
-    if (file.endsWith(".js")) {
+    if (file.endsWith('.js')) {
       const filePath = join(chunksDir, file);
-      const content = readFileSync(filePath, "utf-8");
+      const content = readFileSync(filePath, 'utf-8');
       const stats = statSync(filePath);
 
       bundles.push({
@@ -216,12 +216,12 @@ function extractBundles(nextDir) {
 ```javascript
 compilation.hooks.processAssets.tap(
   {
-    name: "NextJsBundleAnalysis",
+    name: 'NextJsBundleAnalysis',
     stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ANALYZE,
   },
   (assets) => {
     for (const [filename, asset] of Object.entries(assets)) {
-      if (filename.endsWith(".js")) {
+      if (filename.endsWith('.js')) {
         const sourceMap = assets[`${filename}.map`];
         if (sourceMap) {
           // Extract source map
@@ -235,12 +235,12 @@ compilation.hooks.processAssets.tap(
 ### From Build Output
 
 ```javascript
-const mapFiles = readdirSync(chunksDir).filter((file) => file.endsWith(".map"));
+const mapFiles = readdirSync(chunksDir).filter((file) => file.endsWith('.map'));
 
 for (const mapFile of mapFiles) {
   const mapPath = join(chunksDir, mapFile);
-  const mapContent = readFileSync(mapPath, "utf-8");
-  const bundleName = mapFile.replace(".map", "");
+  const mapContent = readFileSync(mapPath, 'utf-8');
+  const bundleName = mapFile.replace('.map', '');
   // Associate with bundle
 }
 ```
@@ -255,16 +255,16 @@ webpack: (config, { isServer }) => {
     // Client bundle analysis
     config.plugins.push(
       new WebpackBundleAnalysisPlugin({
-        projectName: "my-app",
-        buildType: "client",
+        projectName: 'my-app',
+        buildType: 'client',
       }),
     );
   } else {
     // Server bundle analysis (optional)
     config.plugins.push(
       new WebpackBundleAnalysisPlugin({
-        projectName: "my-app",
-        buildType: "server",
+        projectName: 'my-app',
+        buildType: 'server',
       }),
     );
   }
@@ -279,14 +279,14 @@ webpack: (config, { isServer }) => {
 
 ```javascript
 // next.config.js
-const WebpackBundleAnalysisPlugin = require("./webpack-plugin");
+const WebpackBundleAnalysisPlugin = require('./webpack-plugin');
 
 module.exports = {
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.plugins.push(
         new WebpackBundleAnalysisPlugin({
-          projectName: "my-nextjs-app",
+          projectName: 'my-nextjs-app',
           extractSourceMaps: true,
         }),
       );
@@ -319,7 +319,7 @@ module.exports = {
 
 ```javascript
 module.exports = {
-  distDir: ".next", // Default
+  distDir: '.next', // Default
 
   webpack: (config, { isServer }) => {
     // Access distDir via config.output.path
@@ -337,7 +337,7 @@ Next.js generates static pages at build time. These create additional chunks:
 ```javascript
 // app/blog/[slug]/page.tsx
 export async function generateStaticParams() {
-  return [{ slug: "post-1" }, { slug: "post-2" }];
+  return [{ slug: 'post-1' }, { slug: 'post-2' }];
 }
 ```
 
@@ -372,16 +372,16 @@ Next.js optimizes fonts. Handle separately if font analysis is needed.
 
 ```javascript
 // next.config.js
-const WebpackBundleAnalysisPlugin = require("./webpack-plugin");
+const WebpackBundleAnalysisPlugin = require('./webpack-plugin');
 
 module.exports = {
   webpack: (config, { isServer, webpack }) => {
     if (!isServer) {
       config.plugins.push(
         new WebpackBundleAnalysisPlugin({
-          projectName: "my-nextjs-app",
+          projectName: 'my-nextjs-app',
           extractSourceMaps: true,
-          outputDir: ".next/static",
+          outputDir: '.next/static',
         }),
       );
     }

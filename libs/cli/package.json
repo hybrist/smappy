@@ -11,25 +11,25 @@
     "prepare": "tsdown"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^2.0.56",
+    "@ai-sdk/openai": "^2.0.87",
     "@smappy/core": "workspace:*",
     "@smappy/store": "workspace:*",
+    "ai": "^5.0.114",
     "commander": "^14.0.2",
     "drizzle-orm": "^0.44.7",
-    "ai": "^5.0.89",
-    "@ai-sdk/anthropic": "^2.0.42",
-    "@ai-sdk/openai": "^2.0.64",
-    "ollama-ai-provider-v2": "^1.5.3"
+    "ollama-ai-provider-v2": "^1.5.5"
   },
   "devDependencies": {
-    "@types/node": "^22.19.0",
+    "@types/node": "^22.19.3",
     "@types/webpack": "^5.28.5",
     "prettier": "catalog:",
-    "rollup": "^4.52.5",
+    "rollup": "^4.53.5",
     "tsdown": "catalog:",
     "typescript": "catalog:",
-    "vite": "^7.1.12",
+    "vite": "^7.3.0",
     "vitest": "catalog:",
-    "webpack": "^5.102.1"
+    "webpack": "^5.104.0"
   },
   "exports": {
     "./ingestion": "./src/ingestion/index.ts",

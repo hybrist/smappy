@@ -3,9 +3,9 @@
  * Common functions for parsing stats, extracting source maps, and normalizing data
  */
 
-import type { BundleInput, ModuleInput } from "@smappy/core";
-import { readFileSync } from "node:fs";
-import { join, dirname, extname } from "node:path";
+import type { BundleInput, ModuleInput } from '@smappy/core';
+import { readFileSync } from 'node:fs';
+import { join, dirname, extname } from 'node:path';
 
 // ============================================================================
 // Source Map Utilities
@@ -31,8 +31,8 @@ export function extractSourceMap(
   );
   if (inlineSourceMapMatch) {
     try {
-      const decoded = Buffer.from(inlineSourceMapMatch[1], "base64").toString(
-        "utf-8",
+      const decoded = Buffer.from(inlineSourceMapMatch[1], 'base64').toString(
+        'utf-8',
       );
       // Validate it's valid JSON
       JSON.parse(decoded);
@@ -54,12 +54,12 @@ export function extractSourceMap(
     try {
       // Try relative to bundle directory
       const fullPath = join(outputDirectory, sourceMapPath);
-      return readFileSync(fullPath, "utf-8");
+      return readFileSync(fullPath, 'utf-8');
     } catch {
       // Try relative to output directory
       try {
         const outputPath = join(outputDirectory, sourceMapPath);
-        return readFileSync(outputPath, "utf-8");
+        return readFileSync(outputPath, 'utf-8');
       } catch {
         // Source map not found
         return undefined;
@@ -82,7 +82,7 @@ export function extractSourceMapFromPath(
 ): string | undefined {
   const sourceMapPath = `${bundlePath}.map`;
   try {
-    return readFileSync(sourceMapPath, "utf-8");
+    return readFileSync(sourceMapPath, 'utf-8');
   } catch {
     return undefined;
   }
@@ -100,21 +100,21 @@ export function extractSourceMapFromPath(
  */
 export function detectFileType(
   filePath: string,
-): BundleInput["type"] | ModuleInput["fileType"] {
+): BundleInput['type'] | ModuleInput['fileType'] {
   const ext = extname(filePath).toLowerCase();
-  const extMap: Record<string, BundleInput["type"] | ModuleInput["fileType"]> =
+  const extMap: Record<string, BundleInput['type'] | ModuleInput['fileType']> =
     {
-      ".js": "js",
-      ".mjs": "mjs",
-      ".cjs": "cjs",
-      ".jsx": "jsx",
-      ".ts": "ts",
-      ".tsx": "tsx",
-      ".json": "json",
-      ".css": "css",
+      '.js': 'js',
+      '.mjs': 'mjs',
+      '.cjs': 'cjs',
+      '.jsx': 'jsx',
+      '.ts': 'ts',
+      '.tsx': 'tsx',
+      '.json': 'json',
+      '.css': 'css',
     };
 
-  return extMap[ext] || "js";
+  return extMap[ext] || 'js';
 }
 
 /**
@@ -125,7 +125,7 @@ export function detectFileType(
  */
 export function isModuleFile(filePath: string): boolean {
   const ext = extname(filePath).toLowerCase();
-  return [".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx"].includes(ext);
+  return ['.js', '.mjs', '.cjs', '.jsx', '.ts', '.tsx'].includes(ext);
 }
 
 /**
@@ -164,47 +164,47 @@ export function isSourceFile(filePath: string): boolean {
  */
 export function normalizePath(filePath: string, baseDir?: string): string {
   // Normalize separators
-  let normalized = filePath.replace(/\\/g, "/");
+  let normalized = filePath.replace(/\\/g, '/');
 
   // Track if the original path was absolute
-  const isAbsolute = normalized.startsWith("/") || normalized.match(/^[A-Z]:/);
+  const isAbsolute = normalized.startsWith('/') || normalized.match(/^[A-Z]:/);
 
   // Remove leading slashes for processing (we'll add back if needed)
-  normalized = normalized.replace(/^\/+/, "");
+  normalized = normalized.replace(/^\/+/, '');
 
   // Resolve relative paths if baseDir is provided
   if (baseDir && !isAbsolute) {
-    const base = baseDir.replace(/\\/g, "/").replace(/\/+$/, "");
+    const base = baseDir.replace(/\\/g, '/').replace(/\/+$/, '');
     normalized = `${base}/${normalized}`;
   }
 
   // Remove redundant path segments
-  const parts = normalized.split("/");
+  const parts = normalized.split('/');
   const resolved: string[] = [];
 
   for (const part of parts) {
-    if (part === "." || part === "") {
+    if (part === '.' || part === '') {
       continue;
-    } else if (part === "..") {
+    } else if (part === '..') {
       resolved.pop();
     } else {
       resolved.push(part);
     }
   }
 
-  const result = resolved.join("/");
+  const result = resolved.join('/');
 
   // Restore leading slash ONLY if:
   // 1. We joined with an absolute baseDir (baseDir starts with /), OR
   // 2. The original path was absolute Unix-style
   // Do NOT add leading slash for Windows absolute paths or relative paths
   const baseDirIsAbsolute =
-    baseDir && baseDir.replace(/\\/g, "/").startsWith("/");
+    baseDir && baseDir.replace(/\\/g, '/').startsWith('/');
   const isWindowsPath = /^[A-Z]:/.test(result);
 
   if (
     (baseDirIsAbsolute || (isAbsolute && !isWindowsPath)) &&
-    !result.startsWith("/")
+    !result.startsWith('/')
   ) {
     return `/${result}`;
   }
@@ -227,13 +227,13 @@ export function resolveModulePath(
   baseDir: string,
 ): string {
   // Absolute path
-  if (importPath.startsWith("/")) {
+  if (importPath.startsWith('/')) {
     // Remove leading slash and normalize
     return normalizePath(importPath.slice(1));
   }
 
   // Node module (package name)
-  if (!importPath.startsWith(".") && !importPath.startsWith("/")) {
+  if (!importPath.startsWith('.') && !importPath.startsWith('/')) {
     return `node_modules/${importPath}`;
   }
 
@@ -254,8 +254,8 @@ export function resolveModulePath(
  * @returns Size in bytes
  */
 export function calculateSize(content: string | Buffer): number {
-  if (typeof content === "string") {
-    return Buffer.byteLength(content, "utf-8");
+  if (typeof content === 'string') {
+    return Buffer.byteLength(content, 'utf-8');
   }
   return content.length;
 }
@@ -292,7 +292,7 @@ export function getSize(
  */
 export function readFileContent(filePath: string): string | undefined {
   try {
-    return readFileSync(filePath, "utf-8");
+    return readFileSync(filePath, 'utf-8');
   } catch {
     return undefined;
   }
@@ -310,7 +310,7 @@ export function readFileContentSafe(
   errors: string[],
 ): string | undefined {
   try {
-    return readFileSync(filePath, "utf-8");
+    return readFileSync(filePath, 'utf-8');
   } catch (error) {
     errors.push(`Failed to read file ${filePath}: ${error}`);
     return undefined;
@@ -345,10 +345,10 @@ export function shouldExcludeFile(
       // If not a valid regex, treat as glob pattern (simple implementation)
       // Escape special regex characters except * and ?
       const escaped = pattern
-        .replace(/[.+^${}()|[\]\\]/g, "\\$&")
-        .replace(/\*\*/g, ".*")
-        .replace(/\*/g, "[^/]*")
-        .replace(/\?/g, ".");
+        .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+        .replace(/\*\*/g, '.*')
+        .replace(/\*/g, '[^/]*')
+        .replace(/\?/g, '.');
       const regex = new RegExp(escaped);
       return regex.test(filePath);
     }
@@ -377,10 +377,10 @@ export function shouldIncludeFile(
     } catch {
       // Escape special regex characters except * and ?
       const escaped = pattern
-        .replace(/[.+^${}()|[\]\\]/g, "\\$&")
-        .replace(/\*\*/g, ".*")
-        .replace(/\*/g, "[^/]*")
-        .replace(/\?/g, ".");
+        .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+        .replace(/\*\*/g, '.*')
+        .replace(/\*/g, '[^/]*')
+        .replace(/\?/g, '.');
       const regex = new RegExp(escaped);
       return regex.test(filePath);
     }

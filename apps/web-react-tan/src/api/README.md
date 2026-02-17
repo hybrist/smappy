@@ -34,7 +34,7 @@ Array<{
 **Example:**
 
 ```typescript
-import { getProjects } from "@/api";
+import { getProjects } from '@/api';
 
 const projects = await getProjects();
 ```
@@ -65,7 +65,7 @@ Array<{
 **Example:**
 
 ```typescript
-const analyses = await getProjectAnalyses("my-app");
+const analyses = await getProjectAnalyses('my-app');
 ```
 
 ### `getAnalysisDetails(id: string)`
@@ -81,7 +81,7 @@ Returns detailed information about a specific analysis run.
 **Example:**
 
 ```typescript
-const details = await getAnalysisDetails("123");
+const details = await getAnalysisDetails('123');
 ```
 
 ### `getAnalysisModules(id: string, filters?: AnalysisModuleFilters)`
@@ -128,12 +128,12 @@ Returns modules for an analysis with optional filtering and pagination.
 **Example:**
 
 ```typescript
-const result = await getAnalysisModules("123", {
+const result = await getAnalysisModules('123', {
   isThirdParty: true,
   page: 1,
   pageSize: 20,
-  sortBy: "bundledSize",
-  sortOrder: "desc",
+  sortBy: 'bundledSize',
+  sortOrder: 'desc',
 });
 ```
 
@@ -160,7 +160,7 @@ Array<{
 **Example:**
 
 ```typescript
-const bundles = await getAnalysisBundles("123");
+const bundles = await getAnalysisBundles('123');
 ```
 
 ### `getAnalysisDependencyGraph(id: string)`
@@ -195,7 +195,7 @@ Returns the dependency graph for visualization.
 **Example:**
 
 ```typescript
-const graph = await getAnalysisDependencyGraph("123");
+const graph = await getAnalysisDependencyGraph('123');
 ```
 
 ### `getAnalysisTreemap(id: string)`
@@ -226,7 +226,7 @@ Returns hierarchical data for treemap visualization.
 **Example:**
 
 ```typescript
-const treemap = await getAnalysisTreemap("123");
+const treemap = await getAnalysisTreemap('123');
 ```
 
 ## Integration with TanStack Router
@@ -264,7 +264,7 @@ All server functions include error handling. Errors are logged on the server and
 try {
   const projects = await getProjects();
 } catch (error) {
-  console.error("Failed to load projects:", error);
+  console.error('Failed to load projects:', error);
 }
 ```
 

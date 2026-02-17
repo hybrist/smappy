@@ -1,5 +1,5 @@
-import z from "zod";
-import { FileCode, Box, ArrowRight, Layers } from "lucide-react";
+import z from 'zod';
+import { FileCode, Box, ArrowRight, Layers } from 'lucide-react';
 
 function defineAppTool() {}
 
@@ -24,7 +24,7 @@ export function FileSummary(props: FileSummaryProps) {
     <div className="w-[400px] sm:w-[540px] flex flex-col h-full">
       <div className="pb-6 border-b">
         <div className="flex items-center gap-2 font-mono text-lg text-primary">
-          {props.type === "package" ? (
+          {props.type === 'package' ? (
             <Box className="w-5 h-5" />
           ) : (
             <FileCode className="w-5 h-5" />
@@ -32,7 +32,7 @@ export function FileSummary(props: FileSummaryProps) {
           {props.name}
         </div>
         <div>
-          Full path:{" "}
+          Full path:{' '}
           <code className="bg-muted px-1 py-0.5 rounded text-xs break-all">
             {props.path}
           </code>

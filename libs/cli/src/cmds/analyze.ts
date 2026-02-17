@@ -3,18 +3,18 @@
  * Analyzes a JavaScript/TypeScript project to extract bundle information
  */
 
-import { existsSync, statSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, statSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import {
   detectBundlerAndFramework,
   type DetectionResult,
-} from "../detection/index.ts";
+} from '../detection/index.ts';
 import {
   createBuilderOrNull as createBuildRunnerOrNull,
   type ProjectInfo,
-} from "../runner/index.ts";
-import { createStore } from "@smappy/store";
-import { ingestBundle } from "../ingestion/index.ts";
+} from '../runner/index.ts';
+import { createStore } from '@smappy/store';
+import { ingestBundle } from '../ingestion/index.ts';
 
 export interface AnalyzeOptions {
   projectPath?: string;
@@ -30,42 +30,42 @@ export interface AnalyzeOptions {
 /**
  * Parse bundler string to DetectionResult bundler type
  */
-function parseBundler(bundler?: string): DetectionResult["bundler"] {
+function parseBundler(bundler?: string): DetectionResult['bundler'] {
   if (!bundler) return null;
 
-  const validBundlers: DetectionResult["bundler"][] = [
-    "vite",
-    "webpack",
-    "rollup",
-    "esbuild",
-    "parcel",
-    "nextjs",
-    "angular",
+  const validBundlers: DetectionResult['bundler'][] = [
+    'vite',
+    'webpack',
+    'rollup',
+    'esbuild',
+    'parcel',
+    'nextjs',
+    'angular',
   ];
 
-  return validBundlers.includes(bundler as DetectionResult["bundler"])
-    ? (bundler as DetectionResult["bundler"])
+  return validBundlers.includes(bundler as DetectionResult['bundler'])
+    ? (bundler as DetectionResult['bundler'])
     : null;
 }
 
 /**
  * Parse framework string to DetectionResult framework type
  */
-function parseFramework(framework?: string): DetectionResult["framework"] {
+function parseFramework(framework?: string): DetectionResult['framework'] {
   if (!framework) return null;
 
-  const validFrameworks: DetectionResult["framework"][] = [
-    "react",
-    "vue",
-    "svelte",
-    "angular",
-    "sveltekit",
-    "nextjs",
-    "nuxt",
+  const validFrameworks: DetectionResult['framework'][] = [
+    'react',
+    'vue',
+    'svelte',
+    'angular',
+    'sveltekit',
+    'nextjs',
+    'nuxt',
   ];
 
-  return validFrameworks.includes(framework as DetectionResult["framework"])
-    ? (framework as DetectionResult["framework"])
+  return validFrameworks.includes(framework as DetectionResult['framework'])
+    ? (framework as DetectionResult['framework'])
     : null;
 }
 
@@ -73,18 +73,18 @@ function parseFramework(framework?: string): DetectionResult["framework"] {
  * Get project name from package.json
  */
 function getProjectName(projectPath: string): string {
-  const packageJsonPath = resolve(projectPath, "package.json");
+  const packageJsonPath = resolve(projectPath, 'package.json');
   if (!existsSync(packageJsonPath)) {
-    return "unknown";
+    return 'unknown';
   }
 
   try {
     const packageJson = JSON.parse(
-      readFileSync(packageJsonPath, "utf-8"),
+      readFileSync(packageJsonPath, 'utf-8'),
     ) as Record<string, unknown>;
-    return (packageJson.name as string) || "unknown";
+    return (packageJson.name as string) || 'unknown';
   } catch {
-    return "unknown";
+    return 'unknown';
   }
 }
 
@@ -92,22 +92,22 @@ function getProjectName(projectPath: string): string {
  * Check if project uses TypeScript
  */
 function hasTypeScript(projectPath: string): boolean {
-  const tsConfigPath = resolve(projectPath, "tsconfig.json");
+  const tsConfigPath = resolve(projectPath, 'tsconfig.json');
   if (existsSync(tsConfigPath)) {
     return true;
   }
 
-  const packageJsonPath = resolve(projectPath, "package.json");
+  const packageJsonPath = resolve(projectPath, 'package.json');
   if (existsSync(packageJsonPath)) {
     try {
       const packageJson = JSON.parse(
-        readFileSync(packageJsonPath, "utf-8"),
+        readFileSync(packageJsonPath, 'utf-8'),
       ) as Record<string, unknown>;
       const deps = {
         ...((packageJson.dependencies as Record<string, string>) || {}),
         ...((packageJson.devDependencies as Record<string, string>) || {}),
       };
-      return !!deps.typescript || !!deps["@types/node"];
+      return !!deps.typescript || !!deps['@types/node'];
     } catch {
       // Ignore errors
     }
@@ -122,7 +122,7 @@ function hasTypeScript(projectPath: string): boolean {
  */
 export async function analyzeCommand(
   projectPath: string = process.cwd(),
-  options: Omit<AnalyzeOptions, "projectPath"> = {},
+  options: Omit<AnalyzeOptions, 'projectPath'> = {},
 ): Promise<number> {
   // Resolve and validate project path
   const resolvedPath = resolve(projectPath);
@@ -140,7 +140,7 @@ export async function analyzeCommand(
   }
 
   // Detect bundler and framework using comprehensive detection system
-  console.log("Detecting project configuration...");
+  console.log('Detecting project configuration...');
   let detection = await detectBundlerAndFramework(resolvedPath);
 
   // Override with manual flags if provided
@@ -154,7 +154,7 @@ export async function analyzeCommand(
         ? (parseFramework(options.framework) ?? detection.framework)
         : detection.framework,
       confidence:
-        options.bundler || options.framework ? "high" : detection.confidence,
+        options.bundler || options.framework ? 'high' : detection.confidence,
       detectedVia: {
         bundler: options.bundler
           ? [`manual override: ${options.bundler}`]
@@ -171,26 +171,26 @@ export async function analyzeCommand(
   const usesTypeScript = hasTypeScript(resolvedPath);
 
   if (options.verbose) {
-    console.log(`  Bundler: ${detection.bundler ?? "Unknown"}`);
+    console.log(`  Bundler: ${detection.bundler ?? 'Unknown'}`);
     if (detection.detectedVia.bundler.length > 0) {
       console.log(
-        `    Detected via: ${detection.detectedVia.bundler.join(", ")}`,
+        `    Detected via: ${detection.detectedVia.bundler.join(', ')}`,
       );
     }
-    console.log(`  Framework: ${detection.framework ?? "Unknown"}`);
+    console.log(`  Framework: ${detection.framework ?? 'Unknown'}`);
     if (detection.detectedVia.framework.length > 0) {
       console.log(
-        `    Detected via: ${detection.detectedVia.framework.join(", ")}`,
+        `    Detected via: ${detection.detectedVia.framework.join(', ')}`,
       );
     }
     console.log(`  Confidence: ${detection.confidence}`);
-    console.log(`  TypeScript: ${usesTypeScript ? "Yes" : "No"}`);
+    console.log(`  TypeScript: ${usesTypeScript ? 'Yes' : 'No'}`);
     console.log(`  Project name: ${projectName}`);
   } else {
     // Non-verbose output (matching PR #145 style)
-    console.log(`  Bundler: ${detection.bundler ?? "Unknown"}`);
-    console.log(`  Framework: ${detection.framework ?? "Unknown"}`);
-    console.log(`  TypeScript: ${usesTypeScript ? "Yes" : "No"}`);
+    console.log(`  Bundler: ${detection.bundler ?? 'Unknown'}`);
+    console.log(`  Framework: ${detection.framework ?? 'Unknown'}`);
+    console.log(`  TypeScript: ${usesTypeScript ? 'Yes' : 'No'}`);
     console.log(`  Project name: ${projectName}`);
   }
 
@@ -205,23 +205,23 @@ export async function analyzeCommand(
   );
   if (!runner) {
     console.error(
-      "⚠️  Could not detect bundler. Make sure you have a valid project configuration.",
+      '⚠️  Could not detect bundler. Make sure you have a valid project configuration.',
     );
-    console.error("Supported bundlers: webpack, vite, rollup, nextjs, angular");
+    console.error('Supported bundlers: webpack, vite, rollup, nextjs, angular');
     return 1;
   }
 
   // Integrate with plugin system to extract bundle information
   const adapter = await runner.runBuild(options);
   if (!adapter) {
-    console.error("⚠️ Failed to extract bundle information.");
+    console.error('⚠️ Failed to extract bundle information.');
     return 1;
   }
 
   const extractionResult = await adapter.extract();
 
   // Store analysis results in database
-  console.log("Storing analysis results...");
+  console.log('Storing analysis results...');
   const store = createStore();
 
   try {
@@ -258,7 +258,7 @@ export async function analyzeCommand(
 
     return 0;
   } catch (error) {
-    console.error("❌ Failed to store analysis results:", error);
+    console.error('❌ Failed to store analysis results:', error);
     return 1;
   } finally {
     store.close();

@@ -1,0 +1,273 @@
+import rsc from '@vitejs/plugin-rsc';
+import react from '@vitejs/plugin-react';
+import {
+  defineConfig,
+  type Plugin as VitePlugin,
+  type ViteDevServer,
+} from 'vite';
+import type { IncomingMessage, ServerResponse } from 'node:http';
+
+// Global reference to RSC renderer for MCP handler
+let rscRenderer: {
+  renderGreeting: (props: { name: string }) => Promise<string>;
+  dispatchAction: (
+    actionId: string,
+    argsType: 'string' | 'formdata',
+    encodedArgs: string,
+  ) => Promise<{
+    payload: string;
+    returnValue: { ok: boolean; data: unknown };
+  }>;
+  renderComponent: (
+    componentName: string,
+    props: Record<string, unknown>,
+  ) => Promise<string>;
+} | null = null;
+
+// Export for use in handler
+export function getRscRenderer() {
+  return rscRenderer;
+}
+
+// Helper to convert Node.js IncomingMessage to Web Request
+async function nodeToWebRequest(
+  req: IncomingMessage,
+  baseUrl: string,
+): Promise<Request> {
+  const url = new URL(req.url || '/', baseUrl);
+  const headers = new Headers();
+
+  for (const [key, value] of Object.entries(req.headers)) {
+    if (value) {
+      if (Array.isArray(value)) {
+        value.forEach((v) => headers.append(key, v));
+      } else {
+        headers.set(key, value);
+      }
+    }
+  }
+
+  // Add base URL header for MCP handler to use when generating bootstrap HTML
+  headers.set('x-base-url', baseUrl);
+
+  // Read body for methods that have one
+  let body: string | undefined;
+  if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
+    const chunks: Buffer[] = [];
+    for await (const chunk of req) {
+      chunks.push(chunk);
+    }
+    body = Buffer.concat(chunks).toString('utf8');
+  }
+
+  return new Request(url.toString(), {
+    method: req.method || 'GET',
+    headers,
+    body,
+  });
+}
+
+// Helper to send Web Response to Node.js ServerResponse
+async function webToNodeResponse(
+  webResponse: Response,
+  res: ServerResponse,
+): Promise<void> {
+  res.statusCode = webResponse.status;
+
+  webResponse.headers.forEach((value, key) => {
+    res.setHeader(key, value);
+  });
+
+  if (webResponse.body) {
+    const reader = webResponse.body.getReader();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      res.write(value);
+    }
+  }
+
+  res.end();
+}
+
+function rscMcpApps(): VitePlugin {
+  let server: ViteDevServer;
+
+  return {
+    name: 'rsc-mcp-apps',
+
+    configureServer: async (devServer) => {
+      server = devServer;
+
+      // Dynamically import handler to avoid circular dependency
+      const { Route: mcpRoute } = await import('./src/mcp/handler.ts');
+
+      function isSupportedMethod(
+        method?: string,
+      ): method is keyof typeof mcpRoute {
+        if (!method) return false;
+        return method in mcpRoute;
+      }
+
+      // Load RSC renderer module in RSC environment
+      const loadRscRenderer = async () => {
+        try {
+          const rscEnv = server.environments['rsc'];
+          if (!rscEnv) {
+            console.error('RSC environment not found');
+            return;
+          }
+
+          // Use the module runner to load the MCP RSC entry
+          const mod = await (
+            rscEnv as unknown as {
+              runner: { import: (id: string) => Promise<unknown> };
+            }
+          ).runner.import('/src/mcp/entry.rsc.tsx');
+          rscRenderer = mod as typeof rscRenderer;
+        } catch (error) {
+          console.error('[MCP] Failed to load RSC renderer:', error);
+        }
+      };
+
+      // Initialize RSC renderer when server is ready
+      server.httpServer?.once('listening', async () => {
+        await loadRscRenderer();
+      });
+
+      // Handle HMR for RSC module
+      server.watcher.on('change', async (file) => {
+        if (
+          file.includes('mcp/entry.rsc.tsx') ||
+          file.includes('mcp/components/')
+        ) {
+          await loadRscRenderer();
+        }
+      });
+
+      // MCP endpoint
+      server.middlewares.use('/mcp', async (req, res, next) => {
+        if (!isSupportedMethod(req.method)) {
+          next();
+          return;
+        }
+
+        try {
+          const address = server.httpServer?.address();
+          const port =
+            typeof address === 'object' && address ? address.port : 5173;
+          const baseUrl = `http://localhost:${port}`;
+
+          const webRequest = await nodeToWebRequest(req, baseUrl);
+          const webResponse = await mcpRoute[req.method]({
+            request: webRequest,
+            generateBootstrapHtml: async () => {
+              const { default: bootstrapHtmlTemplate } =
+                await server.ssrLoadModule('/src/mcp/bootstrap.html?raw');
+              const transformedHtml = await server.transformIndexHtml(
+                req.url!,
+                bootstrapHtmlTemplate,
+                req.originalUrl!,
+              );
+              // Work around https://github.com/vitejs/vite/issues/18457 by adding server.origin to HTML asset references.
+              const absoluteHtml = transformedHtml.replace(
+                /(\bsrc="|\bfrom ")\//g,
+                `$1${server.config.server.origin}/`,
+              );
+              return absoluteHtml;
+            },
+          });
+          await webToNodeResponse(webResponse, res);
+        } catch (error) {
+          console.error('[MCP] Error handling request:', error);
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(
+            JSON.stringify({
+              jsonrpc: '2.0',
+              error: { code: -32603, message: 'Internal server error' },
+              id: null,
+            }),
+          );
+        }
+      });
+    },
+  };
+}
+
+export default defineConfig({
+  server: {
+    port: 5200,
+    strictPort: true,
+    origin: process.env.VITE_MCP_ORIGIN || 'http://rsc.localhost:5200',
+  },
+
+  plugins: [
+    rsc({
+      // `entries` option is only a shorthand for specifying each `rollupOptions.input` below
+      // > entries: { rsc, ssr, client },
+      //
+      // by default, the plugin setup request handler based on `default export` of `rsc` environment `rollupOptions.input.index`.
+      // This can be disabled when setting up own server handler e.g. `@cloudflare/vite-plugin`.
+      // > serverHandler: false
+    }),
+
+    // use any of react plugins https://github.com/vitejs/vite-plugin-react
+    // to enable client component HMR
+    react(),
+
+    rscMcpApps(),
+
+    // use https://github.com/antfu-collective/vite-plugin-inspect
+    // to understand internal transforms required for RSC.
+    // import("vite-plugin-inspect").then(m => m.default()),
+  ],
+
+  // specify entry point for each environment.
+  // (currently the plugin assumes `rollupOptions.input.index` for some features.)
+  environments: {
+    // `rsc` environment loads modules with `react-server` condition.
+    // this environment is responsible for:
+    // - RSC stream serialization (React VDOM -> RSC stream)
+    // - server functions handling
+    rsc: {
+      build: {
+        rollupOptions: {
+          input: {
+            index: './src/framework/entry.rsc.tsx',
+          },
+        },
+      },
+    },
+
+    // `ssr` environment loads modules without `react-server` condition.
+    // this environment is responsible for:
+    // - RSC stream deserialization (RSC stream -> React VDOM)
+    // - traditional SSR (React VDOM -> HTML string/stream)
+    ssr: {
+      build: {
+        rollupOptions: {
+          input: {
+            index: './src/framework/entry.ssr.tsx',
+          },
+        },
+      },
+    },
+
+    // client environment is used for hydration and client-side rendering
+    // this environment is responsible for:
+    // - RSC stream deserialization (RSC stream -> React VDOM)
+    // - traditional CSR (React VDOM -> Browser DOM tree mount/hydration)
+    // - refetch and re-render RSC
+    // - calling server functions
+    client: {
+      build: {
+        rollupOptions: {
+          input: {
+            index: './src/framework/entry.browser.tsx',
+          },
+        },
+      },
+    },
+  },
+});

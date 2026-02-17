@@ -1,46 +1,46 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
-import { useState } from "react";
-import { Navbar } from "@/components/layout/navbar";
-import { Bot, Loader2 } from "lucide-react";
+import { createFileRoute } from '@tanstack/react-router';
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+import { useState } from 'react';
+import { Navbar } from '@/components/layout/navbar';
+import { Bot, Loader2 } from 'lucide-react';
 import {
   Conversation,
   ConversationContent,
   ConversationEmptyState,
   ConversationScrollButton,
-} from "@/components/ai-elements/conversation";
+} from '@/components/ai-elements/conversation';
 import {
   Message,
   MessageContent,
   MessageResponse,
-} from "@/components/ai-elements/message";
+} from '@/components/ai-elements/message';
 import {
   PromptInput,
   PromptInputTextarea,
   PromptInputFooter,
   PromptInputSubmit,
-} from "@/components/ai-elements/prompt-input";
+} from '@/components/ai-elements/prompt-input';
 import {
   Reasoning,
   ReasoningTrigger,
   ReasoningContent,
-} from "@/components/ai-elements/reasoning";
+} from '@/components/ai-elements/reasoning';
 
-export const Route = createFileRoute("/chat")({
+export const Route = createFileRoute('/chat')({
   component: ChatPage,
 });
 
 function ChatPage() {
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState('');
 
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
-      api: "/api/chat",
+      api: '/api/chat',
     }),
   });
 
-  const isLoading = status === "submitted" || status === "streaming";
+  const isLoading = status === 'submitted' || status === 'streaming';
 
   return (
     <div className="min-h-screen bg-background font-sans flex flex-col">
@@ -62,12 +62,12 @@ function ChatPage() {
                     <Message key={message.id} from={message.role}>
                       <MessageContent>
                         {message.parts.map((part, partIndex) => {
-                          if (part.type === "reasoning") {
+                          if (part.type === 'reasoning') {
                             return (
                               <Reasoning
                                 key={partIndex}
                                 isStreaming={
-                                  status === "streaming" &&
+                                  status === 'streaming' &&
                                   message.id ===
                                     messages[messages.length - 1]?.id
                                 }
@@ -77,7 +77,7 @@ function ChatPage() {
                               </Reasoning>
                             );
                           }
-                          if (part.type === "text") {
+                          if (part.type === 'text') {
                             return (
                               <MessageResponse key={partIndex}>
                                 {part.text}
@@ -89,7 +89,7 @@ function ChatPage() {
                       </MessageContent>
                     </Message>
                   ))}
-                  {status === "submitted" && (
+                  {status === 'submitted' && (
                     <Message from="assistant">
                       <MessageContent>
                         <div className="flex items-center gap-2 text-muted-foreground">
@@ -110,7 +110,7 @@ function ChatPage() {
               onSubmit={({ text }) => {
                 if (text.trim() && !isLoading) {
                   sendMessage({ text });
-                  setInput("");
+                  setInput('');
                 }
               }}
             >

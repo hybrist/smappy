@@ -1,29 +1,29 @@
-import { getProjectAnalyses } from "@/api";
-import { Navbar } from "@/components/layout/navbar";
-import { Button } from "@/components/ui/button";
+import { getProjectAnalyses } from '@/api';
+import { Navbar } from '@/components/layout/navbar';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   useLoaderData,
   useParams,
   Link,
   createFileRoute,
-} from "@tanstack/react-router";
+} from '@tanstack/react-router';
 
-export const Route = createFileRoute("/projects/$projectName")({
+export const Route = createFileRoute('/projects/$projectName')({
   component: ProjectAnalysesPage,
   loader: ({ params: { projectName } }) =>
     getProjectAnalyses({ data: { projectName } }),
 });
 
 function ProjectAnalysesPage() {
-  const analyses = useLoaderData({ from: "/projects/$projectName" });
-  const { projectName } = useParams({ from: "/projects/$projectName" });
+  const analyses = useLoaderData({ from: '/projects/$projectName' });
+  const { projectName } = useParams({ from: '/projects/$projectName' });
 
   return (
     <div className="min-h-screen bg-background font-sans flex flex-col">

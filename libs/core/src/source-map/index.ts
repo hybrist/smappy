@@ -11,4 +11,4 @@ export {
   type Position,
   type PositionMapping,
   type SymbolFragment,
-} from "./processor.ts";
+} from './processor.ts';

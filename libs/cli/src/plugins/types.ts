@@ -3,8 +3,8 @@
  * Defines the shared type system for all bundler plugins
  */
 
-import type { BundleInput, ChunkInput, ModuleInput } from "@smappy/core";
-import type { IngestionOptions } from "../ingestion/index.ts";
+import type { BundleInput, ChunkInput, ModuleInput } from '@smappy/core';
+import type { IngestionOptions } from '../ingestion/index.ts';
 
 // ============================================================================
 // Plugin Options
@@ -166,11 +166,11 @@ export interface BundlerBundle {
  */
 export function isBundlerPlugin(obj: unknown): obj is BundlerPlugin {
   return (
-    typeof obj === "object" &&
+    typeof obj === 'object' &&
     obj !== null &&
-    "bundlerName" in obj &&
-    "extract" in obj &&
-    typeof (obj as BundlerPlugin).extract === "function"
+    'bundlerName' in obj &&
+    'extract' in obj &&
+    typeof (obj as BundlerPlugin).extract === 'function'
   );
 }
 
@@ -179,10 +179,10 @@ export function isBundlerPlugin(obj: unknown): obj is BundlerPlugin {
  */
 export function isBundlerModule(obj: unknown): obj is BundlerModule {
   return (
-    typeof obj === "object" &&
+    typeof obj === 'object' &&
     obj !== null &&
-    "identifier" in obj &&
-    typeof (obj as BundlerModule).identifier === "string"
+    'identifier' in obj &&
+    typeof (obj as BundlerModule).identifier === 'string'
   );
 }
 
@@ -191,9 +191,9 @@ export function isBundlerModule(obj: unknown): obj is BundlerModule {
  */
 export function isBundlerChunk(obj: unknown): obj is BundlerChunk {
   return (
-    typeof obj === "object" &&
+    typeof obj === 'object' &&
     obj !== null &&
-    "name" in obj &&
-    typeof (obj as BundlerChunk).name === "string"
+    'name' in obj &&
+    typeof (obj as BundlerChunk).name === 'string'
   );
 }

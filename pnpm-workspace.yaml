@@ -4,19 +4,19 @@ packages:
   - examples/*
 
 catalog:
-  "@vitest/browser-playwright": ^4.0.12
-  "@vitest/coverage-v8": ^4.0.15
-  "@playwright/test": ^1.57.0
+  '@playwright/test': ^1.57.0
+  '@vitest/browser-playwright': ^4.0.16
+  '@vitest/coverage-v8': ^4.0.16
   playwright: ^1.57.0
-  prettier: ^3.7.3
-  tailwindcss: ^4.1.17
-  tsdown: ^0.16.3
-  typescript: ^5.9.3
+  prettier: ^3.7.4
+  tailwindcss: ^4.1.18
+  tsdown: ^0.16.8
+  typescript: 5.9.3
   vite: ^7.2.6
-  vitest: ^4.0.15
-  zod: ^4.1.12
+  vitest: ^4.0.16
+  zod: ^4.2.1
 
 onlyBuiltDependencies:
   - esbuild
-  - "@tailwindcss/oxide"
+  - '@tailwindcss/oxide'
   - better-sqlite3

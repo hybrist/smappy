@@ -17,12 +17,12 @@
     "prepare": "tsdown"
   },
   "dependencies": {
-    "better-sqlite3": "^12.4.1",
+    "better-sqlite3": "^12.5.0",
     "drizzle-orm": "^0.44.7"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
-    "@types/node": "^22.19.0",
+    "@types/node": "^22.19.3",
     "prettier": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:",

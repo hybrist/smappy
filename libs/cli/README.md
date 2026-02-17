@@ -106,16 +106,16 @@ Smappy generates temporary configuration files in your OS temp directory (e.g., 
 Example generated Vite config:
 
 ```typescript
-import { defineConfig, mergeConfig } from "vite";
-import { viteBundleAnalysisPlugin } from "@smappy/cli/plugins/vite";
+import { defineConfig, mergeConfig } from 'vite';
+import { viteBundleAnalysisPlugin } from '@smappy/cli/plugins/vite';
 
 export default defineConfig(async () => {
   // Import user's config
-  const userConfig = await import("/path/to/vite.config.ts");
+  const userConfig = await import('/path/to/vite.config.ts');
 
   // Add Smappy plugin
   const smappyConfig = {
-    plugins: [viteBundleAnalysisPlugin({ projectName: "my-app" })],
+    plugins: [viteBundleAnalysisPlugin({ projectName: 'my-app' })],
   };
 
   // Merge and return

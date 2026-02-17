@@ -9,8 +9,8 @@ Angular builders are Node.js packages that implement the `Builder` interface.
 ### Builder Structure
 
 ```typescript
-import { BuilderContext, BuilderOutput } from "@angular-devkit/architect";
-import { json } from "@angular-devkit/core";
+import { BuilderContext, BuilderOutput } from '@angular-devkit/architect';
+import { json } from '@angular-devkit/core';
 
 interface BuilderOptions extends json.JsonObject {
   projectName: string;
@@ -57,7 +57,7 @@ export default async function build(
 
   // Schedule the application builder
   const applicationBuilder = await context.scheduleTarget({
-    target: "build",
+    target: 'build',
     project: context.target.project,
   });
 
@@ -66,7 +66,7 @@ export default async function build(
 
   if (result.success) {
     // Extract bundle data from build output
-    const outputPath = result.outputPath || "dist";
+    const outputPath = result.outputPath || 'dist';
     // Process bundles...
   }
 
@@ -125,11 +125,11 @@ interface AngularStats {
 #### From Stats JSON
 
 ```typescript
-import { readFileSync } from "fs";
-import { join } from "path";
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
-const statsPath = join(outputPath, "stats.json");
-const stats = JSON.parse(readFileSync(statsPath, "utf-8"));
+const statsPath = join(outputPath, 'stats.json');
+const stats = JSON.parse(readFileSync(statsPath, 'utf-8'));
 
 // Extract modules
 const modules = stats.modules.map((module) => ({
@@ -148,7 +148,7 @@ const chunks = stats.chunks.map((chunk) => ({
 
 // Extract bundles
 const bundles = stats.assets
-  .filter((asset) => asset.name.endsWith(".js"))
+  .filter((asset) => asset.name.endsWith('.js'))
   .map((asset) => ({
     fileName: asset.name,
     size: asset.size,
@@ -158,8 +158,8 @@ const bundles = stats.assets
 #### From Build Output Directory
 
 ```typescript
-import { readdirSync, readFileSync, statSync } from "fs";
-import { join } from "path";
+import { readdirSync, readFileSync, statSync } from 'fs';
+import { join } from 'path';
 
 function extractBundles(outputPath: string) {
   const bundles = [];
@@ -169,8 +169,8 @@ function extractBundles(outputPath: string) {
     const filePath = join(outputPath, file);
     const stats = statSync(filePath);
 
-    if (file.endsWith(".js") && stats.isFile()) {
-      const content = readFileSync(filePath, "utf-8");
+    if (file.endsWith('.js') && stats.isFile()) {
+      const content = readFileSync(filePath, 'utf-8');
       bundles.push({
         fileName: file,
         content,
@@ -189,13 +189,13 @@ Angular uses route-based code splitting configured in TypeScript routing modules
 
 ```typescript
 // app-routing.module.ts
-import { NgModule } from "@angular/core";
-import { RouterModule, Routes } from "@angular/router";
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
 
 const routes: Routes = [
   {
-    path: "lazy",
-    loadChildren: () => import("./lazy/lazy.module").then((m) => m.LazyModule),
+    path: 'lazy',
+    loadChildren: () => import('./lazy/lazy.module').then((m) => m.LazyModule),
   },
 ];
 
@@ -210,7 +210,7 @@ Lazy routes create separate chunks:
 
 ```typescript
 const lazyChunks = stats.chunks.filter((chunk) =>
-  chunk.names.some((name) => name.includes("lazy")),
+  chunk.names.some((name) => name.includes('lazy')),
 );
 ```
 
@@ -273,10 +273,10 @@ function extractSourceMaps(outputPath: string) {
   const files = readdirSync(outputPath, { recursive: true });
 
   for (const file of files) {
-    if (file.endsWith(".map")) {
+    if (file.endsWith('.map')) {
       const mapPath = join(outputPath, file);
-      const mapContent = readFileSync(mapPath, "utf-8");
-      const bundleName = file.replace(".map", "");
+      const mapContent = readFileSync(mapPath, 'utf-8');
+      const bundleName = file.replace('.map', '');
       sourceMaps.set(bundleName, mapContent);
     }
   }
@@ -294,7 +294,7 @@ function extractInlineSourceMap(bundleContent: string) {
   );
 
   if (sourceMapMatch) {
-    return Buffer.from(sourceMapMatch[1], "base64").toString("utf-8");
+    return Buffer.from(sourceMapMatch[1], 'base64').toString('utf-8');
   }
 
   return null;
@@ -318,8 +318,8 @@ Angular modules (`@NgModule`) are different from ES modules. The builder should 
 Angular supports SSR builds. Handle separately:
 
 ```typescript
-const ssrOutputPath = join(outputPath, "server");
-const browserOutputPath = join(outputPath, "browser");
+const ssrOutputPath = join(outputPath, 'server');
+const browserOutputPath = join(outputPath, 'browser');
 
 // Process both separately
 ```
@@ -342,10 +342,10 @@ import {
   BuilderContext,
   BuilderOutput,
   createBuilder,
-} from "@angular-devkit/architect";
-import { json } from "@angular-devkit/core";
-import { readFileSync, readdirSync } from "fs";
-import { join } from "path";
+} from '@angular-devkit/architect';
+import { json } from '@angular-devkit/core';
+import { readFileSync, readdirSync } from 'fs';
+import { join } from 'path';
 
 interface BuilderOptions extends json.JsonObject {
   projectName: string;
@@ -359,7 +359,7 @@ export default createBuilder(
   ): Promise<BuilderOutput> => {
     // Schedule application build
     const buildTarget = await context.scheduleTarget({
-      target: "build",
+      target: 'build',
       project: context.target.project,
     });
 
@@ -369,11 +369,11 @@ export default createBuilder(
       return { success: false };
     }
 
-    const outputPath = result.outputPath || "dist";
+    const outputPath = result.outputPath || 'dist';
 
     // Extract bundle data
-    const statsPath = join(outputPath, "stats.json");
-    const stats = JSON.parse(readFileSync(statsPath, "utf-8"));
+    const statsPath = join(outputPath, 'stats.json');
+    const stats = JSON.parse(readFileSync(statsPath, 'utf-8'));
 
     // Process with adapter
     // ...

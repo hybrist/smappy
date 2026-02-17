@@ -34,6 +34,9 @@
     "prettier": "catalog:",
     "vitest": "catalog:"
   },
+  "prettier": {
+    "singleQuote": true
+  },
   "pnpm": {
     "overrides": {
       "@tanstack/react-router": "^1.136.18",

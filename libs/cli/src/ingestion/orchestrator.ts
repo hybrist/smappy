@@ -3,10 +3,10 @@
  * Coordinates the analysis pipeline from bundle input to database persistence
  */
 
-import type { BundleInput, ChunkInput, ModuleInput } from "@smappy/core";
-import { schema } from "@smappy/store";
-import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
-import { posix as pathPosix } from "node:path";
+import type { BundleInput, ChunkInput, ModuleInput } from '@smappy/core';
+import { schema } from '@smappy/store';
+import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import { posix as pathPosix } from 'node:path';
 import type {
   IngestionData,
   IngestionWriteResult,
@@ -15,7 +15,7 @@ import type {
   DependencyRelationship,
   SuggestionData,
   IngestionOptions,
-} from "./db/writer.ts";
+} from './db/writer.ts';
 import {
   extractSymbols,
   type SymbolWithExport,
@@ -26,12 +26,12 @@ import {
   buildDependencyGraph,
   computeRawSize,
   computeGzipSize,
-} from "@smappy/core";
-import { writeIngestionData } from "./db/writer.ts";
+} from '@smappy/core';
+import { writeIngestionData } from './db/writer.ts';
 
-import { createSuggestionAnalyzer } from "../suggestions/orchestrator.ts";
-import type { SuggestionContext } from "../suggestions/types.ts";
-import { LLMAnalyzer } from "./suggestions/llm-analyzer.ts";
+import { createSuggestionAnalyzer } from '../suggestions/orchestrator.ts';
+import type { SuggestionContext } from '../suggestions/types.ts';
+import { LLMAnalyzer } from './suggestions/llm-analyzer.ts';
 
 // ============================================================================
 // Main Orchestrator API
@@ -136,7 +136,7 @@ export async function ingestBundle(
       errors,
     };
   } catch (error) {
-    console.error("[Ingestion] ✗ Fatal error:", error);
+    console.error('[Ingestion] ✗ Fatal error:', error);
     throw error;
   }
 }
@@ -173,14 +173,14 @@ async function analyzeModules(
     try {
       // Extract symbols from source code
       const analysisResult = extractSymbols(module.sourceContent, {
-        sourceType: "module",
+        sourceType: 'module',
         includeNested: true,
         filePath: module.filePath,
       });
 
       if (analysisResult.errors.length > 0) {
         errors.push(
-          `Errors analyzing ${module.filePath}: ${analysisResult.errors.join(", ")}`,
+          `Errors analyzing ${module.filePath}: ${analysisResult.errors.join(', ')}`,
         );
       }
 
@@ -228,7 +228,7 @@ async function analyzeModules(
       }
 
       // Detect third-party modules
-      const isThirdParty = module.filePath.includes("node_modules");
+      const isThirdParty = module.filePath.includes('node_modules');
       let packageName: string | undefined;
       let packageVersion: string | undefined;
 
@@ -320,7 +320,7 @@ async function buildDependencies(
             importerLookup.get(normalizeModulePath(module.filePath)) ??
             module.filePath,
           importedPath: resolvedPath,
-          type: dep.type === "dynamic-import" ? "dynamic" : "static",
+          type: dep.type === 'dynamic-import' ? 'dynamic' : 'static',
           importedSymbols: dep.importedNames,
         });
       }
@@ -359,15 +359,15 @@ function resolveImportedModulePath(
 }
 
 const SUPPORTED_EXTENSIONS = [
-  ".js",
-  ".jsx",
-  ".ts",
-  ".tsx",
-  ".mjs",
-  ".cjs",
-  ".json",
-  ".svelte",
-  ".css",
+  '.js',
+  '.jsx',
+  '.ts',
+  '.tsx',
+  '.mjs',
+  '.cjs',
+  '.json',
+  '.svelte',
+  '.css',
 ];
 
 function createModuleLookup(modules: ModuleInput[]): Map<string, string> {
@@ -377,8 +377,8 @@ function createModuleLookup(modules: ModuleInput[]): Map<string, string> {
     const normalized = normalizeModulePath(module.filePath);
     addPathVariants(lookup, normalized, module.filePath);
 
-    if (normalized.startsWith("node_modules/")) {
-      const withoutPrefix = normalized.slice("node_modules/".length);
+    if (normalized.startsWith('node_modules/')) {
+      const withoutPrefix = normalized.slice('node_modules/'.length);
       addPathVariants(lookup, withoutPrefix, module.filePath);
 
       const packageName = extractPackageNameFromNodeModulesPath(withoutPrefix);
@@ -446,17 +446,17 @@ function addLookupKey(
 
 function normalizeModulePath(pathValue: string): string {
   const normalized = normalizeSpecifier(pathValue);
-  return normalized.startsWith("../") || normalized.startsWith("./")
+  return normalized.startsWith('../') || normalized.startsWith('./')
     ? normalized
-    : normalized.replace(/^\.\/+/, "");
+    : normalized.replace(/^\.\/+/, '');
 }
 
 function normalizeSpecifier(specifier: string): string {
-  return pathPosix.normalize(specifier.replace(/\\/g, "/"));
+  return pathPosix.normalize(specifier.replace(/\\/g, '/'));
 }
 
 function stripLeadingDot(pathValue: string): string {
-  return pathValue.startsWith("./") ? pathValue.slice(2) : pathValue;
+  return pathValue.startsWith('./') ? pathValue.slice(2) : pathValue;
 }
 
 function stripExtension(pathValue: string): string {
@@ -470,9 +470,9 @@ function stripExtension(pathValue: string): string {
 function addDotPrefix(pathValue: string): string | null {
   if (
     !pathValue ||
-    pathValue.startsWith("./") ||
-    pathValue.startsWith("../") ||
-    pathValue.startsWith("/")
+    pathValue.startsWith('./') ||
+    pathValue.startsWith('../') ||
+    pathValue.startsWith('/')
   ) {
     return null;
   }
@@ -491,12 +491,12 @@ function extractPackageNameFromNodeModulesPath(
     return null;
   }
 
-  const parts = pathValue.split("/");
+  const parts = pathValue.split('/');
   if (parts.length === 0) {
     return null;
   }
 
-  if (parts[0].startsWith("@") && parts.length >= 2) {
+  if (parts[0].startsWith('@') && parts.length >= 2) {
     return `${parts[0]}/${parts[1]}`;
   }
 
@@ -509,8 +509,8 @@ function createSpecifierCandidates(
 ): string[] {
   const candidates = new Set<string>();
   const importerDir = pathPosix.dirname(importerPath);
-  const isRelative = target.startsWith("./") || target.startsWith("../");
-  const isAbsolute = target.startsWith("/");
+  const isRelative = target.startsWith('./') || target.startsWith('../');
+  const isAbsolute = target.startsWith('/');
   const normalizedTarget = normalizeSpecifier(target);
 
   if (isRelative || isAbsolute) {
@@ -551,7 +551,7 @@ function addCandidateVariants(candidates: Set<string>, base: string): void {
     }
   }
 
-  if (!normalizedBase.endsWith("/index")) {
+  if (!normalizedBase.endsWith('/index')) {
     const indexBase = `${normalizedBase}/index`;
     candidates.add(indexBase);
     candidates.add(stripLeadingDot(indexBase));
@@ -570,12 +570,12 @@ function extractPackageNameFromSpecifier(specifier: string): string | null {
     return null;
   }
 
-  const [first, second] = normalized.split("/");
+  const [first, second] = normalized.split('/');
   if (!first) {
     return null;
   }
 
-  if (first.startsWith("@") && second) {
+  if (first.startsWith('@') && second) {
     return `${first}/${second}`;
   }
 
@@ -651,7 +651,7 @@ async function generateAISuggestions(
 
     return await analyzer.analyze(context);
   } catch (error) {
-    console.error("[Ingestion] Failed to generate AI suggestions", error);
+    console.error('[Ingestion] Failed to generate AI suggestions', error);
     return [];
   }
 }
@@ -661,7 +661,7 @@ async function generateAISuggestions(
 // ============================================================================
 
 // Re-export input types from @smappy/core
-export type { BundleInput, ChunkInput, ModuleInput } from "@smappy/core";
+export type { BundleInput, ChunkInput, ModuleInput } from '@smappy/core';
 
 // Re-export result types from db writer
 export type {
@@ -671,9 +671,9 @@ export type {
   BundleWithMetadata,
   DependencyRelationship,
   IngestionOptions,
-} from "./db/writer.ts";
+} from './db/writer.ts';
 
-export { createMockIngestionOptions } from "./db/writer.ts";
+export { createMockIngestionOptions } from './db/writer.ts';
 
 // Re-export analysis types from @smappy/core
 export type {
@@ -686,7 +686,7 @@ export type {
   ParsedSymbol,
   ParsedDependency,
   SizeInfo,
-} from "@smappy/core";
+} from '@smappy/core';
 
 // Re-export test helpers from @smappy/core
 export {
@@ -696,4 +696,4 @@ export {
   createMockParsedSymbol,
   createMockParsedDependency,
   createMockSizeInfo,
-} from "@smappy/core";
+} from '@smappy/core';

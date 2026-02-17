@@ -7,4 +7,4 @@ export {
   computeGzipSize,
   aggregateChunkSizes,
   aggregateBundleSizes,
-} from "./calculator.ts";
+} from './calculator.ts';

@@ -1,31 +1,31 @@
-import { getProjects } from "@/api";
-import { Navbar } from "@/components/layout/navbar";
-import { RawModulesView } from "@/components/raw-modules-view";
-import { Button } from "@/components/ui/button";
+import { getProjects } from '@/api';
+import { Navbar } from '@/components/layout/navbar';
+import { RawModulesView } from '@/components/raw-modules-view';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import { createFileRoute, Link, useLoaderData } from "@tanstack/react-router";
-import { Bot, Database, LayoutDashboard, Package } from "lucide-react";
-import { useState } from "react";
+} from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+import { createFileRoute, Link, useLoaderData } from '@tanstack/react-router';
+import { Bot, Database, LayoutDashboard, Package } from 'lucide-react';
+import { useState } from 'react';
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute('/dashboard')({
   component: DashboardPage,
   loader: () => getProjects(),
 });
 
 function DashboardPage() {
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState('overview');
   // TODO: Re-enable when TanStack Start SSR is set up
-  const projects = useLoaderData({ from: "/dashboard" });
+  const projects = useLoaderData({ from: '/dashboard' });
 
   const renderContent = () => {
-    if (activeTab === "raw-modules") {
+    if (activeTab === 'raw-modules') {
       return <RawModulesView />;
     }
 
@@ -94,35 +94,35 @@ function DashboardPage() {
             </h2>
             <nav className="space-y-1">
               <Button
-                variant={activeTab === "overview" ? "secondary" : "ghost"}
+                variant={activeTab === 'overview' ? 'secondary' : 'ghost'}
                 className={cn(
-                  "w-full justify-start",
-                  activeTab === "overview" &&
-                    "bg-sidebar-accent text-sidebar-accent-foreground",
+                  'w-full justify-start',
+                  activeTab === 'overview' &&
+                    'bg-sidebar-accent text-sidebar-accent-foreground',
                 )}
-                onClick={() => setActiveTab("overview")}
+                onClick={() => setActiveTab('overview')}
               >
                 <LayoutDashboard className="mr-2 w-4 h-4" /> Overview
               </Button>
               <Button
-                variant={activeTab === "raw-modules" ? "secondary" : "ghost"}
+                variant={activeTab === 'raw-modules' ? 'secondary' : 'ghost'}
                 className={cn(
-                  "w-full justify-start",
-                  activeTab === "raw-modules" &&
-                    "bg-sidebar-accent text-sidebar-accent-foreground",
+                  'w-full justify-start',
+                  activeTab === 'raw-modules' &&
+                    'bg-sidebar-accent text-sidebar-accent-foreground',
                 )}
-                onClick={() => setActiveTab("raw-modules")}
+                onClick={() => setActiveTab('raw-modules')}
               >
                 <Database className="mr-2 w-4 h-4" /> Raw Modules
               </Button>
               <Button
-                variant={activeTab === "dependencies" ? "secondary" : "ghost"}
+                variant={activeTab === 'dependencies' ? 'secondary' : 'ghost'}
                 className={cn(
-                  "w-full justify-start",
-                  activeTab === "dependencies" &&
-                    "bg-sidebar-accent text-sidebar-accent-foreground",
+                  'w-full justify-start',
+                  activeTab === 'dependencies' &&
+                    'bg-sidebar-accent text-sidebar-accent-foreground',
                 )}
-                onClick={() => setActiveTab("dependencies")}
+                onClick={() => setActiveTab('dependencies')}
               >
                 <Package className="mr-2 w-4 h-4" /> Dependencies
               </Button>

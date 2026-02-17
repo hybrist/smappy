@@ -3,10 +3,10 @@
  * Handles applying migration files to initialize or update database schema
  */
 
-import Database from "better-sqlite3";
-import { readFileSync, readdirSync, statSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import Database from 'better-sqlite3';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -19,13 +19,13 @@ function getMigrationsDirectory(): string {
   // Look for migrations - first check if we have local migrations, then check web-sv
   const possiblePaths = [
     // Local migrations (if we copy them)
-    join(__dirname, "..", "drizzle"),
+    join(__dirname, '..', 'drizzle'),
     // When running from monorepo root
-    join(process.cwd(), "apps", "web-sv", "drizzle"),
+    join(process.cwd(), 'apps', 'web-sv', 'drizzle'),
     // When running from libs/store
-    join(process.cwd(), "..", "..", "apps", "web-sv", "drizzle"),
+    join(process.cwd(), '..', '..', 'apps', 'web-sv', 'drizzle'),
     // When built, migrations might be packaged differently
-    join(__dirname, "..", "..", "..", "apps", "web-sv", "drizzle"),
+    join(__dirname, '..', '..', '..', 'apps', 'web-sv', 'drizzle'),
   ];
 
   for (const path of possiblePaths) {
@@ -57,7 +57,7 @@ export function applyMigrations(client: Database.Database): void {
       .filter((file) => {
         const filePath = join(drizzleDir, file);
         try {
-          return file.endsWith(".sql") && statSync(filePath).isFile();
+          return file.endsWith('.sql') && statSync(filePath).isFile();
         } catch {
           return false;
         }
@@ -65,14 +65,14 @@ export function applyMigrations(client: Database.Database): void {
       .sort();
 
     if (migrationFiles.length === 0) {
-      console.warn("No migration files found in", drizzleDir);
+      console.warn('No migration files found in', drizzleDir);
       return;
     }
 
     // Apply all migrations in order
     for (const migrationFile of migrationFiles) {
       const migrationPath = join(drizzleDir, migrationFile);
-      const migrationSQL = readFileSync(migrationPath, "utf-8");
+      const migrationSQL = readFileSync(migrationPath, 'utf-8');
 
       // Split by statement-breakpoint comments and execute each statement
       const statements = migrationSQL
@@ -89,7 +89,7 @@ export function applyMigrations(client: Database.Database): void {
             // during initialization
             const errorMessage =
               error instanceof Error ? error.message : String(error);
-            if (!errorMessage.includes("already exists")) {
+            if (!errorMessage.includes('already exists')) {
               throw error;
             }
           }

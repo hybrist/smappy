@@ -2,7 +2,7 @@
  * Types for build execution
  */
 
-import type { DetectionResult } from "../detection/index.ts";
+import type { DetectionResult } from '../detection/index.ts';
 
 export interface ProjectInfo extends DetectionResult {
   name: string;
@@ -26,7 +26,7 @@ export interface BuildOptions {
   /** Path to the config file to use */
   configPath: string;
   /** Detected bundler */
-  bundler: DetectionResult["bundler"];
+  bundler: DetectionResult['bundler'];
   /** Enable debug logging */
   debug?: boolean;
 }

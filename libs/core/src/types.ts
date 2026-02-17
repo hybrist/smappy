@@ -16,7 +16,7 @@ export interface BundleInput {
   /** Bundle content as a string */
   content: string;
   /** Type of the bundle file (e.g., 'js', 'mjs', 'cjs') */
-  type: "js" | "mjs" | "cjs" | "jsx" | "tsx" | "ts";
+  type: 'js' | 'mjs' | 'cjs' | 'jsx' | 'tsx' | 'ts';
   /** Optional reference to source map content */
   sourceMapReference?: string;
   /** Optional size in bytes (used when content is not available) */
@@ -52,7 +52,7 @@ export interface ModuleInput {
   /** Source content of the module */
   sourceContent: string;
   /** File type (extension) */
-  fileType: "js" | "mjs" | "cjs" | "jsx" | "ts" | "tsx" | "json" | "css";
+  fileType: 'js' | 'mjs' | 'cjs' | 'jsx' | 'ts' | 'tsx' | 'json' | 'css';
   /** Optional bundled size in bytes (from bundler stats, after minification/tree-shaking) */
   bundledSize?: number;
 }
@@ -90,13 +90,13 @@ export interface ParsedSymbol {
   name: string;
   /** Symbol type (function, class, variable, etc.) */
   type:
-    | "function"
-    | "class"
-    | "variable"
-    | "import"
-    | "export"
-    | "const"
-    | "let";
+    | 'function'
+    | 'class'
+    | 'variable'
+    | 'import'
+    | 'export'
+    | 'const'
+    | 'let';
   /** Location in source code with line and column information */
   location: {
     /** Start position of the symbol */
@@ -107,7 +107,7 @@ export interface ParsedSymbol {
   /** Size in bytes attributed to this symbol */
   size: number;
   /** Scope information (global, module, function, block) */
-  scope?: "global" | "module" | "function" | "block";
+  scope?: 'global' | 'module' | 'function' | 'block';
 }
 
 /**
@@ -120,7 +120,7 @@ export interface ParsedDependency {
   /** Target module path being imported/exported */
   target: string;
   /** Type of dependency relationship */
-  type: "import" | "export" | "re-export" | "dynamic-import";
+  type: 'import' | 'export' | 're-export' | 'dynamic-import';
   /** Imported names (for named imports) */
   importedNames?: string[];
   /** Whether this is a default import/export */
@@ -162,9 +162,9 @@ export function createMockBundleInput(
   overrides?: Partial<BundleInput>,
 ): BundleInput {
   return {
-    fileName: "bundle.js",
+    fileName: 'bundle.js',
     content: 'console.log("Hello, world!");',
-    type: "js",
+    type: 'js',
     sourceMapReference: undefined,
     ...overrides,
   };
@@ -179,10 +179,10 @@ export function createMockChunkInput(
   overrides?: Partial<ChunkInput>,
 ): ChunkInput {
   return {
-    name: "main",
+    name: 'main',
     isEntry: true,
     isAsync: false,
-    moduleIds: ["./src/index.js"],
+    moduleIds: ['./src/index.js'],
     ...overrides,
   };
 }
@@ -196,9 +196,9 @@ export function createMockModuleInput(
   overrides?: Partial<ModuleInput>,
 ): ModuleInput {
   return {
-    filePath: "./src/index.js",
-    sourceContent: "export default function() {}",
-    fileType: "js",
+    filePath: './src/index.js',
+    sourceContent: 'export default function() {}',
+    fileType: 'js',
     ...overrides,
   };
 }
@@ -212,14 +212,14 @@ export function createMockParsedSymbol(
   overrides?: Partial<ParsedSymbol>,
 ): ParsedSymbol {
   return {
-    name: "testFunction",
-    type: "function",
+    name: 'testFunction',
+    type: 'function',
     location: {
       start: { line: 1, column: 0 },
       end: { line: 1, column: 10 },
     },
     size: 100,
-    scope: "module",
+    scope: 'module',
     ...overrides,
   };
 }
@@ -233,10 +233,10 @@ export function createMockParsedDependency(
   overrides?: Partial<ParsedDependency>,
 ): ParsedDependency {
   return {
-    source: "./src/index.js",
-    target: "./src/utils.js",
-    type: "import",
-    importedNames: ["helper"],
+    source: './src/index.js',
+    target: './src/utils.js',
+    type: 'import',
+    importedNames: ['helper'],
     isDefault: false,
     isNamespace: false,
     ...overrides,

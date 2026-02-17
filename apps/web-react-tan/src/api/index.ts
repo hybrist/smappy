@@ -1,8 +1,8 @@
-import { createServerFn } from "@tanstack/react-start";
-import * as v from "valibot";
+import { createServerFn } from '@tanstack/react-start';
+import * as v from 'valibot';
 // TODO: These server-only imports need proper SSR configuration
 // @ts-ignore - Server-only imports
-import { createDatabase } from "@smappy/store";
+import { createDatabase } from '@smappy/store';
 // @ts-ignore - Server-only imports
 import {
   listProjects,
@@ -12,7 +12,7 @@ import {
   getAnalysisBundles as getAnalysisBundlesQuery,
   getAnalysisDependencyGraph as getAnalysisDependencyGraphQuery,
   getAnalysisTreemap as getAnalysisTreemapQuery,
-} from "@smappy/store/queries";
+} from '@smappy/store/queries';
 
 const db = createDatabase(
   process.env.DATABASE_URL ? { dbPath: process.env.DATABASE_URL } : undefined,
@@ -20,13 +20,13 @@ const db = createDatabase(
 
 // Validation schemas
 const ProjectNameSchema = v.object({
-  projectName: v.pipe(v.string(), v.minLength(1, "Project name is required")),
+  projectName: v.pipe(v.string(), v.minLength(1, 'Project name is required')),
 });
 
 const AnalysisIdSchema = v.object({
   id: v.pipe(
     v.string(),
-    v.regex(/^\d+$/, "ID must be a numeric string"),
+    v.regex(/^\d+$/, 'ID must be a numeric string'),
     v.transform((val) => parseInt(val, 10)),
   ),
 });
@@ -34,25 +34,25 @@ const AnalysisIdSchema = v.object({
 const AnalysisModulesSchema = v.object({
   id: v.pipe(
     v.string(),
-    v.regex(/^\d+$/, "ID must be a numeric string"),
+    v.regex(/^\d+$/, 'ID must be a numeric string'),
     v.transform((val) => parseInt(val, 10)),
   ),
   filters: v.optional(v.any()),
 });
 
 export const getProjects = createServerFn({
-  method: "GET",
+  method: 'GET',
 }).handler(async () => {
   try {
     return listProjects(db);
   } catch (error) {
-    console.error("Failed to fetch projects:", error);
-    throw new Error("Failed to fetch projects");
+    console.error('Failed to fetch projects:', error);
+    throw new Error('Failed to fetch projects');
   }
 });
 
 export const getProjectAnalyses = createServerFn({
-  method: "GET",
+  method: 'GET',
 })
   .inputValidator(ProjectNameSchema)
   .handler(async ({ data }) => {
@@ -70,7 +70,7 @@ export const getProjectAnalyses = createServerFn({
   });
 
 export const getAnalysisDetails = createServerFn({
-  method: "GET",
+  method: 'GET',
 })
   .inputValidator(AnalysisIdSchema)
   .handler(async ({ data }) => {
@@ -86,7 +86,7 @@ export const getAnalysisDetails = createServerFn({
   });
 
 export const getAnalysisModules = createServerFn({
-  method: "GET",
+  method: 'GET',
 })
   .inputValidator(AnalysisModulesSchema)
   .handler(async ({ data }) => {
@@ -102,7 +102,7 @@ export const getAnalysisModules = createServerFn({
   });
 
 export const getAnalysisBundles = createServerFn({
-  method: "GET",
+  method: 'GET',
 })
   .inputValidator(AnalysisIdSchema)
   .handler(async ({ data }) => {
@@ -118,7 +118,7 @@ export const getAnalysisBundles = createServerFn({
   });
 
 export const getAnalysisDependencyGraph = createServerFn({
-  method: "GET",
+  method: 'GET',
 })
   .inputValidator(AnalysisIdSchema)
   .handler(async ({ data }) => {
@@ -136,7 +136,7 @@ export const getAnalysisDependencyGraph = createServerFn({
   });
 
 export const getAnalysisTreemap = createServerFn({
-  method: "GET",
+  method: 'GET',
 })
   .inputValidator(AnalysisIdSchema)
   .handler(async ({ data }) => {
