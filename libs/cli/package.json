@@ -11,6 +11,7 @@
     "prepare": "tsdown"
   },
   "dependencies": {
+    "@babel/parser": "^7.26.2",
     "@ai-sdk/anthropic": "^2.0.56",
     "@ai-sdk/openai": "^2.0.87",
     "@smappy/core": "workspace:*",
@@ -18,9 +19,12 @@
     "ai": "^5.0.114",
     "commander": "^14.0.2",
     "drizzle-orm": "^0.44.7",
-    "ollama-ai-provider-v2": "^1.5.5"
+    "ollama-ai-provider-v2": "^1.5.5",
+    "picomatch": "^4.0.2"
   },
   "devDependencies": {
+    "@types/picomatch": "^4.0.2",
+    "@babel/types": "^7.26.0",
     "@types/node": "^22.19.3",
     "@types/webpack": "^5.28.5",
     "prettier": "catalog:",

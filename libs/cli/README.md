@@ -56,6 +56,34 @@ smappy analyze --framework react
 - `--skip-build` - Generate config but don't run build (for testing)
 - `--keep-temp` - Keep temporary files for debugging
 
+### Analyze HAR Command
+
+Generate a syntax-size breakdown directly from a HAR file exported from Chrome DevTools:
+
+```bash
+# Basic usage
+smappy analyze-har ./my-session.har
+
+# Limit to specific HAR page + only show top 3 categories
+smappy analyze-har ./my-session.har --page "Checkout" --top 3
+
+# Filter script URLs and emit JSON
+smappy analyze-har ./my-session.har --include "**/app-*.js" --json > report.json
+```
+
+#### Options
+
+- `har-file` – Path to the HAR export to inspect
+- `--page <id-or-name>` – Only include entries from a given HAR page id or title
+- `--include <glob>` – Glob filter that must match the script URL (powered by picomatch)
+- `--top <n>` – Only print the top N categories (plus the `Other` bucket)
+- `--json` – Emit machine-readable JSON instead of a table
+- `--mode <mode>` – `full` (default) shows all syntax categories; `core` limits to methods, object literal methods, functions, classes, and inferred top-level code
+
+The report shows total JavaScript weight plus per-category breakdowns. Each category lists both its **own share** (bytes not claimed by other categories) and **total share** (including nested content). We also detect webpack-style chunk definitions (numeric object literal methods with large module bodies) and, in the default mode, count them in a dedicated **Bundled modules** bucket so real object methods stay readable. Core mode skips that bucket entirely so you can focus on “real” methods, free functions, classes, and the remaining top-level code.
+
+For each category we also compute distribution stats of the total (inclusive) size of every occurrence: average, standard deviation, and the 50th/90th/99th percentiles. These are printed beneath the main table and included in `--json` output so you can quickly tell whether a category is dominated by a few large chunks or evenly spread across many occurrences.
+
 ### Detect Command
 
 Detect bundler and framework without running analysis:

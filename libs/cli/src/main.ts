@@ -4,6 +4,7 @@ import { Command } from 'commander';
 import { fileURLToPath } from 'node:url';
 import pkgJSON from '../package.json' with { type: 'json' };
 import { analyzeCommand } from './cmds/analyze.ts';
+import { analyzeHarCommand } from './cmds/analyze-har.ts';
 import { listCommand } from './cmds/list.ts';
 
 const program = new Command();
@@ -33,6 +34,45 @@ program
     ) => {
       try {
         const code = await analyzeCommand(projectPath, options);
+        process.exit(code);
+      } catch (error) {
+        console.error(
+          'Error:',
+          error instanceof Error ? error.message : String(error),
+        );
+        process.exit(1);
+      }
+    },
+  );
+
+program
+  .command('analyze-har')
+  .description('Analyze JavaScript usage from a HAR export')
+  .argument('<har-file>', 'Path to the HAR file to analyze')
+  .option(
+    '--page <id-or-name>',
+    'Only include entries from a specific HAR page',
+  )
+  .option('--include <pattern>', 'Glob pattern to match script request URLs')
+  .option(
+    '--mode <mode>',
+    'Analysis mode: full (default) or core (methods/functions/classes/top-level)',
+  )
+  .option('-t, --top <n>', 'Limit output to the top N categories')
+  .option('-j, --json', 'Print the report as JSON')
+  .action(
+    async (
+      harFile: string,
+      options: {
+        page?: string;
+        include?: string;
+        top?: string;
+        json?: boolean;
+        mode?: string;
+      },
+    ) => {
+      try {
+        const code = await analyzeHarCommand(harFile, options);
         process.exit(code);
       } catch (error) {
         console.error(
