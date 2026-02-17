@@ -56,6 +56,31 @@ smappy analyze --framework react
 - `--skip-build` - Generate config but don't run build (for testing)
 - `--keep-temp` - Keep temporary files for debugging
 
+### Analyze HAR Command
+
+Generate a syntax-size breakdown directly from a HAR file exported from Chrome DevTools:
+
+```bash
+# Basic usage
+smappy analyze-har ./my-session.har
+
+# Limit to specific HAR page + only show top 3 categories
+smappy analyze-har ./my-session.har --page "Checkout" --top 3
+
+# Filter script URLs and emit JSON
+smappy analyze-har ./my-session.har --include "**/app-*.js" --json > report.json
+```
+
+#### Options
+
+- `har-file` – Path to the HAR export to inspect
+- `--page <id-or-name>` – Only include entries from a given HAR page id or title
+- `--include <glob>` – Glob filter that must match the script URL (powered by picomatch)
+- `--top <n>` – Only print the top N categories (plus the `Other` bucket)
+- `--json` – Emit machine-readable JSON instead of a table
+
+The report shows total JavaScript weight plus how much of it comes from classes, functions, methods, string/template literals, imports/exports, object literals, comments, and the uncategorized remainder.
+
 ### Detect Command
 
 Detect bundler and framework without running analysis:

@@ -692,6 +692,9 @@ importers:
       '@ai-sdk/openai':
         specifier: ^2.0.87
         version: 2.0.87(zod@4.2.1)
+      '@babel/parser':
+        specifier: ^7.26.2
+        version: 7.28.5
       '@smappy/core':
         specifier: workspace:*
         version: link:../core
@@ -710,10 +713,19 @@ importers:
       ollama-ai-provider-v2:
         specifier: ^1.5.5
         version: 1.5.5(zod@4.2.1)
+      picomatch:
+        specifier: ^4.0.2
+        version: 4.0.3
     devDependencies:
+      '@babel/types':
+        specifier: ^7.26.0
+        version: 7.28.5
       '@types/node':
         specifier: ^22.19.0
         version: 22.19.3
+      '@types/picomatch':
+        specifier: ^4.0.2
+        version: 4.0.2
       '@types/webpack':
         specifier: ^5.28.5
         version: 5.28.5
@@ -4615,6 +4627,9 @@ packages:
 
   '@types/pako@2.0.4':
     resolution: {integrity: sha512-VWDCbrLeVXJM9fihYodcLiIv0ku+AlOa/TQ1SvYOaBuyrSKgEcro95LJyIsJ4vSo6BXIxOKxiJAat04CmST9Fw==}
+
+  '@types/picomatch@4.0.2':
+    resolution: {integrity: sha512-qHHxQ+P9PysNEGbALT8f8YOSHW0KJu6l2xU8DYY0fu/EmGxXdVnuTLvFUvBgPJMSqXq29SYHveejeAha+4AYgA==}
 
   '@types/prismjs@1.26.5':
     resolution: {integrity: sha512-AUZTa7hQ2KY5L7AmtSiqxlhWxb4ina0yd8hNbl4TWuqnv/pFP0nDMb3YrfSBf4hJVGLh2YEIBfKaBW/9UEl6IQ==}
@@ -13043,6 +13058,8 @@ snapshots:
 
   '@types/pako@2.0.4': {}
 
+  '@types/picomatch@4.0.2': {}
+
   '@types/prismjs@1.26.5': {}
 
   '@types/prop-types@15.7.15': {}
@@ -17987,7 +18004,7 @@ snapshots:
       schema-utils: 4.3.3
       serialize-javascript: 6.0.2
       terser: 5.44.1
-      webpack: 5.104.0(webpack-cli@5.1.4)
+      webpack: 5.104.0
 
   terser@5.44.1:
     dependencies:
