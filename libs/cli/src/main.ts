@@ -54,6 +54,10 @@ program
     'Only include entries from a specific HAR page',
   )
   .option('--include <pattern>', 'Glob pattern to match script request URLs')
+  .option(
+    '--mode <mode>',
+    'Analysis mode: full (default) or core (methods/functions/classes/top-level)',
+  )
   .option('-t, --top <n>', 'Limit output to the top N categories')
   .option('-j, --json', 'Print the report as JSON')
   .action(
@@ -64,6 +68,7 @@ program
         include?: string;
         top?: string;
         json?: boolean;
+        mode?: string;
       },
     ) => {
       try {

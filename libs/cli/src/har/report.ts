@@ -33,6 +33,13 @@ export function renderReport(
   const categories = applyTopFilter(result, top);
   console.log(buildTable(categories));
 
+  const statsTable = buildStatsTable(categories);
+  if (statsTable) {
+    console.log('');
+    console.log('Category stats (total bytes)');
+    console.log(statsTable);
+  }
+
   if (warnings.length) {
     console.log('');
     console.log('Warnings:');
@@ -68,11 +75,20 @@ function buildTable(categories: AnalyzerResult['categories']) {
     return 'No categories to report.';
   }
 
-  const headers = ['Category', 'Bytes', '% of total', 'Occurrences'];
+  const headers = [
+    'Category',
+    'Own bytes',
+    '% own',
+    'Total bytes',
+    '% total',
+    'Occurrences',
+  ];
   const rows = categories.map((category) => [
     category.label,
-    formatBytes(category.bytes),
-    formatPercent(category.percentage),
+    formatBytes(category.ownBytes),
+    formatPercent(category.ownPercentage),
+    formatBytes(category.totalBytes),
+    formatPercent(category.totalPercentage),
     category.occurrences.toString(),
   ]);
 
@@ -81,7 +97,7 @@ function buildTable(categories: AnalyzerResult['categories']) {
   );
 
   const lines = [];
-  lines.push(formatRow(headers, widths, [false, true, true, true]));
+  lines.push(formatRow(headers, widths, [false, true, true, true, true, true]));
   lines.push(
     formatRow(
       widths.map((w) => '-'.repeat(w)),
@@ -89,7 +105,7 @@ function buildTable(categories: AnalyzerResult['categories']) {
     ),
   );
   for (const row of rows) {
-    lines.push(formatRow(row, widths, [false, true, true, true]));
+    lines.push(formatRow(row, widths, [false, true, true, true, true, true]));
   }
   return lines.join('\n');
 }
@@ -130,4 +146,43 @@ function formatPercent(value: number): string {
     return '0%';
   }
   return `${value.toFixed(value >= 10 ? 1 : 2)}%`;
+}
+
+function buildStatsTable(categories: AnalyzerResult['categories']) {
+  const rows = categories
+    .filter((category) => category.stats)
+    .map((category) => {
+      const stats = category.stats!;
+      return [
+        category.label,
+        formatBytes(stats.average),
+        formatBytes(stats.stddev),
+        formatBytes(stats.p50),
+        formatBytes(stats.p90),
+        formatBytes(stats.p99),
+      ];
+    });
+
+  if (!rows.length) {
+    return '';
+  }
+
+  const headers = ['Category', 'Avg', 'StdDev', 'P50', 'P90', 'P99'];
+  const widths = headers.map((header, index) =>
+    Math.max(header.length, ...rows.map((row) => row[index].length)),
+  );
+
+  const lines = [];
+  lines.push(formatRow(headers, widths, [false, true, true, true, true, true]));
+  lines.push(
+    formatRow(
+      widths.map((w) => '-'.repeat(w)),
+      widths,
+    ),
+  );
+  for (const row of rows) {
+    lines.push(formatRow(row, widths, [false, true, true, true, true, true]));
+  }
+
+  return lines.join('\n');
 }

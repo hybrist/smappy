@@ -1,10 +1,12 @@
 import { parse } from '@babel/parser';
-import type { Node } from '@babel/types';
+import type { Node, ObjectMethod } from '@babel/types';
 
 export type SyntaxCategoryId =
   | 'class'
   | 'function'
   | 'method'
+  | 'bundle_module'
+  | 'object_method'
   | 'string_literal'
   | 'template_literal'
   | 'import_export'
@@ -12,18 +14,36 @@ export type SyntaxCategoryId =
   | 'comment'
   | 'other';
 
+export interface SyntaxAnalysisOptions {
+  categories?: SyntaxCategoryId[];
+  includeCoverage?: boolean;
+}
+
+export interface CategoryStats {
+  average: number;
+  stddev: number;
+  p50: number;
+  p90: number;
+  p99: number;
+}
+
 export interface SyntaxCategorySummary {
   id: SyntaxCategoryId;
   label: string;
-  bytes: number;
-  characters: number;
+  ownBytes: number;
+  ownCharacters: number;
+  totalBytes: number;
+  totalCharacters: number;
   occurrences: number;
+  stats?: CategoryStats;
+  samples?: number[];
 }
 
 export interface ScriptSyntaxAnalysis {
   bytes: number;
   characters: number;
   categories: SyntaxCategorySummary[];
+  coverage?: Record<string, Segment[]>;
 }
 
 interface Segment {
@@ -37,7 +57,9 @@ const CATEGORY_INFO: Record<
 > = {
   string_literal: { label: 'String literals', priority: 10 },
   template_literal: { label: 'Template literals', priority: 9 },
-  method: { label: 'Methods', priority: 8 },
+  method: { label: 'Methods', priority: 8.5 },
+  bundle_module: { label: 'Bundled modules', priority: 8 },
+  object_method: { label: 'Object literal methods', priority: 7.5 },
   function: { label: 'Functions', priority: 7 },
   class: { label: 'Classes', priority: 6 },
   import_export: { label: 'Imports/exports', priority: 5 },
@@ -45,35 +67,29 @@ const CATEGORY_INFO: Record<
   comment: { label: 'Comments', priority: 1 },
 };
 
-const CATEGORY_ORDER = Object.entries(CATEGORY_INFO)
+const DEFAULT_CATEGORY_ORDER = Object.entries(CATEGORY_INFO)
   .sort((a, b) => b[1].priority - a[1].priority)
   .map(([id]) => id as Exclude<SyntaxCategoryId, 'other'>);
 
-export function analyzeSyntax(source: string): ScriptSyntaxAnalysis {
+export function analyzeSyntax(
+  source: string,
+  options: SyntaxAnalysisOptions = {},
+): ScriptSyntaxAnalysis {
+  const categories: SyntaxCategoryId[] = (
+    options.categories ? [...options.categories] : [...DEFAULT_CATEGORY_ORDER]
+  ).sort((a, b) => getPriority(b) - getPriority(a));
+  const categorySet = new Set(categories);
   const ast = parseSource(source);
-  const groupedIntervals: Record<
-    Exclude<SyntaxCategoryId, 'other'>,
-    Segment[]
-  > = {
-    class: [],
-    function: [],
-    method: [],
-    string_literal: [],
-    template_literal: [],
-    import_export: [],
-    object_literal: [],
-    comment: [],
-  };
-  const occurrences: Record<Exclude<SyntaxCategoryId, 'other'>, number> = {
-    class: 0,
-    function: 0,
-    method: 0,
-    string_literal: 0,
-    template_literal: 0,
-    import_export: 0,
-    object_literal: 0,
-    comment: 0,
-  };
+
+  const groupedIntervals: Record<string, Segment[]> = {};
+  const occurrences: Record<string, number> = {};
+  const sampleMap: Record<string, number[]> = {};
+  const classShells: Segment[] = [];
+  for (const category of categories) {
+    groupedIntervals[category] = [];
+    occurrences[category] = 0;
+    sampleMap[category] = [];
+  }
 
   visitNode(ast.program as Node, (node) => {
     if (!hasRange(node)) {
@@ -83,83 +99,178 @@ export function analyzeSyntax(source: string): ScriptSyntaxAnalysis {
     switch (node.type) {
       case 'ClassDeclaration':
       case 'ClassExpression':
-        addInterval(
-          groupedIntervals.class,
-          node.start,
-          node.end,
-          occurrences,
-          'class',
-        );
+        if (categorySet.has('class')) {
+          addInterval(
+            groupedIntervals.class,
+            node.start,
+            node.end,
+            occurrences,
+            'class',
+          );
+          classShells.push(...collectClassShells(node));
+          recordSample(sampleMap, 'class', source, node.start, node.end);
+        }
         break;
       case 'FunctionDeclaration':
       case 'FunctionExpression':
       case 'ArrowFunctionExpression':
-        addInterval(
-          groupedIntervals.function,
-          node.start,
-          node.end,
-          occurrences,
-          'function',
-        );
+        if (categorySet.has('function')) {
+          addInterval(
+            groupedIntervals.function,
+            node.start,
+            node.end,
+            occurrences,
+            'function',
+          );
+          recordSample(sampleMap, 'function', source, node.start, node.end);
+        }
         break;
       case 'ClassMethod':
       case 'ClassPrivateMethod':
-      case 'ObjectMethod':
       case 'TSDeclareMethod':
-        addInterval(
-          groupedIntervals.method,
-          node.start,
-          node.end,
-          occurrences,
-          'method',
-        );
+        if (categorySet.has('method')) {
+          addInterval(
+            groupedIntervals.method,
+            node.start,
+            node.end,
+            occurrences,
+            'method',
+          );
+          recordSample(sampleMap, 'method', source, node.start, node.end);
+        }
+        break;
+      case 'ObjectMethod':
+        if (isBundlerObjectMethod(node)) {
+          if (categorySet.has('bundle_module')) {
+            addInterval(
+              groupedIntervals.bundle_module,
+              node.start,
+              node.end,
+              occurrences,
+              'bundle_module',
+            );
+            recordSample(
+              sampleMap,
+              'bundle_module',
+              source,
+              node.start,
+              node.end,
+            );
+          } else if (categorySet.has('object_method')) {
+            addInterval(
+              groupedIntervals.object_method,
+              node.start,
+              node.end,
+              occurrences,
+              'object_method',
+            );
+            recordSample(
+              sampleMap,
+              'object_method',
+              source,
+              node.start,
+              node.end,
+            );
+          }
+        } else if (categorySet.has('object_method')) {
+          addInterval(
+            groupedIntervals.object_method,
+            node.start,
+            node.end,
+            occurrences,
+            'object_method',
+          );
+          recordSample(
+            sampleMap,
+            'object_method',
+            source,
+            node.start,
+            node.end,
+          );
+        }
         break;
       case 'StringLiteral':
-        addInterval(
-          groupedIntervals.string_literal,
-          node.start,
-          node.end,
-          occurrences,
-          'string_literal',
-        );
+        if (categorySet.has('string_literal')) {
+          addInterval(
+            groupedIntervals.string_literal,
+            node.start,
+            node.end,
+            occurrences,
+            'string_literal',
+          );
+          recordSample(
+            sampleMap,
+            'string_literal',
+            source,
+            node.start,
+            node.end,
+          );
+        }
         break;
       case 'TemplateLiteral':
-        addInterval(
-          groupedIntervals.template_literal,
-          node.start,
-          node.end,
-          occurrences,
-          'template_literal',
-        );
+        if (categorySet.has('template_literal')) {
+          addInterval(
+            groupedIntervals.template_literal,
+            node.start,
+            node.end,
+            occurrences,
+            'template_literal',
+          );
+          recordSample(
+            sampleMap,
+            'template_literal',
+            source,
+            node.start,
+            node.end,
+          );
+        }
         break;
       case 'ImportDeclaration':
       case 'ExportDefaultDeclaration':
       case 'ExportNamedDeclaration':
       case 'ExportAllDeclaration':
       case 'ImportExpression':
-        addInterval(
-          groupedIntervals.import_export,
-          node.start,
-          node.end,
-          occurrences,
-          'import_export',
-        );
+        if (categorySet.has('import_export')) {
+          addInterval(
+            groupedIntervals.import_export,
+            node.start,
+            node.end,
+            occurrences,
+            'import_export',
+          );
+          recordSample(
+            sampleMap,
+            'import_export',
+            source,
+            node.start,
+            node.end,
+          );
+        }
         break;
       case 'ObjectExpression':
-        addInterval(
-          groupedIntervals.object_literal,
-          node.start,
-          node.end,
-          occurrences,
-          'object_literal',
-        );
+        if (categorySet.has('object_literal')) {
+          addInterval(
+            groupedIntervals.object_literal,
+            node.start,
+            node.end,
+            occurrences,
+            'object_literal',
+          );
+          recordSample(
+            sampleMap,
+            'object_literal',
+            source,
+            node.start,
+            node.end,
+          );
+        }
         break;
       default:
         break;
     }
   });
 
-  if (Array.isArray((ast as any).comments)) {
+  if (categorySet.has('comment') && Array.isArray((ast as any).comments)) {
     for (const comment of (ast as any).comments as Array<{
       start: number;
       end: number;
@@ -175,24 +286,25 @@ export function analyzeSyntax(source: string): ScriptSyntaxAnalysis {
           occurrences,
           'comment',
         );
+        recordSample(sampleMap, 'comment', source, comment.start, comment.end);
       }
     }
   }
 
   const occupied: Segment[] = [];
-  const attributed: Record<Exclude<SyntaxCategoryId, 'other'>, Segment[]> = {
-    class: [],
-    function: [],
-    method: [],
-    string_literal: [],
-    template_literal: [],
-    import_export: [],
-    object_literal: [],
-    comment: [],
-  };
+  const attributed: Record<string, Segment[]> = {};
+  for (const category of categories) {
+    attributed[category] = [];
+  }
 
-  for (const category of CATEGORY_ORDER) {
-    const merged = mergeSegments(groupedIntervals[category]);
+  const coverage: Record<string, Segment[]> | undefined =
+    options.includeCoverage ? {} : undefined;
+
+  for (const category of categories) {
+    const merged = mergeSegments(groupedIntervals[category] ?? []);
+    if (coverage) {
+      coverage[category] = merged.map((segment) => ({ ...segment }));
+    }
     const available: Segment[] = [];
     for (const segment of merged) {
       const remainder = subtractSegment(segment, occupied);
@@ -210,23 +322,38 @@ export function analyzeSyntax(source: string): ScriptSyntaxAnalysis {
   let accountedBytes = 0;
   let accountedChars = 0;
 
-  for (const category of CATEGORY_ORDER) {
-    const segments = mergeSegments(attributed[category]);
-    if (!segments.length) {
+  for (const category of categories) {
+    let exclusiveSegments = mergeSegments(attributed[category] ?? []);
+    if (category === 'class' && classShells.length) {
+      exclusiveSegments = mergeSegments(classShells);
+    }
+    const inclusiveSegments = mergeSegments(groupedIntervals[category] ?? []);
+    const ownBytes = sumBytes(source, exclusiveSegments);
+    const ownChars = sumCharacters(exclusiveSegments);
+    const totalBytesForCategory = sumBytes(source, inclusiveSegments);
+    const totalCharsForCategory = sumCharacters(inclusiveSegments);
+
+    accountedBytes += ownBytes;
+    accountedChars += ownChars;
+
+    if (!ownBytes && !totalBytesForCategory) {
       continue;
     }
 
-    const bytes = sumBytes(source, segments);
-    const chars = sumCharacters(segments);
-    accountedBytes += bytes;
-    accountedChars += chars;
+    const samplesForCategory = sampleMap[category] ?? [];
 
     summaries.push({
       id: category,
-      label: CATEGORY_INFO[category].label,
-      bytes,
-      characters: chars,
-      occurrences: occurrences[category],
+      label:
+        CATEGORY_INFO[category as Exclude<SyntaxCategoryId, 'other'>]?.label ??
+        category,
+      ownBytes,
+      ownCharacters: ownChars,
+      totalBytes: totalBytesForCategory,
+      totalCharacters: totalCharsForCategory,
+      occurrences: occurrences[category] ?? 0,
+      stats: computeStats(samplesForCategory),
+      samples: samplesForCategory.length ? [...samplesForCategory] : [],
     });
   }
 
@@ -236,15 +363,20 @@ export function analyzeSyntax(source: string): ScriptSyntaxAnalysis {
   summaries.push({
     id: 'other',
     label: 'Other',
-    bytes: remainingBytes,
-    characters: remainingChars,
+    ownBytes: remainingBytes,
+    ownCharacters: remainingChars,
+    totalBytes: remainingBytes,
+    totalCharacters: remainingChars,
     occurrences: 0,
+    stats: undefined,
+    samples: [],
   });
 
   return {
     bytes: totalBytes,
     characters: totalCharacters,
     categories: summaries,
+    coverage,
   };
 }
 
@@ -309,14 +441,14 @@ function addInterval(
   list: Segment[],
   start: number,
   end: number,
-  occurrences: Record<Exclude<SyntaxCategoryId, 'other'>, number>,
+  occurrences: Record<string, number>,
   category: Exclude<SyntaxCategoryId, 'other'>,
 ) {
   if (start >= end) {
     return;
   }
   list.push({ start, end });
-  occurrences[category] += 1;
+  occurrences[category] = (occurrences[category] ?? 0) + 1;
 }
 
 function mergeSegments(segments: Segment[]): Segment[] {
@@ -338,6 +470,47 @@ function mergeSegments(segments: Segment[]): Segment[] {
     }
   }
   return merged;
+}
+
+function collectClassShells(node: Node): Segment[] {
+  if (
+    typeof (node as any).start !== 'number' ||
+    typeof (node as any).end !== 'number'
+  ) {
+    return [];
+  }
+
+  const body =
+    node && typeof node === 'object' && 'body' in node
+      ? ((node as any).body?.body as Node[] | undefined)
+      : undefined;
+  const children = body ?? [];
+
+  let shells: Segment[] = [
+    { start: (node as any).start, end: (node as any).end },
+  ];
+  for (const child of children) {
+    if (!CLASS_CHILD_EXCLUDE.has(child.type)) {
+      continue;
+    }
+    if (
+      typeof (child as any).start !== 'number' ||
+      typeof (child as any).end !== 'number'
+    ) {
+      continue;
+    }
+    const childSegment = {
+      start: (child as any).start,
+      end: (child as any).end,
+    };
+    const updated: Segment[] = [];
+    for (const segment of shells) {
+      updated.push(...subtractSegment(segment, [childSegment]));
+    }
+    shells = updated;
+  }
+
+  return shells.filter((segment) => segment.end > segment.start);
 }
 
 function subtractSegment(segment: Segment, occupied: Segment[]): Segment[] {
@@ -404,3 +577,97 @@ function sumCharacters(segments: Segment[]): number {
     0,
   );
 }
+
+export type { Segment };
+
+function getPriority(category: SyntaxCategoryId): number {
+  return (
+    CATEGORY_INFO[category as Exclude<SyntaxCategoryId, 'other'>]?.priority ?? 0
+  );
+}
+
+function recordSample(
+  samples: Record<string, number[]>,
+  category: SyntaxCategoryId,
+  source: string,
+  start: number,
+  end: number,
+) {
+  if (!samples[category]) {
+    samples[category] = [];
+  }
+  const length = Math.max(0, end - start);
+  if (!length) {
+    return;
+  }
+  samples[category].push(Buffer.byteLength(source.slice(start, end), 'utf8'));
+}
+
+function computeStats(values: number[]): CategoryStats | undefined {
+  if (!values.length) {
+    return undefined;
+  }
+  const n = values.length;
+  const sum = values.reduce((acc, value) => acc + value, 0);
+  const average = sum / n;
+  const sumSquares = values.reduce((acc, value) => acc + value * value, 0);
+  const variance = Math.max(0, sumSquares / n - average * average);
+  const stddev = Math.sqrt(variance);
+  const sorted = [...values].sort((a, b) => a - b);
+  const percentile = (p: number) => {
+    if (n === 1) {
+      return sorted[0];
+    }
+    const rank = (p / 100) * (n - 1);
+    const low = Math.floor(rank);
+    const high = Math.min(sorted.length - 1, Math.ceil(rank));
+    if (low === high) {
+      return sorted[low];
+    }
+    const weight = rank - low;
+    return sorted[low] * (1 - weight) + sorted[high] * weight;
+  };
+
+  return {
+    average,
+    stddev,
+    p50: percentile(50),
+    p90: percentile(90),
+    p99: percentile(99),
+  };
+}
+
+function isBundlerObjectMethod(node: ObjectMethod): boolean {
+  if (node.kind && node.kind !== 'method') {
+    return false;
+  }
+  const key = (node as any).key;
+  if (!key) {
+    return false;
+  }
+  let numericKey = false;
+  if (key.type === 'NumericLiteral') {
+    numericKey = true;
+  } else if (key.type === 'StringLiteral' && /^\d+$/.test(String(key.value))) {
+    numericKey = true;
+  } else if (
+    !node.computed &&
+    key.type === 'Identifier' &&
+    /^\d+$/.test(key.name)
+  ) {
+    numericKey = true;
+  }
+  if (!numericKey) {
+    return false;
+  }
+  const params = Array.isArray(node.params) ? node.params : [];
+  if (params.length < 2 || params.length > 4) {
+    return false;
+  }
+  return true;
+}
+const CLASS_CHILD_EXCLUDE = new Set([
+  'ClassMethod',
+  'ClassPrivateMethod',
+  'TSDeclareMethod',
+]);

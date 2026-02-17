@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { analyzeScripts } from '../har/analyzer.ts';
+import type { AnalyzerMode } from '../har/analyzer.ts';
 import { extractJavaScript } from '../har/extract-javascript.ts';
 import { loadHar } from '../har/loader.ts';
 import { renderReport } from '../har/report.ts';
@@ -9,6 +10,7 @@ export interface AnalyzeHarOptions {
   include?: string;
   json?: boolean;
   top?: string | number;
+  mode?: string;
 }
 
 export async function analyzeHarCommand(
@@ -28,7 +30,15 @@ export async function analyzeHarCommand(
       return 1;
     }
 
-    const analysis = analyzeScripts(extraction.scripts);
+    const mode = parseMode(options.mode);
+    if (mode === 'invalid') {
+      console.error('Invalid mode. Use "full" (default) or "core".');
+      return 1;
+    }
+
+    const analysis = analyzeScripts(extraction.scripts, {
+      mode,
+    });
     const warnings = [...extraction.warnings, ...analysis.warnings];
     renderReport(analysis, {
       json: options.json,
@@ -57,4 +67,19 @@ function parseTop(value?: string | number) {
 
   const parsed = Number.parseInt(value, 10);
   return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function parseMode(value?: string): AnalyzerMode | undefined | 'invalid' {
+  if (!value) {
+    return undefined;
+  }
+
+  const normalized = value.toLowerCase();
+  if (normalized === 'full') {
+    return 'full';
+  }
+  if (normalized === 'core') {
+    return 'core';
+  }
+  return 'invalid';
 }
